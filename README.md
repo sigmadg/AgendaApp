@@ -1,97 +1,190 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Mi Agenda - Aplicación de Tareas Diarias
 
-# Getting Started
+Una aplicación móvil desarrollada con React Native para gestionar tareas diarias con un calendario integrado.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Características
 
-## Step 1: Start Metro
+- 📅 **Calendario interactivo** - Navega entre fechas y ve tus tareas organizadas por día
+- ✅ **Gestión de tareas** - Agrega, completa y elimina tareas fácilmente
+- 💾 **Almacenamiento local** - Tus tareas se guardan automáticamente en el dispositivo
+- 🎨 **Interfaz moderna** - Diseño limpio y fácil de usar
+- 📱 **Multiplataforma** - Funciona en Android e iOS
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Compilar en Android Studio
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Prerrequisitos
 
-```sh
-# Using npm
-npm start
+1. **Android Studio** (última versión)
+2. **Java Development Kit (JDK) 17**
+3. **Android SDK** (API Level 33 o superior)
+4. **Node.js** (versión 16 o superior)
+5. **npm** o **yarn**
 
-# OR using Yarn
-yarn start
+### Pasos para compilar
+
+#### 1. Configurar el entorno
+
+```bash
+# Navegar al directorio del proyecto
+cd /home/sigmadg/Documentos/AgendaApp
+
+# Instalar dependencias
+npm install
+
+# Para iOS (solo en macOS)
+cd ios && pod install && cd ..
 ```
 
-## Step 2: Build and run your app
+#### 2. Configurar Android Studio
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+1. **Abrir Android Studio**
+2. **File → Open** y seleccionar la carpeta `/home/sigmadg/Documentos/AgendaApp/android`
+3. **Esperar** a que Android Studio sincronice el proyecto
+4. **Configurar el SDK** si es necesario:
+   - File → Project Structure → SDK Location
+   - Verificar que Android SDK esté configurado correctamente
 
-### Android
+#### 3. Configurar el dispositivo/emulador
 
-```sh
-# Using npm
-npm run android
+**Opción A: Emulador Android**
+1. En Android Studio: **Tools → AVD Manager**
+2. **Create Virtual Device**
+3. Seleccionar un dispositivo (ej: Pixel 6)
+4. Descargar una imagen del sistema (API 33 o superior)
+5. **Start** el emulador
 
-# OR using Yarn
-yarn android
+**Opción B: Dispositivo físico**
+1. Habilitar **Opciones de desarrollador** en tu Android
+2. Activar **Depuración USB**
+3. Conectar el dispositivo por USB
+4. Autorizar la depuración cuando aparezca el diálogo
+
+#### 4. Compilar y ejecutar
+
+**Método 1: Desde la terminal**
+```bash
+# Ejecutar en Android
+npx react-native run-android
+
+# Ejecutar en iOS (solo en macOS)
+npx react-native run-ios
 ```
 
-### iOS
+**Método 2: Desde Android Studio**
+1. **Seleccionar** el dispositivo/emulador en la barra superior
+2. **Click** en el botón **Run** (▶️) o presionar **Shift + F10**
+3. **Esperar** a que compile e instale la aplicación
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+#### 5. Generar APK
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+**APK de Debug:**
+```bash
+cd android
+./gradlew assembleDebug
+```
+El APK se generará en: `android/app/build/outputs/apk/debug/app-debug.apk`
 
-```sh
-bundle install
+**APK de Release:**
+```bash
+cd android
+./gradlew assembleRelease
+```
+El APK se generará en: `android/app/build/outputs/apk/release/app-release.apk`
+
+### Solución de problemas comunes
+
+#### Error: "SDK location not found"
+```bash
+# Crear archivo local.properties en android/
+echo "sdk.dir=/path/to/your/android/sdk" > android/local.properties
 ```
 
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
+#### Error: "Metro bundler not found"
+```bash
+# Iniciar Metro bundler en una terminal separada
+npx react-native start
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+#### Error: "Device not found"
+- Verificar que el dispositivo esté conectado: `adb devices`
+- Reiniciar el servidor ADB: `adb kill-server && adb start-server`
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+#### Error: "Build failed"
+```bash
+# Limpiar el proyecto
+cd android
+./gradlew clean
+cd ..
+npx react-native run-android
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Estructura del proyecto
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+AgendaApp/
+├── android/                 # Proyecto Android nativo
+│   ├── app/
+│   │   ├── build.gradle     # Configuración de la app
+│   │   └── src/main/
+│   │       ├── AndroidManifest.xml
+│   │       └── java/com/agendaapp/
+│   └── build.gradle         # Configuración del proyecto
+├── ios/                     # Proyecto iOS nativo
+├── src/
+│   ├── components/          # Componentes React Native
+│   │   ├── CalendarView.js
+│   │   ├── TaskList.js
+│   │   ├── TaskItem.js
+│   │   └── AddTaskModal.js
+│   └── utils/
+│       └── storage.js       # Almacenamiento local
+├── App.tsx                  # Componente principal
+├── package.json
+└── README.md
+```
 
-## Step 3: Modify your app
+### Comandos útiles
 
-Now that you have successfully run the app, let's make changes!
+```bash
+# Limpiar caché
+npx react-native start --reset-cache
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+# Ver logs de Android
+npx react-native log-android
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+# Ver logs de iOS
+npx react-native log-ios
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+# Verificar dispositivos conectados
+adb devices
 
-## Congratulations! :tada:
+# Instalar APK manualmente
+adb install android/app/build/outputs/apk/debug/app-debug.apk
+```
 
-You've successfully run and modified your React Native App. :partying_face:
+### Personalización
 
-### Now what?
+#### Cambiar el nombre de la aplicación
+1. Editar `android/app/src/main/res/values/strings.xml`
+2. Cambiar el valor de `app_name`
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+#### Cambiar el ícono de la aplicación
+1. Reemplazar los archivos en `android/app/src/main/res/mipmap-*/`
+2. Usar Android Asset Studio para generar iconos
 
-# Troubleshooting
+#### Cambiar el package name
+1. Editar `android/app/build.gradle` → `applicationId`
+2. Renombrar carpetas en `android/app/src/main/java/`
+3. Actualizar `AndroidManifest.xml`
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### Tecnologías utilizadas
 
-# Learn More
+- **React Native 0.82.0** - Framework para desarrollo móvil
+- **React Native Calendars** - Componente de calendario
+- **AsyncStorage** - Almacenamiento local de datos
+- **React Native Vector Icons** - Iconografía
+- **React Native Safe Area Context** - Manejo de áreas seguras
 
-To learn more about React Native, take a look at the following resources:
+---
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+¡Tu aplicación de agenda está lista para compilar en Android Studio! 🎉
