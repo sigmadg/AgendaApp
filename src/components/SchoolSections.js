@@ -8,11 +8,12 @@ import {
   TextInput,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const SchoolSections = () => {
+const SchoolSections = ({ onUpdateSection }) => {
   // Estados para las diferentes secciones
   const [activeSection, setActiveSection] = useState('timetable');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -89,7 +90,7 @@ const SchoolSections = () => {
 
   const renderSectionTabs = () => (
     <View style={styles.tabsContainer}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
+      <View style={styles.tabsWrapper}>
         {sections.map((section) => (
           <TouchableOpacity
             key={section.id}
@@ -99,14 +100,22 @@ const SchoolSections = () => {
             ]}
             onPress={() => setActiveSection(section.id)}
           >
-            <Icon 
-              name={section.icon} 
-              size={20} 
-              color={activeSection === section.id ? '#FFFFFF' : '#6c757d'} 
-            />
+            <View style={[styles.tabContent, {
+              backgroundColor: activeSection === section.id ? '#4A90E2' : 'transparent',
+              borderColor: activeSection === section.id ? '#4A90E2' : '#0066CC',
+            }]}>
+              <Icon 
+                name={section.icon} 
+                size={20} 
+                color={activeSection === section.id ? '#FFFFFF' : '#1E3A8A'} 
+              />
+              {activeSection === section.id && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 
@@ -130,7 +139,19 @@ const SchoolSections = () => {
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>HORARIO DE HOY - {dayNames[currentDay]}</Text>
+          <View style={styles.headerDecoration}>
+            <Image 
+              source={require('../../android/app/src/main/assets/escuela.png')}
+              style={styles.mascotImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.headerContent}>
+            <Text style={styles.sectionTitle}>Horario de - {dayNames[currentDay]}</Text>
+            <Text style={styles.sectionSubtitle}>
+              Gestiona tu horario académico diario
+            </Text>
+          </View>
           <TouchableOpacity onPress={() => {
             setModalType('timetable');
             setShowAddModal(true);
@@ -142,26 +163,68 @@ const SchoolSections = () => {
         <View style={styles.timetableContainer}>
           <View style={styles.timetableHeader}>
             <View style={styles.timeColumn}>
+              <Icon name="time" size={16} color="#FFFFFF" style={styles.headerIcon} />
               <Text style={styles.timeHeader}>HORA</Text>
             </View>
             <View style={styles.dayColumn}>
+              <Icon name="calendar" size={16} color="#FFFFFF" style={styles.headerIcon} />
               <Text style={styles.dayHeader}>{dayNames[currentDay]}</Text>
             </View>
           </View>
           
-          <ScrollView style={styles.timetableBody}>
-            {timeSlots.map((time, index) => (
-              <View key={time} style={styles.timetableRow}>
-                <View style={styles.timeCell}>
-                  <Text style={styles.timeText}>{time}</Text>
+          <ScrollView style={styles.timetableBody} showsVerticalScrollIndicator={false}>
+            {timeSlots.map((time, index) => {
+              const hasClass = timetable[`${currentDay}-${time}`];
+              return (
+                <View key={time} style={[
+                  styles.timetableRow,
+                  hasClass && styles.timetableRowWithClass
+                ]}>
+                  <View style={[
+                    styles.timeCell,
+                    hasClass && styles.timeCellWithClass
+                  ]}>
+                    <Icon 
+                      name="time-outline" 
+                      size={12} 
+                      color={hasClass ? '#FFFFFF' : '#1E3A8A'} 
+                    />
+                    <Text style={[
+                      styles.timeText,
+                      hasClass && styles.timeTextWithClass
+                    ]}>{time}</Text>
+                  </View>
+                  <View style={[
+                    styles.scheduleCell,
+                    hasClass && styles.scheduleCellWithClass
+                  ]}>
+                    {hasClass ? (
+                      <View style={styles.classCard}>
+                        <View style={styles.classHeader}>
+                          <Icon name="school" size={14} color="#FFFFFF" />
+                          <Text style={styles.classTitle}>{hasClass}</Text>
+                        </View>
+                        <View style={styles.classDetails}>
+                          <View style={styles.classDetailItem}>
+                            <Icon name="location" size={12} color="#4A90E2" />
+                            <Text style={styles.classDetailText}>Aula 101</Text>
+                          </View>
+                          <View style={styles.classDetailItem}>
+                            <Icon name="person" size={12} color="#4A90E2" />
+                            <Text style={styles.classDetailText}>Prof. García</Text>
+                          </View>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.emptySlot}>
+                        <Icon name="ellipse-outline" size={16} color="#B0C4DE" />
+                        <Text style={styles.emptySlotText}>Libre</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-                <View style={styles.scheduleCell}>
-                  <Text style={styles.scheduleText}>
-                    {timetable[`${currentDay}-${time}`] || ''}
-                  </Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
         </View>
       </View>
@@ -171,7 +234,19 @@ const SchoolSections = () => {
   const renderTodoLists = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>TAREAS ACADÉMICAS</Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/escuela.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>TAREAS ACADÉMICAS</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza tus tareas y proyectos académicos
+          </Text>
+        </View>
         <TouchableOpacity onPress={() => {
           setModalType('todo');
           setShowAddModal(true);
@@ -211,7 +286,19 @@ const SchoolSections = () => {
   const renderGroupProjects = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>PLANIFICADOR DE PROYECTOS</Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/escuela.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>PLANIFICADOR DE PROYECTOS</Text>
+          <Text style={styles.sectionSubtitle}>
+            Gestiona proyectos grupales y colaborativos
+          </Text>
+        </View>
         <TouchableOpacity onPress={() => {
           setModalType('project');
           setShowAddModal(true);
@@ -259,7 +346,19 @@ const SchoolSections = () => {
   const renderExamRevision = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>EXÁMENES</Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/escuela.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>EXÁMENES</Text>
+          <Text style={styles.sectionSubtitle}>
+            Planifica y prepara tus exámenes
+          </Text>
+        </View>
         <TouchableOpacity onPress={() => {
           setModalType('exam');
           setShowAddModal(true);
@@ -299,8 +398,19 @@ const SchoolSections = () => {
   const renderCourseMaterials = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>MATERIALES DEL CURSO</Text>
-        <Icon name="crown" size={16} color="#FF69B4" />
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/escuela.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>MATERIALES DEL CURSO</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza libros, recursos y materiales
+          </Text>
+        </View>
         <TouchableOpacity onPress={() => {
           setModalType('materials');
           setShowAddModal(true);
@@ -380,7 +490,19 @@ const SchoolSections = () => {
   const renderClassOverview = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>RESUMEN DE CLASE</Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/escuela.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>RESUMEN DE CLASE</Text>
+          <Text style={styles.sectionSubtitle}>
+            Información detallada de tus clases
+          </Text>
+        </View>
         <TouchableOpacity onPress={() => {
           setModalType('class');
           setShowAddModal(true);
@@ -480,28 +602,84 @@ const SchoolSections = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#E6F3FF', // Azul oceánico claro
   },
   tabsContainer: {
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingVertical: 8,
-  },
-  tabsScroll: {
+    backgroundColor: '#E6F3FF', // Azul oceánico claro
+    paddingVertical: 12,
     paddingHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    marginHorizontal: 4,
+    shadowColor: '#0066CC', // Azul oceánico
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: '#4A90E2', // Azul marino
+  },
+  tabsWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#E6F3FF', // Azul oceánico claro
+    padding: 8,
+    width: '100%',
   },
   tab: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
+    flex: 1,
     alignItems: 'center',
-    marginRight: 8,
-    borderRadius: 12,
-    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    marginHorizontal: 4,
   },
   activeTab: {
-    backgroundColor: '#45B7D1',
+    shadowColor: '#4A90E2', // Azul marino
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  tabContent: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    position: 'relative',
+    shadowColor: '#0066CC', // Azul oceánico
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: -8,
+    left: '50%',
+    marginLeft: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1E3A8A', // Azul oceánico profundo
+    shadowColor: '#1E3A8A',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     flex: 1,
@@ -509,61 +687,120 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   section: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    marginHorizontal: 0,
-    shadowColor: '#000',
+    backgroundColor: '#F0F8FF', // Azul cielo muy claro
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    marginHorizontal: 4,
+    shadowColor: '#0066CC', // Azul oceánico
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#4A90E2', // Azul marino
   },
   sectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: '#1E3A8A', // Azul oceánico profundo
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    shadowColor: '#1E3A8A',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+    borderBottomWidth: 3,
+    borderBottomColor: '#4A90E2', // Azul marino
+  },
+  headerDecoration: {
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  mascotImage: {
+    width: 60,
+    height: 60,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2d4150',
-    flex: 1,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   addButton: {
-    backgroundColor: '#45B7D1',
+    backgroundColor: '#4A90E2', // Azul marino
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1E3A8A', // Azul oceánico profundo
+    shadowColor: '#0066CC', // Azul oceánico
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   // Estilos para el horario semanal
   timetableContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
+    backgroundColor: '#F0F8FF', // Azul cielo muy claro
+    borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#4A90E2', // Azul marino
+    shadowColor: '#0066CC', // Azul oceánico
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   timetableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#45B7D1',
+    backgroundColor: '#1E3A8A', // Azul oceánico profundo
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   timeColumn: {
     width: 80,
     padding: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
   },
   dayColumn: {
     flex: 1,
     padding: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
   },
   timeHeader: {
     color: '#ffffff',
@@ -581,31 +818,103 @@ const styles = StyleSheet.create({
   timetableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#E6F3FF',
+    backgroundColor: '#FFFFFF',
+    minHeight: 60,
+  },
+  timetableRowWithClass: {
+    backgroundColor: '#E6F3FF',
+    borderBottomColor: '#4A90E2',
   },
   timeCell: {
     width: 80,
-    padding: 8,
+    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8F9FA',
+    flexDirection: 'column',
+    gap: 4,
+  },
+  timeCellWithClass: {
+    backgroundColor: '#4A90E2',
   },
   scheduleCell: {
     flex: 1,
-    padding: 8,
+    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 40,
+    minHeight: 60,
+  },
+  scheduleCellWithClass: {
+    backgroundColor: '#E6F3FF',
   },
   timeText: {
-    fontSize: 10,
-    color: '#6c757d',
-    fontWeight: '500',
+    fontSize: 11,
+    color: '#1E3A8A', // Azul oceánico profundo
+    fontWeight: '600',
+  },
+  timeTextWithClass: {
+    color: '#FFFFFF',
   },
   scheduleText: {
     fontSize: 10,
-    color: '#2d4150',
+    color: '#1E3A8A', // Azul oceánico profundo
     textAlign: 'center',
+  },
+  // Nuevos estilos para las tarjetas de clase
+  classCard: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 12,
+    padding: 12,
+    width: '100%',
+    shadowColor: '#0066CC',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  classHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 6,
+  },
+  classTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  classDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  classDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  classDetailText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  emptySlot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+  },
+  emptySlotText: {
+    color: '#B0C4DE',
+    fontSize: 12,
+    fontStyle: 'italic',
   },
   // Estilos para las listas de tareas
   todoContainer: {
@@ -618,14 +927,16 @@ const styles = StyleSheet.create({
   todoListTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#1E3A8A', // Azul oceánico profundo
     marginBottom: 8,
   },
   todoHeader: {
     flexDirection: 'row',
-    backgroundColor: '#45B7D1',
+    backgroundColor: '#4A90E2', // Azul marino
     padding: 8,
     borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#1E3A8A', // Azul oceánico profundo
     marginBottom: 8,
   },
   todoHeaderText: {

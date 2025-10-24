@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, StatusBar, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { colors, typography, spacing, borderRadius, shadows } from './src/styles/globalStyles';
+// import { FloatingIcons, DecorativeIcons, AnimatedDecorativeIcons } from './src/components/DecorativeIcons';
 import Header from './src/components/Header';
 import CalendarView from './src/components/CalendarView';
 import TaskList from './src/components/TaskList';
@@ -148,6 +150,13 @@ export default function App() {
       setUserName(result.user.name);
     }
     return result;
+  };
+
+  const handleUpdateSection = async (sectionType, sectionData) => {
+    // Función para manejar actualizaciones de secciones
+    // TODO: Implementar sincronización con Supabase cuando esté disponible
+    console.log(`Actualizando sección ${sectionType}:`, sectionData);
+    return { success: true };
   };
 
   const handleToggleSection = async (sectionId) => {
@@ -400,7 +409,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
         <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
+          <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Cargando...</Text>
           </View>
@@ -414,7 +423,7 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
+          <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
           <AuthNavigator onLogin={handleLogin} onRegister={handleRegister} />
         </SafeAreaView>
       </SafeAreaProvider>
@@ -425,10 +434,16 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
+        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+        
+        {/* Iconos decorativos removidos para evitar conflictos con el sidebar */}
         
         <Header
-          onOpenSidebar={() => setShowSidebar(true)}
+          onOpenSidebar={() => {
+            console.log('Abriendo sidebar, showSidebar actual:', showSidebar);
+            setShowSidebar(true);
+            console.log('showSidebar después de setShowSidebar(true):', true);
+          }}
           selectedCategory={selectedCategory}
           userName={userName}
           onLogout={handleLogout}
@@ -465,13 +480,14 @@ export default function App() {
           onAddEvent={() => setShowAddEventModal(true)}
           onEditEvent={editEvent}
           onDeleteEvent={deleteEvent}
+          onUpdateSection={handleUpdateSection}
         />
       ) : showHealthSections ? (
         <HealthSections />
       ) : showMenstrualSections ? (
         <MenstrualSections />
       ) : showSchoolSections ? (
-        <SchoolSections />
+        <SchoolSections onUpdateSection={handleUpdateSection} />
       ) : showLanguageSections ? (
         <LanguageSections />
       ) : showTravelSections ? (
@@ -537,9 +553,13 @@ export default function App() {
           selectedCategory={selectedCategory}
         />
 
+        {console.log('Renderizando Sidebar con visible:', showSidebar)}
         <Sidebar
           visible={showSidebar}
-          onClose={() => setShowSidebar(false)}
+          onClose={() => {
+            console.log('Cerrando sidebar');
+            setShowSidebar(false);
+          }}
           selectedCategory={selectedCategory}
           onCategorySelect={setSelectedCategory}
           activeSections={activeSections}
@@ -560,12 +580,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
   loadingContainer: {
     flex: 1,
@@ -573,20 +593,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 18,
-    color: '#6c757d',
-    fontWeight: '500',
+    fontSize: typography.h5,
+    color: colors.textSecondary,
+    fontWeight: typography.medium,
   },
   closeTestButton: {
-    backgroundColor: '#dc3545',
-    padding: 15,
-    margin: 20,
-    borderRadius: 10,
+    backgroundColor: colors.error,
+    padding: spacing.md,
+    margin: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
+    ...shadows.sm,
   },
   closeTestButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.surface,
+    fontSize: typography.h6,
+    fontWeight: typography.semiBold,
   },
+  // decorativeBackground removido para evitar conflictos con el sidebar
 });

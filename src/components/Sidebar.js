@@ -1,124 +1,146 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { colors, typography, spacing, borderRadius, shadows } from '../styles/globalStyles';
+import { CuteTitle, CuteText, CuteElement } from './CuteElements';
+// import { DecorativeIcons, AnimatedDecorativeIcons, GradientDecorativeIcons } from './DecorativeIcons';
 
 const CATEGORIES = [
   {
     id: 'personal',
     name: 'Mi Perfil',
     icon: 'person-outline',
-    color: '#007AFF',
-    description: 'Eventos personales y generales'
+    color: colors.primary,
+    description: 'Eventos personales y generales',
+    cuteIcon: 'heart'
   },
   {
     id: 'work',
     name: 'Trabajo',
     icon: 'briefcase-outline',
-    color: '#FF6B6B',
-    description: 'Reuniones y actividades laborales'
+    color: colors.coral,
+    description: 'Reuniones y actividades laborales',
+    cuteIcon: 'star'
   },
   {
     id: 'school',
     name: 'Escuela',
     icon: 'school-outline',
-    color: '#4ECDC4',
-    description: 'Clases y actividades académicas'
+    color: colors.secondary,
+    description: 'Clases y actividades académicas',
+    cuteIcon: 'sparkle'
   },
   {
     id: 'health',
     name: 'Salud',
     icon: 'medical-outline',
-    color: '#45B7D1',
-    description: 'Alimentación, ejercicio y bienestar'
+    color: colors.mint,
+    description: 'Alimentación, ejercicio y bienestar',
+    cuteIcon: 'flower'
   },
   {
     id: 'finance',
     name: 'Finanzas',
     icon: 'wallet-outline',
-    color: '#4CAF50',
-    description: 'Gestión financiera y contabilidad personal'
+    color: colors.success,
+    description: 'Gestión financiera y contabilidad personal',
+    cuteIcon: 'rainbow'
   },
   {
     id: 'habits',
     name: 'Habit Tracker',
     icon: 'checkmark-circle-outline',
-    color: '#9C27B0',
-    description: 'Seguimiento de hábitos y rutinas'
+    color: colors.pink,
+    description: 'Seguimiento de hábitos y rutinas',
+    cuteIcon: 'butterfly'
   },
   {
     id: 'events',
     name: 'Eventos',
     icon: 'calendar-outline',
-    color: '#E91E63',
-    description: 'Cumpleaños, organización y recordatorios'
+    color: colors.primary,
+    description: 'Cumpleaños, organización y recordatorios',
+    cuteIcon: 'sun'
   },
   {
     id: 'languages',
     name: 'Idiomas',
     icon: 'language-outline',
-    color: '#FFEAA7',
-    description: 'Clases y práctica de idiomas'
+    color: colors.accent,
+    description: 'Clases y práctica de idiomas',
+    cuteIcon: 'moon'
   },
   {
     id: 'menstrual',
     name: 'Calendario Menstrual',
     icon: 'flower-outline',
-    color: '#DDA0DD',
-    description: 'Seguimiento del ciclo menstrual'
+    color: colors.pink,
+    description: 'Seguimiento del ciclo menstrual',
+    cuteIcon: 'flower'
   },
   {
     id: 'travel',
     name: 'Viajes',
     icon: 'airplane-outline',
-    color: '#FF9F43',
-    description: 'Planificación de viajes y tours'
+    color: colors.coral,
+    description: 'Planificación de viajes y tours',
+    cuteIcon: 'cloud'
   },
   {
     id: 'pets',
     name: 'Mascotas',
     icon: 'paw-outline',
-    color: '#FF6B9D',
-    description: 'Cuidado y planificación de mascotas'
+    color: colors.primary,
+    description: 'Cuidado y planificación de mascotas',
+    cuteIcon: 'heart'
   },
   {
     id: 'selfcare',
     name: 'Cuidado Personal',
     icon: 'heart-outline',
-    color: '#E91E63',
-    description: 'Bienestar y autocuidado personal'
+    color: colors.pink,
+    description: 'Bienestar y autocuidado personal',
+    cuteIcon: 'heart'
   },
   {
     id: 'reading',
     name: 'Lectura',
     icon: 'book-outline',
-    color: '#3F51B5',
-    description: 'Diario de lectura y seguimiento de libros'
+    color: colors.info,
+    description: 'Diario de lectura y seguimiento de libros',
+    cuteIcon: 'star'
   },
   {
     id: 'movies',
     name: 'Películas',
     icon: 'film-outline',
-    color: '#FF5722',
-    description: 'Diario de películas y seguimiento de sagas'
+    color: colors.warning,
+    description: 'Diario de películas y seguimiento de sagas',
+    cuteIcon: 'sparkle'
   }
 ];
 
 const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeSections }) => {
-  if (!visible) return null;
+  console.log('Sidebar renderizado, visible:', visible, 'selectedCategory:', selectedCategory);
+  if (!visible) {
+    console.log('Sidebar no visible, no renderizando');
+    return null;
+  }
 
-  // Filtrar categorías basándose en las secciones activas
-  const filteredCategories = CATEGORIES.filter(category => 
-    activeSections && activeSections[category.id] !== false
-  );
+  // Mostrar todas las categorías por ahora
+  const filteredCategories = CATEGORIES;
 
+  console.log('Renderizando sidebar con overlay');
   return (
     <View style={styles.overlay}>
       <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
       <View style={styles.sidebar}>
+        {/* Iconos decorativos removidos para evitar conflictos */}
+        
         <View style={styles.header}>
-          <Text style={styles.title}>Categorías</Text>
+          <CuteTitle style={styles.title}>Categorías</CuteTitle>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Icon name="close" size={24} color="#6c757d" />
+            <Icon name="close" size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -138,21 +160,21 @@ const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeS
             >
               <View style={styles.categoryContent}>
                 <View style={[styles.iconContainer, { backgroundColor: category.color }]}>
-                  <Icon name={category.icon} size={24} color="#FFFFFF" />
+                  <Icon name={category.icon} size={24} color={colors.surface} />
                 </View>
                 <View style={styles.categoryInfo}>
-                  <Text style={[
+                  <CuteText style={[
                     styles.categoryName,
                     selectedCategory === category.id && styles.selectedCategoryName
                   ]}>
                     {category.name}
-                  </Text>
-                  <Text style={styles.categoryDescription}>
+                  </CuteText>
+                  <CuteText style={styles.categoryDescription}>
                     {category.description}
-                  </Text>
+                  </CuteText>
                 </View>
                 {selectedCategory === category.id && (
-                  <Icon name="checkmark-circle" size={20} color={category.color} />
+                  <CuteElement type={category.cuteIcon} size={20} color={category.color} />
                 )}
               </View>
             </TouchableOpacity>
@@ -161,12 +183,14 @@ const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeS
 
         <View style={styles.footer}>
           <View style={styles.footerInfo}>
-            <Icon name="information-circle-outline" size={16} color="#6c757d" />
-            <Text style={styles.footerText}>
+            <CuteElement type="sparkle" size={16} />
+            <CuteText style={styles.footerText}>
               Cada categoría tiene su propia agenda
-            </Text>
+            </CuteText>
           </View>
         </View>
+        
+        {/* Iconos decorativos removidos para evitar conflictos */}
       </View>
     </View>
   );
@@ -179,7 +203,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1000,
+    zIndex: 9999,
     flexDirection: 'row',
   },
   backdrop: {
@@ -188,93 +212,96 @@ const styles = StyleSheet.create({
   },
   sidebar: {
     width: 320,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: -2,
-      height: 0,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: colors.surface,
+    ...shadows.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 40,
+    padding: spacing.md,
+    paddingTop: spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: colors.textTertiary,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2d4150',
+    fontSize: typography.h4,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+    lineHeight: typography.lineHeight.tight * typography.h4,
+    letterSpacing: typography.letterSpacing.tight,
   },
   closeButton: {
-    padding: 4,
+    padding: spacing.xs,
   },
   categoriesContainer: {
     flex: 1,
-    padding: 16,
+    padding: spacing.md,
   },
   categoryItem: {
-    marginBottom: 8,
-    borderRadius: 12,
-    backgroundColor: '#f8f9fa',
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: 'transparent',
+    ...shadows.sm,
   },
   selectedCategory: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#007AFF',
+    backgroundColor: colors.lavender,
+    borderColor: colors.primary,
   },
   categoryContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.md,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing.md,
+    ...shadows.sm,
   },
   categoryInfo: {
     flex: 1,
   },
   categoryName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2d4150',
-    marginBottom: 4,
+    fontSize: typography.h6,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+    lineHeight: typography.lineHeight.normal * typography.h6,
+    letterSpacing: typography.letterSpacing.normal,
   },
   selectedCategoryName: {
-    color: '#007AFF',
+    color: colors.primary,
   },
   categoryDescription: {
-    fontSize: 12,
-    color: '#6c757d',
-    lineHeight: 16,
+    fontSize: typography.caption,
+    color: colors.textSecondary,
+    lineHeight: typography.lineHeight.normal * typography.caption,
+    letterSpacing: typography.letterSpacing.normal,
   },
   footer: {
-    padding: 20,
+    padding: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: colors.textTertiary,
   },
   footerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
-    color: '#6c757d',
-    marginLeft: 8,
+    fontSize: typography.caption,
+    color: colors.textSecondary,
+    marginLeft: spacing.sm,
     flex: 1,
+    lineHeight: typography.lineHeight.normal * typography.caption,
+    letterSpacing: typography.letterSpacing.normal,
   },
+  // decorativeBackground y gradientBackground removidos para evitar conflictos
 });
 
 export default Sidebar;

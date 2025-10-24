@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteEvent }) => {
+const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteEvent, onUpdateSection }) => {
   const [activeSection, setActiveSection] = useState('weekly');
   const [projectData, setProjectData] = useState({
     title: '',
@@ -79,12 +79,10 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
   const goalsColors = ['#28a745', '#20c997', '#ffc107', '#dc3545', '#6c757d'];
 
   const sections = [
-    { id: 'weekly', name: 'Tareas Semanales', icon: 'calendar-outline' },
-    { id: 'daily', name: 'Tareas Diarias', icon: 'today-outline' },
+    { id: 'daily', name: 'Tareas Diarias', icon: 'sunny-outline' },
+    { id: 'weekly', name: 'Tareas Semanales', icon: 'leaf-outline' },
     { id: 'projects', name: 'Proyectos', icon: 'folder-outline' },
-    { id: 'priorities', name: 'Prioridades', icon: 'flag-outline' },
-    { id: 'focus', name: 'Enfoque', icon: 'bulb-outline' },
-    { id: 'goals', name: 'Objetivos', icon: 'trophy-outline' }
+    { id: 'goals', name: 'Objetivos', icon: 'flower-outline' }
   ];
 
   const addTeammate = () => {
@@ -630,30 +628,51 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
 
   const renderSectionTabs = () => (
     <View style={styles.tabsContainer}>
-      {sections.map(section => (
-        <TouchableOpacity
-          key={section.id}
-          style={[
-            styles.tab,
-            activeSection === section.id && styles.activeTab
-          ]}
-          onPress={() => setActiveSection(section.id)}
-        >
-          <Icon 
-            name={section.icon} 
-            size={20} 
-            color={activeSection === section.id ? '#FFFFFF' : '#6c757d'} 
-          />
-        </TouchableOpacity>
-      ))}
+      <View style={styles.tabsWrapper}>
+        {sections.map((section) => (
+          <TouchableOpacity
+            key={section.id}
+            style={[
+              styles.tab,
+              activeSection === section.id && styles.activeTab
+            ]}
+            onPress={() => setActiveSection(section.id)}
+          >
+            <View style={[styles.tabContent, {
+              backgroundColor: activeSection === section.id ? '#D4A574' : 'transparent',
+              borderColor: activeSection === section.id ? '#D4A574' : '#B8860B',
+            }]}>
+              <Icon 
+                name={section.icon} 
+                size={20} 
+                color={activeSection === section.id ? '#FFFFFF' : '#8B4513'} 
+              />
+              {activeSection === section.id && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 
   const renderWeeklyTasks = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>LISTA DE TAREAS SEMANALES</Text>
-        <Icon name="star" size={16} color="#FF6B6B" />
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/trabajo.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Tareas Semanales</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza tus tareas de trabajo semanalmente
+          </Text>
+        </View>
       </View>
 
       {/* Caja de texto para capturar nueva tarea */}
@@ -776,10 +795,19 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
     return (
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tareas Diarias</Text>
-          <Text style={styles.sectionSubtitle}>
-            Organiza tus tareas por fecha y hora
-          </Text>
+          <View style={styles.headerDecoration}>
+            <Image 
+              source={require('../../android/app/src/main/assets/trabajo.png')}
+              style={styles.mascotImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.headerContent}>
+            <Text style={styles.sectionTitle}>Tareas Diarias</Text>
+            <Text style={styles.sectionSubtitle}>
+              Organiza tus tareas por fecha y hora
+            </Text>
+          </View>
         </View>
         
         <View style={styles.sectionContent}>
@@ -878,149 +906,361 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
   const renderProjectStrategy = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Estrategia de Proyecto</Text>
-        <Text style={styles.sectionSubtitle}>
-          Define los objetivos y estructura de tu proyecto
-        </Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/trabajo.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Gestión de Proyectos</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza y supervisa tus proyectos profesionales
+          </Text>
+        </View>
       </View>
       
       <View style={styles.sectionContent}>
-        <View style={styles.projectForm}>
-        <View style={styles.inputRow}>
-          <Text style={styles.label}>TÍTULO DEL PROYECTO:</Text>
-          <TextInput
-            style={styles.textInput}
-            value={projectData.title}
-            onChangeText={(value) => setProjectData(prev => ({ ...prev, title: value }))}
-            placeholder="Nombre del proyecto"
-          />
-        </View>
-        
-        <View style={styles.inputRow}>
-          <Text style={styles.label}>OBJETIVO DEL PROYECTO:</Text>
-          <TextInput
-            style={[styles.textInput, styles.textArea]}
-            value={projectData.aim}
-            onChangeText={(value) => setProjectData(prev => ({ ...prev, aim: value }))}
-            placeholder="Breve introducción del proyecto"
-            multiline
-            numberOfLines={3}
-          />
-        </View>
-        
-        <View style={styles.inputRow}>
-          <Text style={styles.label}>FECHA DE INICIO:</Text>
-          <TextInput
-            style={styles.textInput}
-            value={projectData.startDate}
-            onChangeText={(value) => setProjectData(prev => ({ ...prev, startDate: value }))}
-            placeholder="DD/MM/AAAA"
-          />
-          <Text style={styles.label}>FECHA LÍMITE:</Text>
-          <TextInput
-            style={styles.textInput}
-            value={projectData.deadline}
-            onChangeText={(value) => setProjectData(prev => ({ ...prev, deadline: value }))}
-            placeholder="DD/MM/AAAA"
-          />
-        </View>
-        
-        
-        {/* Campo para agregar nueva meta */}
-        <View style={styles.addTaskContainer}>
-          <TextInput
-            style={styles.newTaskInput}
-            placeholder="Escribe una nueva meta..."
-            value={newAchievementText}
-            onChangeText={setNewAchievementText}
-            onSubmitEditing={addAchievement}
-            returnKeyType="done"
-          />
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => {
-              Alert.alert('Información', 'Primero agrega la meta, luego podrás asignar fecha y persona');
-            }}
-          >
-            <Icon name="calendar-outline" size={20} color="#6c757d" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => {
-              Alert.alert('Información', 'Primero agrega la meta, luego podrás asignar fecha y persona');
-            }}
-          >
-            <Icon name="person-outline" size={20} color="#6c757d" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={addAchievement} style={styles.addTaskButton}>
-            <Icon name="add" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+        {/* Dashboard de Proyectos */}
+        <View style={styles.projectDashboard}>
+          <View style={styles.dashboardHeader}>
+            <Text style={styles.dashboardTitle}>Panel de Control</Text>
+            <TouchableOpacity style={styles.newProjectButton}>
+              <Icon name="add-circle" size={20} color="#FFFFFF" />
+              <Text style={styles.newProjectButtonText}>Nuevo Proyecto</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Estadísticas del Dashboard */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                <Icon name="folder" size={24} color="#D4A574" />
+              </View>
+              <View style={styles.statContent}>
+                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statLabel}>Proyectos Activos</Text>
+              </View>
+            </View>
+            
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                <Icon name="checkmark-circle" size={24} color="#D4A574" />
+              </View>
+              <View style={styles.statContent}>
+                <Text style={styles.statNumber}>8</Text>
+                <Text style={styles.statLabel}>Completados</Text>
+              </View>
+            </View>
+            
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                <Icon name="time" size={24} color="#D4A574" />
+              </View>
+              <View style={styles.statContent}>
+                <Text style={styles.statNumber}>3</Text>
+                <Text style={styles.statLabel}>En Retraso</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* Lista de metas */}
-        <View style={styles.tasksList}>
-          {projectData.achievements.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Icon name="flag-outline" size={48} color="#dee2e6" />
-              <Text style={styles.emptyText}>No hay metas agregadas</Text>
-              <Text style={styles.emptySubtext}>Escribe una meta arriba y toca el botón +</Text>
+        {/* Lista de Proyectos */}
+        <View style={styles.projectsSection}>
+          <View style={styles.sectionTitleBar}>
+            <Text style={styles.sectionTitleText}>Mis Proyectos</Text>
+            <View style={styles.filterButtons}>
+              <TouchableOpacity style={[styles.filterButton, styles.activeFilter]}>
+                <Text style={styles.filterButtonText}>Todos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterButton}>
+                <Text style={styles.filterButtonText}>Activos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterButton}>
+                <Text style={styles.filterButtonText}>Completados</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            projectData.achievements.map((achievement, index) => (
-              <View key={index} style={styles.taskListItem}>
-                <View style={styles.taskContent}>
-                  <Text style={styles.taskText}>
-                    {achievement.name}
-                  </Text>
-                  <View style={styles.taskMetaInfo}>
-                    {achievement.dueDate && (
-                      <Text style={styles.taskMeta}>
-                        📅 {achievement.dueDate}
-                      </Text>
-                    )}
-                    {achievement.assignedPerson && (
-                      <Text style={styles.taskMeta}>
-                        👤 {achievement.assignedPerson}
-                        {achievement.position && ` - ${achievement.position}`}
-                      </Text>
-                    )}
+          </View>
+
+          {/* Proyectos Lista */}
+          <View style={styles.projectsList}>
+            {/* Proyecto 1 */}
+            <View style={styles.projectCard}>
+              <View style={styles.projectHeader}>
+                <View style={styles.projectInfo}>
+                  <Text style={styles.projectName}>Sistema de Gestión CRM</Text>
+                  <Text style={styles.projectClient}>Cliente: TechCorp Solutions</Text>
+                </View>
+                <View style={styles.projectStatus}>
+                  <View style={[styles.statusBadge, styles.statusActive]}>
+                    <Text style={styles.statusText}>En Progreso</Text>
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.projectDetails}>
+                <View style={styles.projectMeta}>
+                  <View style={styles.metaItem}>
+                    <Icon name="calendar" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Inicio: 15 Ene 2024</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Icon name="flag" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Entrega: 30 Mar 2024</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Icon name="people" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Equipo: 5 personas</Text>
                   </View>
                 </View>
                 
-                <View style={styles.taskActions}>
-                  <TouchableOpacity
-                    onPress={() => openDateModal(index)}
-                    style={[styles.notesButton, achievement.dueDate && styles.notesButtonActive]}
-                  >
-                    <Icon 
-                      name="calendar-outline" 
-                      size={18} 
-                      color={achievement.dueDate ? "#007AFF" : "#6c757d"} 
-                    />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    onPress={() => openPersonModal(index)}
-                    style={[styles.notesButton, achievement.assignedPerson && styles.notesButtonActive]}
-                  >
-                    <Icon 
-                      name="person-outline" 
-                      size={18} 
-                      color={achievement.assignedPerson ? "#28a745" : "#6c757d"} 
-                    />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    onPress={() => removeAchievement(index)}
-                    style={styles.taskDeleteButton}
-                  >
-                    <Icon name="trash-outline" size={18} color="#dc3545" />
-                  </TouchableOpacity>
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Progreso</Text>
+                    <Text style={styles.progressPercentage}>65%</Text>
+                  </View>
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: '65%' }]} />
+                  </View>
                 </View>
               </View>
-            ))
-          )}
+              
+              <View style={styles.projectActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="eye" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Ver</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="list" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Metas</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="create" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Editar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="share" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Compartir</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Proyecto 2 */}
+            <View style={styles.projectCard}>
+              <View style={styles.projectHeader}>
+                <View style={styles.projectInfo}>
+                  <Text style={styles.projectName}>App Móvil E-commerce</Text>
+                  <Text style={styles.projectClient}>Cliente: RetailMax</Text>
+                </View>
+                <View style={styles.projectStatus}>
+                  <View style={[styles.statusBadge, styles.statusCompleted]}>
+                    <Text style={styles.statusText}>Completado</Text>
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.projectDetails}>
+                <View style={styles.projectMeta}>
+                  <View style={styles.metaItem}>
+                    <Icon name="calendar" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Inicio: 01 Nov 2023</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Icon name="flag" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Entrega: 15 Dic 2023</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Icon name="people" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Equipo: 3 personas</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Progreso</Text>
+                    <Text style={styles.progressPercentage}>100%</Text>
+                  </View>
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: '100%' }]} />
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.projectActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="eye" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Ver</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="list" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Metas</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="download" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Reporte</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="star" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Evaluar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Proyecto 3 */}
+            <View style={styles.projectCard}>
+              <View style={styles.projectHeader}>
+                <View style={styles.projectInfo}>
+                  <Text style={styles.projectName}>Rediseño Web Corporativo</Text>
+                  <Text style={styles.projectClient}>Cliente: InnovateLab</Text>
+                </View>
+                <View style={styles.projectStatus}>
+                  <View style={[styles.statusBadge, styles.statusDelayed]}>
+                    <Text style={styles.statusText}>En Retraso</Text>
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.projectDetails}>
+                <View style={styles.projectMeta}>
+                  <View style={styles.metaItem}>
+                    <Icon name="calendar" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Inicio: 10 Dic 2023</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Icon name="flag" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Entrega: 20 Ene 2024</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Icon name="people" size={14} color="#8B4513" />
+                    <Text style={styles.metaText}>Equipo: 4 personas</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Progreso</Text>
+                    <Text style={styles.progressPercentage}>40%</Text>
+                  </View>
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: '40%' }]} />
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.projectActions}>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="eye" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Ver</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="list" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Metas</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="create" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Editar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Icon name="warning" size={16} color="#8B4513" />
+                  <Text style={styles.actionText}>Urgente</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         </View>
+
+        {/* Sección de Metas del Proyecto */}
+        <View style={styles.goalsSection}>
+          <View style={styles.goalsHeader}>
+            <Text style={styles.goalsTitle}>Metas del Proyecto</Text>
+            <TouchableOpacity style={styles.addGoalButton}>
+              <Icon name="add" size={16} color="#FFFFFF" />
+              <Text style={styles.addGoalButtonText}>Nueva Meta</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.goalsList}>
+            {/* Meta 1 */}
+            <View style={styles.goalItem}>
+              <TouchableOpacity style={styles.goalCheckbox}>
+                <Icon name="checkmark" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.goalContent}>
+                <Text style={styles.goalText}>Implementar sistema de autenticación</Text>
+                <Text style={styles.goalDeadline}>Fecha límite: 15 Feb 2024</Text>
+              </View>
+              <View style={styles.goalPriority}>
+                <View style={[styles.priorityBadge, styles.priorityHigh]}>
+                  <Text style={styles.priorityText}>Alta</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Meta 2 */}
+            <View style={styles.goalItem}>
+              <TouchableOpacity style={[styles.goalCheckbox, styles.goalCheckboxCompleted]}>
+                <Icon name="checkmark" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.goalContent}>
+                <Text style={[styles.goalText, styles.goalTextCompleted]}>Diseñar interfaz de usuario</Text>
+                <Text style={styles.goalDeadline}>Completado: 10 Ene 2024</Text>
+              </View>
+              <View style={styles.goalPriority}>
+                <View style={[styles.priorityBadge, styles.priorityMedium]}>
+                  <Text style={styles.priorityText}>Media</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Meta 3 */}
+            <View style={styles.goalItem}>
+              <TouchableOpacity style={styles.goalCheckbox}>
+                <Icon name="checkmark" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.goalContent}>
+                <Text style={styles.goalText}>Configurar base de datos</Text>
+                <Text style={styles.goalDeadline}>Fecha límite: 20 Feb 2024</Text>
+              </View>
+              <View style={styles.goalPriority}>
+                <View style={[styles.priorityBadge, styles.priorityLow]}>
+                  <Text style={styles.priorityText}>Baja</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Meta 4 */}
+            <View style={styles.goalItem}>
+              <TouchableOpacity style={styles.goalCheckbox}>
+                <Icon name="checkmark" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.goalContent}>
+                <Text style={styles.goalText}>Realizar pruebas de integración</Text>
+                <Text style={styles.goalDeadline}>Fecha límite: 25 Feb 2024</Text>
+              </View>
+              <View style={styles.goalPriority}>
+                <View style={[styles.priorityBadge, styles.priorityHigh]}>
+                  <Text style={styles.priorityText}>Alta</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Meta 5 */}
+            <View style={styles.goalItem}>
+              <TouchableOpacity style={[styles.goalCheckbox, styles.goalCheckboxCompleted]}>
+                <Icon name="checkmark" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.goalContent}>
+                <Text style={[styles.goalText, styles.goalTextCompleted]}>Documentar API</Text>
+                <Text style={styles.goalDeadline}>Completado: 5 Ene 2024</Text>
+              </View>
+              <View style={styles.goalPriority}>
+                <View style={[styles.priorityBadge, styles.priorityMedium]}>
+                  <Text style={styles.priorityText}>Media</Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
       </View>
     </View>
@@ -1029,10 +1269,19 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
   const renderProjects = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Proyectos</Text>
-        <Text style={styles.sectionSubtitle}>
-          Gestiona y organiza tus proyectos de trabajo
-        </Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/trabajo.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Proyectos</Text>
+          <Text style={styles.sectionSubtitle}>
+            Gestiona y organiza tus proyectos de trabajo
+          </Text>
+        </View>
       </View>
       
       <View style={styles.sectionContent}>
@@ -1346,10 +1595,19 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
   const renderGoals = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Objetivos</Text>
-        <Text style={styles.sectionSubtitle}>
-          Define y gestiona tus objetivos de trabajo
-        </Text>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/trabajo.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Objetivos</Text>
+          <Text style={styles.sectionSubtitle}>
+            Define y gestiona tus objetivos de trabajo
+          </Text>
+        </View>
       </View>
       
       <View style={styles.sectionContent}>
@@ -1987,33 +2245,81 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FDF6E3', // Crema desierto
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    marginBottom: 16,
+    borderRadius: 20,
+    marginHorizontal: 4,
+    shadowColor: '#B8860B', // Dorado desierto
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
+  },
+  tabsWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#FDF6E3', // Crema desierto
+    padding: 8,
+    width: '100%',
   },
   tab: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
+    flex: 1,
     alignItems: 'center',
-    marginRight: 8,
-    borderRadius: 12,
-    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    marginHorizontal: 4,
   },
   activeTab: {
-    backgroundColor: '#FF6B6B',
+    shadowColor: '#D4A574', // Dorado claro
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  tabText: {
-    fontSize: 10,
-    color: '#6c757d',
-    marginLeft: 4,
-    fontWeight: '500',
+  tabContent: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    position: 'relative',
+    shadowColor: '#B8860B', // Dorado desierto
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  activeTabText: {
-    color: '#FFFFFF',
+  activeIndicator: {
+    position: 'absolute',
+    bottom: -8,
+    left: '50%',
+    marginLeft: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#8B4513', // Marrón desierto
+    shadowColor: '#8B4513',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     flex: 1,
@@ -2022,36 +2328,51 @@ const styles = StyleSheet.create({
     paddingBottom: 40, // Increased bottom padding to prevent button cutoff
   },
   section: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 0,
-    marginBottom: 20,
-    marginHorizontal: 0, // No horizontal margin to span full width
-    shadowColor: '#000',
+    backgroundColor: '#FDF6E3', // Crema desierto
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    marginHorizontal: 4, // Reduced margin to make wider
+    shadowColor: '#B8860B', // Dorado desierto
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 6,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
     elevation: 8,
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
   },
   sectionHeader: {
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
-    padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    backgroundColor: '#8B4513', // Marrón desierto
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     marginBottom: 0,
     marginHorizontal: 0,
-    shadowColor: '#FF6B6B',
+    shadowColor: '#8B4513',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+    borderBottomWidth: 3,
+    borderBottomColor: '#D4A574', // Dorado claro
+  },
+  headerDecoration: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  mascotImage: {
+    width: 60,
+    height: 60,
   },
   sectionTitle: {
     fontSize: 18,
@@ -2067,19 +2388,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sectionContent: {
-    padding: 16,
+    padding: 20,
+    backgroundColor: '#F8F5F0', // Crema más clara
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   addProjectButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#D4A574', // Dorado desierto
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
     marginTop: 16,
     marginBottom: 20,
-    shadowColor: '#FF6B6B',
+    shadowColor: '#B8860B', // Dorado desierto
     shadowOffset: {
       width: 0,
       height: 4,
@@ -2087,6 +2411,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+    borderWidth: 2,
+    borderColor: '#8B4513', // Marrón desierto
   },
   addProjectButtonText: {
     color: '#FFFFFF',
@@ -2396,12 +2722,22 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   addTaskButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#D4A574', // Dorado desierto
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#8B4513', // Marrón desierto
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tasksList: {
     gap: 12,
@@ -2410,43 +2746,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 40,
     paddingHorizontal: 20,
+    backgroundColor: '#FDF6E3', // Crema desierto
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
+    borderStyle: 'dashed',
+    marginVertical: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#8B4513', // Marrón desierto
     marginTop: 12,
     marginBottom: 4,
+    fontWeight: '600',
+    fontStyle: 'italic',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#adb5bd',
+    color: '#B8860B', // Dorado desierto
     textAlign: 'center',
   },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: '#F8F5F0', // Crema más clara
+    borderRadius: 12,
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
+    shadowColor: '#B8860B',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 8,
   },
   taskNumber: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#8B4513', // Marrón desierto
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   taskNumberText: {
     fontSize: 12,
@@ -2497,13 +2852,21 @@ const styles = StyleSheet.create({
   newTaskInput: {
     flex: 1,
     fontSize: 14,
-    color: '#495057',
+    color: '#8B4513', // Marrón desierto
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
     borderRadius: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FDF6E3', // Crema desierto
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   dateTimeContainer: {
     flexDirection: 'row',
@@ -2513,11 +2876,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    backgroundColor: '#F8F5F0', // Crema más clara
+    borderWidth: 2,
+    borderColor: '#D4A574', // Dorado claro
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   taskTime: {
     fontSize: 11,
@@ -3540,6 +3911,409 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2d4150',
     marginBottom: 4,
+  },
+  // Nuevos estilos para la UI de proyectos
+  projectDashboard: {
+    backgroundColor: '#F8F5F0',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dashboardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  dashboardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#8B4513',
+  },
+  newProjectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D4A574',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 8,
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  newProjectButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statIcon: {
+    marginBottom: 8,
+  },
+  statContent: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#8B4513',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#8B4513',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  projectsSection: {
+    backgroundColor: '#F8F5F0',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sectionTitleBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  sectionTitleText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#8B4513',
+  },
+  filterButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D4A574',
+  },
+  activeFilter: {
+    backgroundColor: '#D4A574',
+  },
+  filterButtonText: {
+    fontSize: 12,
+    color: '#8B4513',
+    fontWeight: '500',
+  },
+  projectsList: {
+    gap: 16,
+  },
+  projectCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  projectHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  projectInfo: {
+    flex: 1,
+  },
+  projectName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#8B4513',
+    marginBottom: 4,
+  },
+  projectClient: {
+    fontSize: 12,
+    color: '#8B4513',
+    opacity: 0.7,
+  },
+  projectStatus: {
+    marginLeft: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusActive: {
+    backgroundColor: '#E3F2FD',
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  statusCompleted: {
+    backgroundColor: '#E8F5E8',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  statusDelayed: {
+    backgroundColor: '#FFEBEE',
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8B4513',
+  },
+  projectDetails: {
+    marginBottom: 16,
+  },
+  projectMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  metaText: {
+    fontSize: 11,
+    color: '#8B4513',
+    fontWeight: '500',
+  },
+  progressContainer: {
+    marginTop: 8,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#8B4513',
+    fontWeight: '500',
+  },
+  progressPercentage: {
+    fontSize: 12,
+    color: '#8B4513',
+    fontWeight: 'bold',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#D4A574',
+    borderRadius: 3,
+  },
+  projectActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 8,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#F8F5F0',
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    gap: 4,
+  },
+  actionText: {
+    fontSize: 11,
+    color: '#8B4513',
+    fontWeight: '500',
+  },
+  // Estilos para la sección de metas
+  goalsSection: {
+    backgroundColor: '#F8F5F0',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    borderWidth: 2,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  goalsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  goalsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#8B4513',
+  },
+  addGoalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D4A574',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 6,
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addGoalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  goalsList: {
+    gap: 12,
+  },
+  goalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  goalCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#8B4513',
+  },
+  goalCheckboxCompleted: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  goalContent: {
+    flex: 1,
+  },
+  goalText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B4513',
+    marginBottom: 4,
+  },
+  goalTextCompleted: {
+    textDecorationLine: 'line-through',
+    opacity: 0.6,
+  },
+  goalDeadline: {
+    fontSize: 12,
+    color: '#8B4513',
+    opacity: 0.7,
+  },
+  goalPriority: {
+    marginLeft: 12,
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  priorityHigh: {
+    backgroundColor: '#FFEBEE',
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  priorityMedium: {
+    backgroundColor: '#FFF3E0',
+    borderWidth: 1,
+    borderColor: '#FF9800',
+  },
+  priorityLow: {
+    backgroundColor: '#E8F5E8',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  priorityText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8B4513',
   },
   personPreviewPosition: {
     fontSize: 14,
