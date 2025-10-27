@@ -17,6 +17,7 @@ const SubsectionTabs = ({
   showIcons = true,
   showLabels = true,
   horizontal = true,
+  variant = 'default', // default, elegant
   style,
   tabStyle,
   activeTabStyle,
@@ -90,6 +91,7 @@ const SubsectionTabs = ({
         fontSize: 12,
         iconSize: 16,
         gap: 4,
+        tabSize: 40,
       },
       medium: {
         padding: 12,
@@ -98,6 +100,7 @@ const SubsectionTabs = ({
         fontSize: 14,
         iconSize: 20,
         gap: 8,
+        tabSize: 50,
       },
       large: {
         padding: 16,
@@ -106,6 +109,7 @@ const SubsectionTabs = ({
         fontSize: 16,
         iconSize: 24,
         gap: 12,
+        tabSize: 60,
       },
     };
     return sizes[size] || sizes.medium;
@@ -134,9 +138,31 @@ const SubsectionTabs = ({
   const renderTab = (section) => {
     const isActive = activeSection === section.id;
     
+    // Estilos para variante elegante
+    const elegantTabStyle = variant === 'elegant' ? {
+      width: sizeStyles.tabSize || 50,
+      height: sizeStyles.tabSize || 50,
+      borderRadius: sizeStyles.tabSize ? sizeStyles.tabSize / 2 : 25,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: sizeStyles.gap / 2,
+      borderWidth: 1,
+      borderColor: isActive ? themeStyles.activeTabBackground : themeStyles.borderColor,
+      backgroundColor: isActive ? themeStyles.activeTabBackground : themeStyles.tabBackground,
+      shadowColor: isActive ? themeStyles.borderColor : 'transparent',
+      shadowOffset: {
+        width: 0,
+        height: isActive ? 2 : 0,
+      },
+      shadowOpacity: isActive ? 0.3 : 0,
+      shadowRadius: isActive ? 4 : 0,
+      elevation: isActive ? 3 : 0,
+      flexDirection: 'column', // Cambiar a columna para centrar el icono
+    } : {};
+
     const tabStyleFinal = [
-      subsectionTabsStyles.tab,
-      {
+      variant === 'elegant' ? {} : subsectionTabsStyles.tab, // Solo aplicar estilos base si no es elegante
+      variant === 'default' ? {
         backgroundColor: isActive ? themeStyles.activeTabBackground : themeStyles.tabBackground,
         paddingHorizontal: sizeStyles.tabPadding,
         paddingVertical: sizeStyles.tabPadding,
@@ -144,7 +170,8 @@ const SubsectionTabs = ({
         marginHorizontal: sizeStyles.gap / 2,
         borderWidth: 1,
         borderColor: isActive ? themeStyles.borderColor : 'transparent',
-      },
+      } : {},
+      elegantTabStyle,
       tabStyle,
       isActive && activeTabStyle,
     ];
@@ -154,7 +181,7 @@ const SubsectionTabs = ({
       {
         fontSize: sizeStyles.fontSize,
         color: isActive ? themeStyles.activeTabTextColor : themeStyles.tabTextColor,
-        marginLeft: showIcons ? sizeStyles.gap : 0,
+        marginLeft: showIcons && variant === 'default' ? sizeStyles.gap : 0,
       },
       tabTextStyle,
       isActive && activeTabTextStyle,
@@ -182,10 +209,18 @@ const SubsectionTabs = ({
             style={iconStyleFinal}
           />
         )}
-        {showLabels && (
+        {showLabels && variant === 'default' && (
           <Text style={tabTextStyleFinal}>
             {section.name}
           </Text>
+        )}
+        {isActive && variant === 'elegant' && (
+          <View style={[
+            subsectionTabsStyles.activeIndicator,
+            {
+              backgroundColor: themeStyles.activeTabBackground,
+            }
+          ]} />
         )}
       </TouchableOpacity>
     );

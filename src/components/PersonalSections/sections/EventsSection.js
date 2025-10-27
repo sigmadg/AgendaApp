@@ -140,30 +140,32 @@ const EventsSection = ({
 
       {/* Resumen de eventos */}
       <View style={eventsSectionStyles.summaryContainer}>
-        <Card
-          title="Hoy"
-          subtitle={`${todayEvents.length} eventos`}
-          icon="today-outline"
-          theme={theme}
-          size="small"
-          style={eventsSectionStyles.summaryCard}
-        />
-        <Card
-          title="Próximos"
-          subtitle={`${upcomingEvents.length} eventos`}
-          icon="time-outline"
-          theme={theme}
-          size="small"
-          style={eventsSectionStyles.summaryCard}
-        />
-        <Card
-          title="Total"
-          subtitle={`${todayEvents.length} eventos`}
-          icon="calendar-outline"
-          theme={theme}
-          size="small"
-          style={eventsSectionStyles.summaryCard}
-        />
+        <View style={[eventsSectionStyles.summaryCard, eventsSectionStyles.todayCard]}>
+          <View style={[eventsSectionStyles.cardIconContainer, { backgroundColor: 'rgba(26, 61, 10, 0.15)' }]}>
+            <Icon name="today-outline" size={20} color="#1A3D0A" />
+          </View>
+          <Text style={[eventsSectionStyles.cardTitle, { color: '#1A3D0A' }]}>Hoy</Text>
+          <Text style={[eventsSectionStyles.cardNumber, { color: '#1A3D0A' }]}>{todayEvents.length}</Text>
+          <Text style={[eventsSectionStyles.cardSubtitle, { color: '#1A3D0A' }]}>eventos</Text>
+        </View>
+        
+        <View style={[eventsSectionStyles.summaryCard, eventsSectionStyles.upcomingCard]}>
+          <View style={[eventsSectionStyles.cardIconContainer, { backgroundColor: 'rgba(15, 26, 74, 0.15)' }]}>
+            <Icon name="time-outline" size={20} color="#0F1A4A" />
+          </View>
+          <Text style={[eventsSectionStyles.cardTitle, { color: '#0F1A4A' }]}>Próximos</Text>
+          <Text style={[eventsSectionStyles.cardNumber, { color: '#0F1A4A' }]}>{upcomingEvents.length}</Text>
+          <Text style={[eventsSectionStyles.cardSubtitle, { color: '#0F1A4A' }]}>eventos</Text>
+        </View>
+        
+        <View style={[eventsSectionStyles.summaryCard, eventsSectionStyles.totalCard]}>
+          <View style={[eventsSectionStyles.cardIconContainer, { backgroundColor: 'rgba(93, 46, 10, 0.15)' }]}>
+            <Icon name="calendar-outline" size={20} color="#5D2E0A" />
+          </View>
+          <Text style={[eventsSectionStyles.cardTitle, { color: '#5D2E0A' }]}>Total</Text>
+          <Text style={[eventsSectionStyles.cardNumber, { color: '#5D2E0A' }]}>{todayEvents.length}</Text>
+          <Text style={[eventsSectionStyles.cardSubtitle, { color: '#5D2E0A' }]}>eventos</Text>
+        </View>
       </View>
 
       {/* Eventos de hoy */}

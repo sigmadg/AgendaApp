@@ -30,10 +30,11 @@ export const subsectionTabsStyles = StyleSheet.create({
   },
   activeIndicator: {
     position: 'absolute',
-    bottom: -2,
-    left: 0,
-    right: 0,
-    height: 3,
-    borderRadius: 2,
+    bottom: -8,
+    left: '50%',
+    marginLeft: -3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 });

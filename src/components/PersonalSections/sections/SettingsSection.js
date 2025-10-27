@@ -338,24 +338,35 @@ const SettingsSection = ({
 
         {/* Acciones de configuración */}
         <View style={settingsSectionStyles.actionsContainer}>
-          <Button
-            title="Restablecer Configuración"
+          <TouchableOpacity
+            style={[settingsSectionStyles.actionButton, settingsSectionStyles.resetButton]}
             onPress={handleResetSettings}
-            variant="outline"
-            size="medium"
-            theme={theme}
-            icon="refresh-outline"
-            style={settingsSectionStyles.actionButton}
-          />
-          <Button
-            title="Exportar Configuración"
+            activeOpacity={0.8}
+          >
+            <View style={[settingsSectionStyles.buttonIconContainer, { backgroundColor: '#F59E0B' }]}>
+              <Icon name="refresh-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={settingsSectionStyles.buttonContent}>
+              <Text style={settingsSectionStyles.buttonTitle}>Restablecer Configuración</Text>
+              <Text style={settingsSectionStyles.buttonSubtitle}>Volver a valores predeterminados</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#F59E0B" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[settingsSectionStyles.actionButton, settingsSectionStyles.exportButton]}
             onPress={() => Alert.alert('Info', 'Funcionalidad en desarrollo')}
-            variant="outline"
-            size="medium"
-            theme={theme}
-            icon="download-outline"
-            style={settingsSectionStyles.actionButton}
-          />
+            activeOpacity={0.8}
+          >
+            <View style={[settingsSectionStyles.buttonIconContainer, { backgroundColor: '#3B82F6' }]}>
+              <Icon name="download-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={settingsSectionStyles.buttonContent}>
+              <Text style={settingsSectionStyles.buttonTitle}>Exportar Configuración</Text>
+              <Text style={settingsSectionStyles.buttonSubtitle}>Guardar configuración actual</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#3B82F6" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
 

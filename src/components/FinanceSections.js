@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { SubsectionTabs } from './shared';
 
 const FinanceSections = () => {
   const [activeSection, setActiveSection] = useState('budget-tracker');
@@ -111,28 +112,6 @@ const FinanceSections = () => {
     { id: 'shopping-list', name: 'Lista de Compras', icon: 'list-outline' }
   ];
 
-  const renderSectionTabs = () => (
-    <View style={styles.tabsContainer}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
-        {sections.map((section) => (
-          <TouchableOpacity
-            key={section.id}
-            style={[
-              styles.tab,
-              activeSection === section.id && styles.activeTab
-            ]}
-            onPress={() => setActiveSection(section.id)}
-          >
-            <Icon 
-              name={section.icon} 
-              size={18} 
-              color={activeSection === section.id ? '#FFFFFF' : '#6c757d'} 
-            />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
 
   const updateBudgetCategory = (categoryId, field, value) => {
     setBudgetTracker(prev => ({
@@ -810,8 +789,15 @@ const FinanceSections = () => {
 
   return (
     <View style={styles.container}>
-      {/* Navegación de pestañas */}
-      {renderSectionTabs()}
+      <SubsectionTabs
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        theme="neutral"
+        size="medium"
+        showIcons={true}
+        showLabels={true}
+      />
 
       {/* Contenido de la sección activa */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

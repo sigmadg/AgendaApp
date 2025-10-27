@@ -3,6 +3,7 @@ export { default as SectionHeader } from './headers/SectionHeader';
 
 // Exportar componentes de navegación
 export { default as SubsectionTabs } from './navigation/SubsectionTabs';
+export { default as ElegantSubsectionTabs } from './navigation/ElegantSubsectionTabs';
 
 // Exportar componentes de UI
 export { default as Button } from './ui/Button';
@@ -17,6 +18,7 @@ export { default as WorkPlanningCard } from './work/WorkPlanningCard';
 // Exportar estilos
 export { sectionHeaderStyles } from './styles/sectionHeaderStyles';
 export { subsectionTabsStyles } from './styles/subsectionTabsStyles';
+export { elegantSubsectionTabsStyles } from './styles/elegantSubsectionTabsStyles';
 export { buttonStyles } from './styles/buttonStyles';
 export { cardStyles } from './styles/cardStyles';
 export { taskCardStyles } from './styles/taskCardStyles';

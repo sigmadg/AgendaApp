@@ -136,30 +136,32 @@ const TasksSection = ({
 
       {/* Resumen de tareas */}
       <View style={tasksSectionStyles.summaryContainer}>
-        <Card
-          title="Pendientes"
-          subtitle={`${pendingTasks.length} tareas`}
-          icon="time-outline"
-          theme={theme}
-          size="small"
-          style={tasksSectionStyles.summaryCard}
-        />
-        <Card
-          title="Completadas"
-          subtitle={`${completedTasks.length} tareas`}
-          icon="checkmark-circle-outline"
-          theme={theme}
-          size="small"
-          style={tasksSectionStyles.summaryCard}
-        />
-        <Card
-          title="Total"
-          subtitle={`${todayTasks.length} tareas`}
-          icon="list-outline"
-          theme={theme}
-          size="small"
-          style={tasksSectionStyles.summaryCard}
-        />
+        <View style={[tasksSectionStyles.summaryCard, tasksSectionStyles.pendingCard]}>
+          <View style={[tasksSectionStyles.cardIconContainer, { backgroundColor: 'rgba(255, 193, 7, 0.15)' }]}>
+            <Icon name="time-outline" size={20} color="#B8860B" />
+          </View>
+          <Text style={[tasksSectionStyles.cardTitle, { color: '#8B6914' }]}>Pendiente</Text>
+          <Text style={[tasksSectionStyles.cardNumber, { color: '#8B6914' }]}>{pendingTasks.length}</Text>
+          <Text style={[tasksSectionStyles.cardSubtitle, { color: '#8B6914' }]}>tareas</Text>
+        </View>
+        
+        <View style={[tasksSectionStyles.summaryCard, tasksSectionStyles.completedCard]}>
+          <View style={[tasksSectionStyles.cardIconContainer, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+            <Icon name="checkmark-circle-outline" size={20} color="#16A34A" />
+          </View>
+          <Text style={[tasksSectionStyles.cardTitle, { color: '#15803D' }]}>Listo</Text>
+          <Text style={[tasksSectionStyles.cardNumber, { color: '#15803D' }]}>{completedTasks.length}</Text>
+          <Text style={[tasksSectionStyles.cardSubtitle, { color: '#15803D' }]}>tareas</Text>
+        </View>
+        
+        <View style={[tasksSectionStyles.summaryCard, tasksSectionStyles.totalCard]}>
+          <View style={[tasksSectionStyles.cardIconContainer, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
+            <Icon name="list-outline" size={20} color="#4F46E5" />
+          </View>
+          <Text style={[tasksSectionStyles.cardTitle, { color: '#3730A3' }]}>Total</Text>
+          <Text style={[tasksSectionStyles.cardNumber, { color: '#3730A3' }]}>{todayTasks.length}</Text>
+          <Text style={[tasksSectionStyles.cardSubtitle, { color: '#3730A3' }]}>tareas</Text>
+        </View>
       </View>
 
       {/* Tareas pendientes */}

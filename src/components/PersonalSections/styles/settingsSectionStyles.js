@@ -8,6 +8,7 @@ export const settingsSectionStyles = StyleSheet.create({
     flex: 1,
   },
   sectionContainer: {
+    marginTop: 20,
     marginBottom: 24,
   },
   sectionTitle: {
@@ -55,10 +56,66 @@ export const settingsSectionStyles = StyleSheet.create({
   },
   actionsContainer: {
     marginTop: 20,
-    gap: 12,
+    marginBottom: 24,
+    gap: 16,
   },
   actionButton: {
-    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    minHeight: 80,
+  },
+  buttonIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonContent: {
+    flex: 1,
+  },
+  buttonTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  buttonSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  resetButton: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#F59E0B',
+    borderWidth: 2,
+  },
+  exportButton: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#3B82F6',
+    borderWidth: 2,
   },
   modalOverlay: {
     flex: 1,

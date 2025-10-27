@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { SubsectionTabs } from './shared';
 
 const HealthSections = () => {
   // Estados para las diferentes secciones
@@ -217,36 +218,6 @@ const HealthSections = () => {
     'Multivitamínico', 'Proteína', 'Creatina', 'Omega-3', 'Vitamina D', 'Magnesio', 'Zinc', 'Hierro', 'Calcio', 'Otro'
   ];
 
-  const renderSectionTabs = () => (
-    <View style={styles.tabsContainer}>
-      <View style={styles.tabsWrapper}>
-        {sections.map((section) => (
-          <TouchableOpacity
-            key={section.id}
-            style={[
-              styles.tab,
-              activeSection === section.id && styles.activeTab
-            ]}
-            onPress={() => setActiveSection(section.id)}
-          >
-            <View style={[styles.tabContent, {
-              backgroundColor: activeSection === section.id ? '#4A6B8A' : 'transparent',
-              borderColor: activeSection === section.id ? '#4A6B8A' : '#1E3A5F',
-            }]}>
-              <Icon 
-                name={section.icon} 
-                size={20} 
-                color={activeSection === section.id ? '#FFFFFF' : '#1E3A5F'} 
-              />
-              {activeSection === section.id && (
-                <View style={styles.activeIndicator} />
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
 
   // Funciones para alimentación
   const openAddMealModal = () => {
@@ -1979,7 +1950,15 @@ const HealthSections = () => {
 
   return (
     <View style={styles.container}>
-      {renderSectionTabs()}
+      <SubsectionTabs
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        theme="mountain"
+        size="medium"
+        showIcons={true}
+        showLabels={true}
+      />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderActiveSection()}
       </ScrollView>

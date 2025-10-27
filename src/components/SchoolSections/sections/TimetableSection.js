@@ -128,7 +128,7 @@ const TimetableSection = ({
     const currentDayName = weekDays[today.getDay() - 1] || 'Lunes';
     
     return (
-      <View style={timetableSectionStyles.container}>
+      <View>
         <SectionHeader
           title={`Horario de ${weekDays[selectedDayIndex]}`}
           subtitle="Gestiona tu horario de clases"

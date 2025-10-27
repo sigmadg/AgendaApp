@@ -13,9 +13,6 @@ const SectionHeader = ({
   subtitle,
   icon,
   image,
-  onAddPress,
-  addButtonText = "Agregar",
-  showAddButton = true,
   theme = 'forest', // forest, ocean, desert, mountain, neutral
   size = 'medium', // small, medium, large
   style,
@@ -23,8 +20,6 @@ const SectionHeader = ({
   subtitleStyle,
   iconStyle,
   imageStyle,
-  addButtonStyle,
-  addButtonTextStyle,
 }) => {
   const getThemeStyles = () => {
     const themes = {
@@ -33,7 +28,6 @@ const SectionHeader = ({
         borderColor: '#4A6741',
         titleColor: '#FFFFFF',
         subtitleColor: 'rgba(255, 255, 255, 0.9)',
-        addButtonColor: '#4A7C59',
         decorationColor: '#F0F4F7',
       },
       ocean: {
@@ -41,7 +35,6 @@ const SectionHeader = ({
         borderColor: '#4A90E2',
         titleColor: '#FFFFFF',
         subtitleColor: 'rgba(255, 255, 255, 0.9)',
-        addButtonColor: '#4A90E2',
         decorationColor: '#F0F4F7',
       },
       desert: {
@@ -49,7 +42,6 @@ const SectionHeader = ({
         borderColor: '#D2691E',
         titleColor: '#FFFFFF',
         subtitleColor: 'rgba(255, 255, 255, 0.9)',
-        addButtonColor: '#D2691E',
         decorationColor: '#F0F4F7',
       },
       mountain: {
@@ -57,7 +49,6 @@ const SectionHeader = ({
         borderColor: '#4A6B8A',
         titleColor: '#FFFFFF',
         subtitleColor: 'rgba(255, 255, 255, 0.9)',
-        addButtonColor: '#4A6B8A',
         decorationColor: '#F0F4F7',
       },
       neutral: {
@@ -65,7 +56,6 @@ const SectionHeader = ({
         borderColor: '#ADB5BD',
         titleColor: '#FFFFFF',
         subtitleColor: 'rgba(255, 255, 255, 0.9)',
-        addButtonColor: '#ADB5BD',
         decorationColor: '#F8F9FA',
       },
     };
@@ -81,7 +71,6 @@ const SectionHeader = ({
         subtitleSize: 12,
         iconSize: 20,
         imageSize: 24,
-        addButtonSize: 28,
       },
       medium: {
         padding: 20,
@@ -90,7 +79,6 @@ const SectionHeader = ({
         subtitleSize: 14,
         iconSize: 24,
         imageSize: 60,
-        addButtonSize: 32,
       },
       large: {
         padding: 24,
@@ -99,7 +87,6 @@ const SectionHeader = ({
         subtitleSize: 16,
         iconSize: 28,
         imageSize: 80,
-        addButtonSize: 36,
       },
     };
     return sizes[size] || sizes.medium;
@@ -155,22 +142,6 @@ const SectionHeader = ({
     imageStyle,
   ];
 
-  const addButtonStyleFinal = [
-    sectionHeaderStyles.addButton,
-    {
-      backgroundColor: themeStyles.addButtonColor,
-      width: sizeStyles.addButtonSize,
-      height: sizeStyles.addButtonSize,
-      borderRadius: sizeStyles.addButtonSize / 2,
-    },
-    addButtonStyle,
-  ];
-
-  const addButtonTextStyleFinal = [
-    sectionHeaderStyles.addButtonText,
-    addButtonTextStyle,
-  ];
-
   return (
     <View style={containerStyle}>
       <View style={sectionHeaderStyles.content}>
@@ -186,7 +157,7 @@ const SectionHeader = ({
               <Icon
                 name={icon}
                 size={sizeStyles.iconSize}
-                color={themeStyles.addButtonColor}
+                color="#4A7C59"
                 style={iconStyle}
               />
             ) : null}
@@ -198,20 +169,6 @@ const SectionHeader = ({
           )}
         </View>
       </View>
-
-      {showAddButton && (
-        <TouchableOpacity
-          style={addButtonStyleFinal}
-          onPress={onAddPress}
-          activeOpacity={0.7}
-        >
-          <Icon
-            name="add"
-            size={sizeStyles.iconSize * 0.6}
-            color="#FFFFFF"
-          />
-        </TouchableOpacity>
-      )}
     </View>
   );
 };

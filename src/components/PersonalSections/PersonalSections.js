@@ -3,11 +3,8 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
-  Animated,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { SectionHeader } from '../shared';
+import { SectionHeader, ElegantSubsectionTabs } from '../shared';
 import { useTheme } from '../shared/hooks/useTheme';
 import { personalSectionsStyles } from './styles/personalSectionsStyles';
 
@@ -17,6 +14,7 @@ import TasksSection from './sections/TasksSection';
 import ProfileSection from './sections/ProfileSection';
 import SettingsSection from './sections/SettingsSection';
 import JournalSection from './sections/JournalSection';
+import SectionsSection from './sections/SectionsSection';
 
 const PersonalSections = ({ 
   selectedDate, 
@@ -46,6 +44,7 @@ const PersonalSections = ({
     { id: 'tasks', name: 'Tareas', icon: 'checkmark-circle-outline' },
     { id: 'profile', name: 'Perfil', icon: 'person-outline' },
     { id: 'journal', name: 'Diario', icon: 'book-outline' },
+    { id: 'sections', name: 'Secciones', icon: 'grid-outline' },
     { id: 'settings', name: 'Configuración', icon: 'settings-outline' },
   ];
 
@@ -83,6 +82,8 @@ const PersonalSections = ({
         return <ProfileSection {...commonProps} />;
       case 'journal':
         return <JournalSection {...commonProps} />;
+      case 'sections':
+        return <SectionsSection {...commonProps} />;
       case 'settings':
         return <SettingsSection {...commonProps} />;
       default:
@@ -107,30 +108,15 @@ const PersonalSections = ({
 
   return (
     <View style={[personalSectionsStyles.container, { backgroundColor: themeColors.background }]}>
-      {/* Barra de navegación personalizada solo con iconos */}
-      <View style={[personalSectionsStyles.navigationBar, { backgroundColor: themeColors.surface }]}>
-        {sections.map((section) => (
-          <TouchableOpacity
-            key={section.id}
-            style={[
-              personalSectionsStyles.navTab,
-              activeSection === section.id && personalSectionsStyles.navTabActive
-            ]}
-            onPress={() => setActiveSection(section.id)}
-            activeOpacity={0.7}
-          >
-            <Icon
-              name={section.icon}
-              size={24}
-              color={
-                activeSection === section.id
-                  ? '#FFFFFF'
-                  : themeColors.textSecondary
-              }
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ElegantSubsectionTabs
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        theme="forest"
+        size="medium"
+        showIcons={true}
+        showLabels={false}
+      />
       
       <ScrollView style={personalSectionsStyles.content} showsVerticalScrollIndicator={false}>
         {renderActiveSection()}

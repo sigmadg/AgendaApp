@@ -141,63 +141,53 @@ const ProfileSection = ({
         </View>
       </View>
 
-      {/* Estadísticas del perfil */}
-      <View style={profileSectionStyles.statsContainer}>
-        <Card
-          title="Eventos"
-          subtitle="12 este mes"
-          icon="calendar-outline"
-          theme={theme}
-          size="small"
-          style={profileSectionStyles.statCard}
-        />
-        <Card
-          title="Tareas"
-          subtitle="8 completadas"
-          icon="checkmark-circle-outline"
-          theme={theme}
-          size="small"
-          style={profileSectionStyles.statCard}
-        />
-        <Card
-          title="Días Activos"
-          subtitle="15 este mes"
-          icon="trending-up-outline"
-          theme={theme}
-          size="small"
-          style={profileSectionStyles.statCard}
-        />
-      </View>
 
       {/* Acciones del perfil */}
       <View style={profileSectionStyles.actionsContainer}>
-        <Button
-          title="Editar Perfil"
+        <TouchableOpacity
+          style={[profileSectionStyles.actionButton, profileSectionStyles.editButton]}
           onPress={() => setShowEditModal(true)}
-          variant="primary"
-          size="medium"
-          theme={theme}
-          icon="create-outline"
-          style={profileSectionStyles.actionButton}
-        />
-        <Button
-          title="Cambiar Contraseña"
+          activeOpacity={0.8}
+        >
+          <View style={[profileSectionStyles.buttonIconContainer, { backgroundColor: '#0EA5E9' }]}>
+            <Icon name="create-outline" size={24} color="#FFFFFF" />
+          </View>
+          <View style={profileSectionStyles.buttonContent}>
+            <Text style={profileSectionStyles.buttonTitle}>Editar Perfil</Text>
+            <Text style={profileSectionStyles.buttonSubtitle}>Actualiza tu información personal</Text>
+          </View>
+          <Icon name="chevron-forward" size={20} color="#0EA5E9" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[profileSectionStyles.actionButton, profileSectionStyles.passwordButton]}
           onPress={() => setShowPasswordModal(true)}
-          variant="outline"
-          size="medium"
-          theme={theme}
-          icon="key-outline"
-          style={profileSectionStyles.actionButton}
-        />
-        <Button
-          title="Cerrar Sesión"
+          activeOpacity={0.8}
+        >
+          <View style={[profileSectionStyles.buttonIconContainer, { backgroundColor: '#22C55E' }]}>
+            <Icon name="key-outline" size={24} color="#FFFFFF" />
+          </View>
+          <View style={profileSectionStyles.buttonContent}>
+            <Text style={profileSectionStyles.buttonTitle}>Cambiar Contraseña</Text>
+            <Text style={profileSectionStyles.buttonSubtitle}>Actualiza tu contraseña de acceso</Text>
+          </View>
+          <Icon name="chevron-forward" size={20} color="#22C55E" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[profileSectionStyles.actionButton, profileSectionStyles.logoutButton]}
           onPress={handleLogout}
-          variant="danger"
-          size="medium"
-          theme={theme}
-          icon="log-out-outline"
-          style={profileSectionStyles.actionButton}
-        />
+          activeOpacity={0.8}
+        >
+          <View style={[profileSectionStyles.buttonIconContainer, { backgroundColor: '#EF4444' }]}>
+            <Icon name="log-out-outline" size={24} color="#FFFFFF" />
+          </View>
+          <View style={profileSectionStyles.buttonContent}>
+            <Text style={profileSectionStyles.buttonTitle}>Cerrar Sesión</Text>
+            <Text style={profileSectionStyles.buttonSubtitle}>Salir de tu cuenta</Text>
+          </View>
+          <Icon name="chevron-forward" size={20} color="#EF4444" />
+        </TouchableOpacity>
       </View>
 
       {/* Modal para editar perfil */}

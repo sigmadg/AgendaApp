@@ -3,11 +3,8 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
-  Animated,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { SectionHeader } from '../shared';
+import { SectionHeader, SubsectionTabs } from '../shared';
 import { useTheme } from '../shared/hooks/useTheme';
 import { schoolSectionsStyles } from './styles/schoolSectionsStyles';
 
@@ -39,11 +36,8 @@ const SchoolSections = ({
   const { getThemeColors, currentTheme } = useTheme();
   const themeColors = getThemeColors();
 
-  // Validar que user existe y tiene userData
-  const userData = user?.userData || null;
-  
-  // Si no hay userData, mostrar mensaje de carga
-  if (!userData) {
+  // Validar que user existe
+  if (!user) {
     return (
       <View style={[schoolSectionsStyles.container, { backgroundColor: themeColors.background }]}>
         <View style={schoolSectionsStyles.defaultSection}>
@@ -78,7 +72,7 @@ const SchoolSections = ({
       onAddEvent,
       onEditEvent,
       onDeleteEvent,
-      user: userData, // Pasar userData en lugar de user
+      user: user, // Pasar user directamente
       onUpdateSection,
       theme: currentTheme,
     };
@@ -109,30 +103,15 @@ const SchoolSections = ({
 
   return (
     <View style={[schoolSectionsStyles.container, { backgroundColor: themeColors.background }]}>
-      {/* Barra de navegación personalizada solo con iconos */}
-      <View style={[schoolSectionsStyles.navigationBar, { backgroundColor: themeColors.surface }]}>
-        {sections.map((section) => (
-          <TouchableOpacity
-            key={section.id}
-            style={[
-              schoolSectionsStyles.navTab,
-              activeSection === section.id && schoolSectionsStyles.navTabActive
-            ]}
-            onPress={() => setActiveSection(section.id)}
-            activeOpacity={0.7}
-          >
-            <Icon
-              name={section.icon}
-              size={24}
-              color={
-                activeSection === section.id
-                  ? '#FFFFFF'
-                  : themeColors.textSecondary
-              }
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
+      <SubsectionTabs
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        theme="ocean"
+        size="medium"
+        showIcons={true}
+        showLabels={true}
+      />
       
       <ScrollView style={schoolSectionsStyles.content} showsVerticalScrollIndicator={false}>
         {renderActiveSection()}

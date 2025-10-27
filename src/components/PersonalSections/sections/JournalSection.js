@@ -146,30 +146,32 @@ const JournalSection = ({
 
       {/* Resumen del diario */}
       <View style={journalSectionStyles.summaryContainer}>
-        <Card
-          title="Entradas Hoy"
-          subtitle={`${todayEntries.length} entradas`}
-          icon="today-outline"
-          theme={theme}
-          size="small"
-          style={journalSectionStyles.summaryCard}
-        />
-        <Card
-          title="Total"
-          subtitle={`${journalEntries.length} entradas`}
-          icon="book-outline"
-          theme={theme}
-          size="small"
-          style={journalSectionStyles.summaryCard}
-        />
-        <Card
-          title="Estado"
-          subtitle="Activo"
-          icon="checkmark-circle-outline"
-          theme={theme}
-          size="small"
-          style={journalSectionStyles.summaryCard}
-        />
+        <View style={[journalSectionStyles.summaryCard, journalSectionStyles.todayCard]}>
+          <View style={[journalSectionStyles.cardIconContainer, { backgroundColor: 'rgba(26, 61, 10, 0.15)' }]}>
+            <Icon name="today-outline" size={20} color="#1A3D0A" />
+          </View>
+          <Text style={[journalSectionStyles.cardTitle, { color: '#1A3D0A' }]}>Entradas</Text>
+          <Text style={[journalSectionStyles.cardNumber, { color: '#1A3D0A' }]}>{todayEntries.length}</Text>
+          <Text style={[journalSectionStyles.cardSubtitle, { color: '#1A3D0A' }]}>entradas</Text>
+        </View>
+        
+        <View style={[journalSectionStyles.summaryCard, journalSectionStyles.totalCard]}>
+          <View style={[journalSectionStyles.cardIconContainer, { backgroundColor: 'rgba(93, 46, 10, 0.15)' }]}>
+            <Icon name="book-outline" size={20} color="#5D2E0A" />
+          </View>
+          <Text style={[journalSectionStyles.cardTitle, { color: '#5D2E0A' }]}>Total</Text>
+          <Text style={[journalSectionStyles.cardNumber, { color: '#5D2E0A' }]}>{journalEntries.length}</Text>
+          <Text style={[journalSectionStyles.cardSubtitle, { color: '#5D2E0A' }]}>entradas</Text>
+        </View>
+        
+        <View style={[journalSectionStyles.summaryCard, journalSectionStyles.statusCard]}>
+          <View style={[journalSectionStyles.cardIconContainer, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+            <Icon name="checkmark-circle-outline" size={20} color="#16A34A" />
+          </View>
+          <Text style={[journalSectionStyles.cardTitle, { color: '#15803D' }]}>Estado</Text>
+          <Text style={[journalSectionStyles.cardNumber, { color: '#15803D' }]}>Activo</Text>
+          <Text style={[journalSectionStyles.cardSubtitle, { color: '#15803D' }]}>diario</Text>
+        </View>
       </View>
 
       {/* Entradas de hoy */}
