@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteEvent, onUpdateSection }) => {
+const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteEvent, onUpdateSection, user }) => {
   const [activeSection, setActiveSection] = useState('weekly');
   const [projectData, setProjectData] = useState({
     title: '',
@@ -77,11 +77,40 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
   const [goalsList, setGoalsList] = useState([]);
   const [newGoalText, setNewGoalText] = useState('');
   const goalsColors = ['#28a745', '#20c997', '#ffc107', '#dc3545', '#6c757d'];
+  
+  // Estados para planificación de trabajo
+  const [workPlanningData, setWorkPlanningData] = useState({
+    productivity: {
+      tasksCompleted: 0,
+      totalTasks: 0,
+      efficiency: 0,
+      focusTime: 0
+    },
+    weeklyProgress: [
+      { day: 'Lunes', tasks: 8, completed: 6, hours: 8.5 },
+      { day: 'Martes', tasks: 7, completed: 7, hours: 7.2 },
+      { day: 'Miércoles', tasks: 9, completed: 8, hours: 8.8 },
+      { day: 'Jueves', tasks: 6, completed: 5, hours: 6.5 },
+      { day: 'Viernes', tasks: 8, completed: 7, hours: 7.9 }
+    ],
+    monthlyGoals: [
+      { id: 1, title: 'Completar proyecto principal', progress: 75, deadline: '2024-01-31' },
+      { id: 2, title: 'Mejorar productividad', progress: 60, deadline: '2024-02-15' },
+      { id: 3, title: 'Aprender nueva tecnología', progress: 40, deadline: '2024-03-01' }
+    ],
+    timeTracking: {
+      totalHours: 38.9,
+      averagePerDay: 7.8,
+      mostProductiveDay: 'Miércoles',
+      leastProductiveDay: 'Jueves'
+    }
+  });
 
   const sections = [
     { id: 'daily', name: 'Tareas Diarias', icon: 'sunny-outline' },
     { id: 'weekly', name: 'Tareas Semanales', icon: 'leaf-outline' },
     { id: 'projects', name: 'Proyectos', icon: 'folder-outline' },
+    { id: 'work-planning', name: 'Planificación de Trabajo', icon: 'trending-up-outline' },
     { id: 'goals', name: 'Objetivos', icon: 'flower-outline' }
   ];
 
@@ -1345,6 +1374,142 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
     </View>
   );
 
+  const renderWorkPlanning = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.headerDecoration}>
+          <Image 
+            source={require('../../android/app/src/main/assets/trabajo.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Planificación de Trabajo</Text>
+          <Text style={styles.sectionSubtitle}>
+            Analiza tu productividad y progreso
+          </Text>
+        </View>
+      </View>
+      
+      {/* Resumen de Productividad */}
+      <View style={styles.planningSummary}>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryIcon}>
+            <Icon name="checkmark-circle" size={24} color="#28a745" />
+          </View>
+          <View style={styles.summaryContent}>
+            <Text style={styles.summaryTitle}>Tareas Completadas</Text>
+            <Text style={styles.summaryValue}>
+              {workPlanningData.productivity.tasksCompleted} / {workPlanningData.productivity.totalTasks}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryIcon}>
+            <Icon name="trending-up" size={24} color="#17a2b8" />
+          </View>
+          <View style={styles.summaryContent}>
+            <Text style={styles.summaryTitle}>Eficiencia</Text>
+            <Text style={styles.summaryValue}>{workPlanningData.productivity.efficiency}%</Text>
+          </View>
+        </View>
+        
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryIcon}>
+            <Icon name="time" size={24} color="#ffc107" />
+          </View>
+          <View style={styles.summaryContent}>
+            <Text style={styles.summaryTitle}>Tiempo de Enfoque</Text>
+            <Text style={styles.summaryValue}>{workPlanningData.productivity.focusTime}h</Text>
+          </View>
+        </View>
+      </View>
+      
+      {/* Gráfica de Progreso Semanal */}
+      <View style={styles.weeklyProgressContainer}>
+        <Text style={styles.progressTitle}>Progreso Semanal</Text>
+        <View style={styles.progressChart}>
+          {workPlanningData.weeklyProgress.map((day, index) => {
+            const completionRate = (day.completed / day.tasks) * 100;
+            return (
+              <View key={index} style={styles.progressBarContainer}>
+                <View style={styles.progressBarBackground}>
+                  <View 
+                    style={[
+                      styles.progressBarFill, 
+                      { width: `${completionRate}%` }
+                    ]} 
+                  />
+                </View>
+                <View style={styles.progressBarInfo}>
+                  <Text style={styles.progressBarDay}>{day.day}</Text>
+                  <Text style={styles.progressBarStats}>
+                    {day.completed}/{day.tasks} tareas • {day.hours}h
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+      
+      {/* Objetivos Mensuales */}
+      <View style={styles.monthlyGoalsContainer}>
+        <Text style={styles.goalsTitle}>Objetivos Mensuales</Text>
+        <View style={styles.goalsList}>
+          {workPlanningData.monthlyGoals.map((goal) => (
+            <View key={goal.id} style={styles.goalCard}>
+              <View style={styles.goalHeader}>
+                <Text style={styles.goalTitle}>{goal.title}</Text>
+                <Text style={styles.goalDeadline}>{goal.deadline}</Text>
+              </View>
+              <View style={styles.goalProgress}>
+                <View style={styles.goalProgressBar}>
+                  <View 
+                    style={[
+                      styles.goalProgressFill, 
+                      { width: `${goal.progress}%` }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.goalProgressText}>{goal.progress}%</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+      
+      {/* Seguimiento de Tiempo */}
+      <View style={styles.timeTrackingContainer}>
+        <Text style={styles.timeTrackingTitle}>Seguimiento de Tiempo</Text>
+        <View style={styles.timeTrackingStats}>
+          <View style={styles.timeStat}>
+            <Icon name="time-outline" size={20} color="#6c757d" />
+            <Text style={styles.timeStatLabel}>Total de Horas</Text>
+            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.totalHours}h</Text>
+          </View>
+          <View style={styles.timeStat}>
+            <Icon name="calendar-outline" size={20} color="#6c757d" />
+            <Text style={styles.timeStatLabel}>Promedio Diario</Text>
+            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.averagePerDay}h</Text>
+          </View>
+          <View style={styles.timeStat}>
+            <Icon name="trending-up-outline" size={20} color="#28a745" />
+            <Text style={styles.timeStatLabel}>Día Más Productivo</Text>
+            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.mostProductiveDay}</Text>
+          </View>
+          <View style={styles.timeStat}>
+            <Icon name="trending-down-outline" size={20} color="#dc3545" />
+            <Text style={styles.timeStatLabel}>Día Menos Productivo</Text>
+            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.leastProductiveDay}</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
   const renderPriorities = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -1732,6 +1897,8 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
         return renderDailyTasks();
       case 'projects':
         return renderProjects();
+      case 'work-planning':
+        return renderWorkPlanning();
       case 'priorities':
         return renderPriorities();
       case 'focus':
@@ -4415,6 +4582,221 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
     textAlignVertical: 'center',
+  },
+  // Estilos para Planificación de Trabajo
+  planningSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 12,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  summaryIcon: {
+    marginBottom: 8,
+  },
+  summaryContent: {
+    alignItems: 'center',
+  },
+  summaryTitle: {
+    fontSize: 12,
+    color: '#8B4513',
+    fontWeight: '600',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#8B4513',
+  },
+  weeklyProgressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#8B4513',
+    marginBottom: 16,
+  },
+  progressChart: {
+    gap: 12,
+  },
+  progressBarContainer: {
+    gap: 8,
+  },
+  progressBarBackground: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+    borderRadius: 4,
+  },
+  progressBarInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressBarDay: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B4513',
+  },
+  progressBarStats: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  monthlyGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  goalsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#8B4513',
+    marginBottom: 16,
+  },
+  goalsList: {
+    gap: 12,
+  },
+  goalCard: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  goalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  goalTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B4513',
+    flex: 1,
+  },
+  goalDeadline: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  goalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  goalProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  goalProgressFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+    borderRadius: 3,
+  },
+  goalProgressText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8B4513',
+    minWidth: 35,
+    textAlign: 'right',
+  },
+  timeTrackingContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#D4A574',
+    shadowColor: '#B8860B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  timeTrackingTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#8B4513',
+    marginBottom: 16,
+  },
+  timeTrackingStats: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  timeStat: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  timeStatLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  timeStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#8B4513',
+    marginTop: 2,
   },
 });
 

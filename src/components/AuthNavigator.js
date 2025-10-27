@@ -45,6 +45,7 @@ const AuthNavigator = ({ onLogin, onRegister }) => {
     }
   };
 
+  console.log('AuthNavigator: Renderizando pantalla actual:', currentScreen);
   return (
     <View style={styles.container}>
       {renderCurrentScreen()}

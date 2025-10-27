@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -76,13 +77,38 @@ const FinanceSections = () => {
     ]
   });
 
+  // Estados para Lista de Compras
+  const [marketList, setMarketList] = useState({
+    fruits: [],
+    vegetables: [],
+    dairy: [],
+    meat: [],
+    grains: [],
+    snacks: []
+  });
+
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [newItemText, setNewItemText] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState(1);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+
+  const mealCategories = [
+    { id: 'fruits', name: 'Frutas', icon: '🍎' },
+    { id: 'vegetables', name: 'Verduras', icon: '🥬' },
+    { id: 'dairy', name: 'Lácteos', icon: '🥛' },
+    { id: 'meat', name: 'Carnes', icon: '🥩' },
+    { id: 'grains', name: 'Granos', icon: '🌾' },
+    { id: 'snacks', name: 'Snacks', icon: '🍿' }
+  ];
+
   const sections = [
     { id: 'budget-tracker', name: 'Budget Tracker', icon: 'wallet-outline' },
     { id: 'expense-tracker', name: 'Expense Tracker', icon: 'receipt-outline' },
     { id: 'credit-card-manager', name: 'Credit Card Manager', icon: 'card-outline' },
     { id: 'bill-tracker', name: 'Bill Tracker', icon: 'document-text-outline' },
     { id: 'investment-tracker', name: 'Investment Tracker', icon: 'trending-up-outline' },
-    { id: 'savings-goals', name: 'Savings Goals', icon: 'piggy-bank-outline' }
+    { id: 'savings-goals', name: 'Savings Goals', icon: 'piggy-bank-outline' },
+    { id: 'shopping-list', name: 'Lista de Compras', icon: 'list-outline' }
   ];
 
   const renderSectionTabs = () => (
@@ -171,6 +197,53 @@ const FinanceSections = () => {
           : bill
       )
     }));
+  };
+
+  // Funciones para Lista de Compras
+  const openAddItemModal = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setNewItemText('');
+    setNewItemQuantity(1);
+    setShowAddItemModal(true);
+  };
+
+  const closeAddItemModal = () => {
+    setShowAddItemModal(false);
+    setSelectedCategory('');
+    setNewItemText('');
+    setNewItemQuantity(1);
+  };
+
+  const addItem = () => {
+    if (newItemText.trim() && selectedCategory) {
+      const newItem = {
+        id: Date.now(),
+        name: newItemText.trim(),
+        quantity: newItemQuantity,
+        purchased: false
+      };
+      setMarketList({
+        ...marketList,
+        [selectedCategory]: [...marketList[selectedCategory], newItem]
+      });
+      closeAddItemModal();
+    }
+  };
+
+  const toggleItemPurchased = (categoryId, itemId) => {
+    setMarketList({
+      ...marketList,
+      [categoryId]: marketList[categoryId].map(item => 
+        item.id === itemId ? { ...item, purchased: !item.purchased } : item
+      )
+    });
+  };
+
+  const removeItem = (categoryId, itemId) => {
+    setMarketList({
+      ...marketList,
+      [categoryId]: marketList[categoryId].filter(item => item.id !== itemId)
+    });
   };
 
   const renderBudgetTracker = () => (
@@ -646,6 +719,74 @@ const FinanceSections = () => {
     </View>
   );
 
+  const renderShoppingList = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>LISTA DE COMPRAS</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza tus compras
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.marketListContainer}>
+        {mealCategories.map((category) => (
+          <View key={category.id} style={styles.categorySection}>
+            <View style={styles.categoryHeader}>
+              <Text style={styles.categoryTitle}>
+                {category.icon} {category.name}
+              </Text>
+              <TouchableOpacity
+                style={styles.addItemButton}
+                onPress={() => openAddItemModal(category.id)}
+              >
+                <Icon name="add" size={16} color="#4A7C59" />
+                <Text style={styles.addItemText}>Agregar</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {marketList[category.id].map((item) => (
+              <View key={item.id} style={[styles.itemRow, item.purchased && styles.itemRowPurchased]}>
+                <TouchableOpacity
+                  onPress={() => toggleItemPurchased(category.id, item.id)}
+                  style={styles.checkboxContainer}
+                >
+                  <Icon 
+                    name={item.purchased ? "checkbox" : "square-outline"} 
+                    size={20} 
+                    color={item.purchased ? "#28a745" : "#4A6741"} 
+                  />
+                </TouchableOpacity>
+                <View style={styles.itemInfo}>
+                  <Text style={[styles.itemText, item.purchased && styles.itemTextPurchased]}>
+                    {item.name}
+                  </Text>
+                  <Text style={[styles.itemQuantity, item.purchased && styles.itemQuantityPurchased]}>
+                    {item.quantity}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => removeItem(category.id, item.id)}
+                  style={styles.removeButton}
+                >
+                  <Icon name="close" size={16} color="#dc3545" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'budget-tracker':
@@ -660,6 +801,8 @@ const FinanceSections = () => {
         return renderInvestmentTracker();
       case 'savings-goals':
         return renderSavingsGoals();
+      case 'shopping-list':
+        return renderShoppingList();
       default:
         return renderBudgetTracker();
     }
@@ -674,6 +817,70 @@ const FinanceSections = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderActiveSection()}
       </ScrollView>
+
+      {/* Modal para agregar items */}
+      <Modal
+        visible={showAddItemModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeAddItemModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Agregar a {mealCategories.find(cat => cat.id === selectedCategory)?.name}
+              </Text>
+              <TouchableOpacity onPress={closeAddItemModal} style={styles.closeButton}>
+                <Icon name="close" size={24} color="#4A6741" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <Text style={styles.inputLabel}>Nombre del producto:</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newItemText}
+                onChangeText={setNewItemText}
+                placeholder="Ej: Manzanas"
+                placeholderTextColor="#999"
+              />
+              
+              <Text style={styles.inputLabel}>Cantidad:</Text>
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => setNewItemQuantity(Math.max(1, newItemQuantity - 1))}
+                >
+                  <Icon name="remove" size={20} color="#4A6741" />
+                </TouchableOpacity>
+                <Text style={styles.quantityText}>{newItemQuantity}</Text>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => setNewItemQuantity(newItemQuantity + 1)}
+                >
+                  <Icon name="add" size={20} color="#4A6741" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={closeAddItemModal}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.addButton]}
+                onPress={addItem}
+              >
+                <Text style={styles.addButtonText}>Agregar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1020,6 +1227,191 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#28a745',
     borderRadius: 4,
+  },
+  // Estilos para Lista de Compras
+  headerDecoration: {
+    width: 40,
+    height: 40,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  mascotImage: {
+    width: 32,
+    height: 32,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: '#4A6B8A',
+    marginTop: 2,
+  },
+  marketListContainer: {
+    gap: 16,
+  },
+  categorySection: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1E3A5F',
+  },
+  addItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A6B8A',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  addItemText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
+  },
+  itemRowPurchased: {
+    opacity: 0.6,
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  itemInfo: {
+    flex: 1,
+  },
+  itemText: {
+    fontSize: 14,
+    color: '#1E3A5F',
+  },
+  itemTextPurchased: {
+    textDecorationLine: 'line-through',
+    color: '#6C757D',
+  },
+  itemQuantity: {
+    fontSize: 12,
+    color: '#4A6B8A',
+    marginTop: 2,
+  },
+  itemQuantityPurchased: {
+    color: '#6C757D',
+  },
+  removeButton: {
+    padding: 4,
+  },
+  // Estilos para Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E3A5F',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E3A5F',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#DEE2E6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#1E3A5F',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#4A6B8A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E3A5F',
+    minWidth: 30,
+    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#6C757D',
+  },
+  addButton: {
+    backgroundColor: '#4A6B8A',
+  },
+  cancelButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

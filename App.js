@@ -8,10 +8,10 @@ import CalendarView from './src/components/CalendarView';
 import TaskList from './src/components/TaskList';
 import EventsSchedule from './src/components/EventsSchedule';
 import WorkSections from './src/components/WorkSections';
-import PersonalSections from './src/components/PersonalSections';
+import PersonalSections from './src/components/PersonalSections/index';
 import HealthSections from './src/components/HealthSections';
 import MenstrualSections from './src/components/MenstrualSections';
-import SchoolSections from './src/components/SchoolSections';
+import SchoolSections from './src/components/SchoolSections/index';
 import LanguageSections from './src/components/LanguageSections';
 import TravelSections from './src/components/TravelSections';
 import PetSections from './src/components/PetSections';
@@ -121,8 +121,20 @@ export default function App() {
   }, [isAuthenticated, user]);
 
   const checkAuthSession = async () => {
-    const result = await authManager.checkSession();
-    if (!result.success) {
+    try {
+      const result = await authManager.checkSession();
+      if (result.success) {
+        setIsAuthenticated(true);
+        setUser(result.user);
+        setUserName(result.user.name);
+        loadData();
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Error checking auth session:', error);
+      setIsAuthenticated(false);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -406,20 +418,22 @@ export default function App() {
 
   // Mostrar pantalla de carga mientras se verifica la autenticación
   if (isLoading) {
-  return (
-    <SafeAreaProvider>
-        <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Cargando...</Text>
-          </View>
-        </SafeAreaView>
-    </SafeAreaProvider>
-  );
-}
+    console.log('App: Mostrando pantalla de carga');
+    return (
+      <SafeAreaProvider>
+          <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Cargando...</Text>
+            </View>
+          </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
 
   // Mostrar pantalla de autenticación si no está autenticado
   if (!isAuthenticated) {
+    console.log('App: Mostrando pantalla de autenticación');
     return (
       <SafeAreaProvider>
         <SafeAreaView style={styles.container}>
@@ -431,6 +445,7 @@ export default function App() {
   }
 
   // Mostrar aplicación principal si está autenticado
+  console.log('App: Mostrando aplicación principal');
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
@@ -455,7 +470,7 @@ export default function App() {
           selectedDate={selectedDate}
           onDateSelect={setSelectedDate}
           tasks={tasks}
-          events={getEventsForDate(selectedDate)}
+          events={allCategoryEvents}
           getAllEventsForDate={getAllEventsForDate}
           getTasksForDate={getTasksForDate}
           onAddTask={() => setShowAddTaskModal(true)}
@@ -481,13 +496,29 @@ export default function App() {
           onEditEvent={editEvent}
           onDeleteEvent={deleteEvent}
           onUpdateSection={handleUpdateSection}
+          user={user}
         />
       ) : showHealthSections ? (
         <HealthSections />
       ) : showMenstrualSections ? (
         <MenstrualSections />
       ) : showSchoolSections ? (
-        <SchoolSections onUpdateSection={handleUpdateSection} />
+        <SchoolSections 
+          onUpdateSection={handleUpdateSection} 
+          user={user}
+          selectedDate={selectedDate}
+          onDateSelect={setSelectedDate}
+          events={allCategoryEvents}
+          tasks={tasks}
+          getAllEventsForDate={getAllEventsForDate}
+          getTasksForDate={getTasksForDate}
+          onAddTask={() => setShowAddTaskModal(true)}
+          onToggleTask={toggleTask}
+          onDeleteTask={deleteTask}
+          onAddEvent={() => setShowAddEventModal(true)}
+          onEditEvent={editEvent}
+          onDeleteEvent={deleteEvent}
+        />
       ) : showLanguageSections ? (
         <LanguageSections />
       ) : showTravelSections ? (
@@ -510,7 +541,7 @@ export default function App() {
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
                 tasks={tasks}
-                events={getAllEventsForDate}
+                events={allCategoryEvents}
                 onAddTask={() => setShowAddTaskModal(true)}
                 onAddEvent={() => setShowAddEventModal(true)}
               />

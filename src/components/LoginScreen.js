@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import SocialAuthButtons from './SocialAuthButtons';
 
 const LoginScreen = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword }) => {
+  console.log('LoginScreen: Renderizando pantalla de login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

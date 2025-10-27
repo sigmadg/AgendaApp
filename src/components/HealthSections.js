@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -86,7 +87,7 @@ const HealthSections = () => {
     notes: ''
   });
 
-  // Estados para Fitness Tracker
+  // Estados para Seguimiento de Fitness
   const [fitnessData, setFitnessData] = useState({});
   const [selectedFitnessDate, setSelectedFitnessDate] = useState(new Date());
   const [showFitnessDatePicker, setShowFitnessDatePicker] = useState(false);
@@ -99,7 +100,7 @@ const HealthSections = () => {
     mood: 'neutral'
   });
 
-  // Estados para Body Measurements
+  // Estados para Medidas Corporales
   const [bodyMeasurements, setBodyMeasurements] = useState({});
   const [selectedMeasurementDate, setSelectedMeasurementDate] = useState(new Date());
   const [showMeasurementDatePicker, setShowMeasurementDatePicker] = useState(false);
@@ -116,7 +117,7 @@ const HealthSections = () => {
     notes: ''
   });
 
-  // Estados para Workout Tracker
+  // Estados para Seguimiento de Entrenamientos
   const [workouts, setWorkouts] = useState([]);
   const [showAddWorkoutModal, setShowAddWorkoutModal] = useState(false);
   const [newWorkout, setNewWorkout] = useState({
@@ -127,7 +128,7 @@ const HealthSections = () => {
     notes: ''
   });
 
-  // Estados para Weight Loss Tracker
+  // Estados para Pérdida de Peso
   const [weightLossData, setWeightLossData] = useState({});
   const [weightLossGoals, setWeightLossGoals] = useState([]);
   const [showAddWeightGoalModal, setShowAddWeightGoalModal] = useState(false);
@@ -139,7 +140,7 @@ const HealthSections = () => {
     notes: ''
   });
 
-  // Estados para Nutrition Tracker
+  // Estados para Seguimiento Nutricional
   const [nutritionData, setNutritionData] = useState({});
   const [selectedNutritionDate, setSelectedNutritionDate] = useState(new Date());
   const [showNutritionDatePicker, setShowNutritionDatePicker] = useState(false);
@@ -154,11 +155,10 @@ const HealthSections = () => {
 
   const sections = [
     { id: 'meal-planner', name: 'Planificador de Comidas', icon: 'calendar-outline' },
-    { id: 'shopping-list', name: 'Lista de Compras', icon: 'list-outline' },
     { id: 'recipes', name: 'Recetas', icon: 'book-outline' },
-    { id: 'fitness-tracker', name: 'Fitness Tracker', icon: 'pulse-outline' },
+    { id: 'fitness-tracker', name: 'Seguimiento de Fitness', icon: 'pulse-outline' },
     { id: 'body-measurements', name: 'Medidas Corporales', icon: 'resize-outline' },
-    { id: 'workout-tracker', name: 'Workout Tracker', icon: 'barbell-outline' },
+    { id: 'workout-tracker', name: 'Seguimiento de Entrenamientos', icon: 'barbell-outline' },
     { id: 'weight-loss', name: 'Pérdida de Peso', icon: 'trending-down-outline' },
     { id: 'nutrition-tracker', name: 'Seguimiento Nutricional', icon: 'nutrition-outline' },
     { id: 'gym-routine', name: 'Rutina de Gimnasio', icon: 'fitness-outline' },
@@ -190,11 +190,11 @@ const HealthSections = () => {
   const difficultyLevels = ['Principiante', 'Intermedio', 'Avanzado'];
   const sports = ['Fútbol', 'Básquetbol', 'Tenis', 'Natación', 'Ciclismo', 'Running', 'Yoga', 'Pilates', 'Crossfit', 'Boxeo', 'Artes Marciales', 'Otro'];
   
-  // Constantes para Fitness Tracker
+  // Constantes para Seguimiento de Fitness
   const moodOptions = ['😢', '😐', '😊', '🤩'];
   const moodLabels = ['Triste', 'Neutral', 'Feliz', 'Excelente'];
   
-  // Constantes para Body Measurements
+  // Constantes para Medidas Corporales
   const measurementTypes = [
     { id: 'weight', name: 'Peso', unit: 'kg' },
     { id: 'neck', name: 'Cuello', unit: 'cm' },
@@ -207,19 +207,19 @@ const HealthSections = () => {
     { id: 'calf', name: 'Pantorrilla', unit: 'cm' }
   ];
   
-  // Constantes para Workout Tracker
+  // Constantes para Seguimiento de Entrenamientos
   const exerciseTypes = [
     'Cardio', 'Fuerza', 'Flexibilidad', 'Equilibrio', 'Resistencia', 'HIIT', 'Yoga', 'Pilates', 'Crossfit', 'Funcional'
   ];
   
-  // Constantes para Nutrition Tracker
+  // Constantes para Seguimiento Nutricional
   const supplements = [
     'Multivitamínico', 'Proteína', 'Creatina', 'Omega-3', 'Vitamina D', 'Magnesio', 'Zinc', 'Hierro', 'Calcio', 'Otro'
   ];
 
   const renderSectionTabs = () => (
     <View style={styles.tabsContainer}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
+      <View style={styles.tabsWrapper}>
         {sections.map((section) => (
           <TouchableOpacity
             key={section.id}
@@ -229,14 +229,22 @@ const HealthSections = () => {
             ]}
             onPress={() => setActiveSection(section.id)}
           >
-            <Icon 
-              name={section.icon} 
-              size={18} 
-              color={activeSection === section.id ? '#FFFFFF' : '#6c757d'} 
-            />
+            <View style={[styles.tabContent, {
+              backgroundColor: activeSection === section.id ? '#4A6B8A' : 'transparent',
+              borderColor: activeSection === section.id ? '#4A6B8A' : '#1E3A5F',
+            }]}>
+              <Icon 
+                name={section.icon} 
+                size={20} 
+                color={activeSection === section.id ? '#FFFFFF' : '#1E3A5F'} 
+              />
+              {activeSection === section.id && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 
@@ -442,62 +450,286 @@ const HealthSections = () => {
   const renderMealPlanner = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>PLANIFICADOR DE COMIDAS</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Planificador de Comidas</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza tu alimentación saludable
+          </Text>
+        </View>
         <TouchableOpacity onPress={openAddMealModal} style={styles.addButton}>
           <Icon name="add" size={16} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
       
-      <View style={styles.mealPlannerContainer}>
-        <Text style={styles.currentDayTitle}>Hoy - {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
+      {/* Resumen Nutricional */}
+      <View style={styles.nutritionSummary}>
+        <View style={styles.nutritionSummaryCard}>
+          <View style={styles.nutritionSummaryIcon}>
+            <Icon name="restaurant" size={20} color="#4A6B8A" />
+          </View>
+          <View style={styles.nutritionSummaryContent}>
+            <Text style={styles.nutritionSummaryTitle}>Comidas Planificadas</Text>
+            <Text style={styles.nutritionSummaryValue}>3/3</Text>
+          </View>
+        </View>
         
-        <View style={styles.mealCards}>
-          <View style={styles.mealCard}>
-            <Text style={styles.mealTitle}>🌅 Desayuno</Text>
-            <Text style={styles.mealContent}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.breakfast || 'No planificado'}
-            </Text>
+        <View style={styles.nutritionSummaryCard}>
+          <View style={styles.nutritionSummaryIcon}>
+            <Icon name="water" size={20} color="#4A90E2" />
           </View>
-          
-          <View style={styles.mealCard}>
-            <Text style={styles.mealTitle}>☀️ Comida</Text>
-            <Text style={styles.mealContent}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.lunch || 'No planificado'}
-            </Text>
-          </View>
-          
-          <View style={styles.mealCard}>
-            <Text style={styles.mealTitle}>🌙 Cena</Text>
-            <Text style={styles.mealContent}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.dinner || 'No planificado'}
+          <View style={styles.nutritionSummaryContent}>
+            <Text style={styles.nutritionSummaryTitle}>Hidratación</Text>
+            <Text style={styles.nutritionSummaryValue}>
+              {mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0}/8 vasos
             </Text>
           </View>
         </View>
-
-        {/* Barrita de tomas de agua */}
-        <View style={styles.waterIntakeSection}>
-          <Text style={styles.waterIntakeTitle}>💧 TOMAS DE AGUA</Text>
-          <View style={styles.waterGlassesContainer}>
-            {Array.from({length: 8}, (_, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={[
-                  styles.waterGlass, 
-                  index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) && styles.waterGlassFilled
-                ]}
-                onPress={() => toggleWaterGlass(index + 1)}
-              >
-                <Icon 
-                  name="water" 
-                  size={20} 
-                  color={index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) ? "#4A90E2" : "#E0E0E0"} 
-                />
-              </TouchableOpacity>
-            ))}
+        
+        <View style={styles.nutritionSummaryCard}>
+          <View style={styles.nutritionSummaryIcon}>
+            <Icon name="fitness" size={20} color="#10B981" />
           </View>
-          <Text style={styles.waterIntakeText}>
-            {mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0} / 8 vasos
+          <View style={styles.nutritionSummaryContent}>
+            <Text style={styles.nutritionSummaryTitle}>Calorías</Text>
+            <Text style={styles.nutritionSummaryValue}>1,850 kcal</Text>
+          </View>
+        </View>
+      </View>
+      
+      {/* Plan de Comidas del Día */}
+      <View style={styles.dailyMealPlan}>
+        <View style={styles.dailyMealHeader}>
+          <View style={styles.dailyMealTitleContainer}>
+            <Icon name="calendar" size={18} color="#4A6B8A" />
+            <Text style={styles.dailyMealTitle}>Plan de Hoy</Text>
+          </View>
+          <Text style={styles.dailyMealDate}>
+            {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
           </Text>
+        </View>
+        
+        <View style={styles.mealsContainer}>
+          {/* Desayuno */}
+          <View style={styles.mealCard}>
+            <View style={styles.mealCardHeader}>
+              <View style={styles.mealCardIcon}>
+                <Icon name="sunny" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.mealCardContent}>
+                <Text style={styles.mealCardTitle}>Desayuno</Text>
+                <Text style={styles.mealCardTime}>7:00 - 9:00 AM</Text>
+              </View>
+              <TouchableOpacity style={styles.mealActionButton}>
+                <Icon name="add" size={16} color="#4A6B8A" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.mealCardBody}>
+              {mealPlans[new Date().toISOString().split('T')[0]]?.breakfast ? (
+                <View style={styles.mealContent}>
+                  <Text style={styles.mealContentText}>
+                    {mealPlans[new Date().toISOString().split('T')[0]].breakfast}
+                  </Text>
+                  <View style={styles.mealContentActions}>
+                    <TouchableOpacity style={styles.mealContentAction}>
+                      <Icon name="create" size={14} color="#4A6B8A" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.mealContentAction}>
+                      <Icon name="trash" size={14} color="#DC2626" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.emptyMealState}>
+                  <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
+                  <Text style={styles.emptyMealText}>No planificado</Text>
+                  <TouchableOpacity style={styles.addMealButton}>
+                    <Icon name="add-circle" size={16} color="#4A6B8A" />
+                    <Text style={styles.addMealButtonText}>Agregar</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+          
+          {/* Comida */}
+          <View style={styles.mealCard}>
+            <View style={styles.mealCardHeader}>
+              <View style={styles.mealCardIcon}>
+                <Icon name="sunny" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.mealCardContent}>
+                <Text style={styles.mealCardTitle}>Comida</Text>
+                <Text style={styles.mealCardTime}>12:00 - 2:00 PM</Text>
+              </View>
+              <TouchableOpacity style={styles.mealActionButton}>
+                <Icon name="add" size={16} color="#4A6B8A" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.mealCardBody}>
+              {mealPlans[new Date().toISOString().split('T')[0]]?.lunch ? (
+                <View style={styles.mealContent}>
+                  <Text style={styles.mealContentText}>
+                    {mealPlans[new Date().toISOString().split('T')[0]].lunch}
+                  </Text>
+                  <View style={styles.mealContentActions}>
+                    <TouchableOpacity style={styles.mealContentAction}>
+                      <Icon name="create" size={14} color="#4A6B8A" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.mealContentAction}>
+                      <Icon name="trash" size={14} color="#DC2626" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.emptyMealState}>
+                  <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
+                  <Text style={styles.emptyMealText}>No planificado</Text>
+                  <TouchableOpacity style={styles.addMealButton}>
+                    <Icon name="add-circle" size={16} color="#4A6B8A" />
+                    <Text style={styles.addMealButtonText}>Agregar</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+          
+          {/* Cena */}
+          <View style={styles.mealCard}>
+            <View style={styles.mealCardHeader}>
+              <View style={styles.mealCardIcon}>
+                <Icon name="moon" size={20} color="#8B5CF6" />
+              </View>
+              <View style={styles.mealCardContent}>
+                <Text style={styles.mealCardTitle}>Cena</Text>
+                <Text style={styles.mealCardTime}>7:00 - 9:00 PM</Text>
+              </View>
+              <TouchableOpacity style={styles.mealActionButton}>
+                <Icon name="add" size={16} color="#4A6B8A" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.mealCardBody}>
+              {mealPlans[new Date().toISOString().split('T')[0]]?.dinner ? (
+                <View style={styles.mealContent}>
+                  <Text style={styles.mealContentText}>
+                    {mealPlans[new Date().toISOString().split('T')[0]].dinner}
+                  </Text>
+                  <View style={styles.mealContentActions}>
+                    <TouchableOpacity style={styles.mealContentAction}>
+                      <Icon name="create" size={14} color="#4A6B8A" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.mealContentAction}>
+                      <Icon name="trash" size={14} color="#DC2626" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.emptyMealState}>
+                  <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
+                  <Text style={styles.emptyMealText}>No planificado</Text>
+                  <TouchableOpacity style={styles.addMealButton}>
+                    <Icon name="add-circle" size={16} color="#4A6B8A" />
+                    <Text style={styles.addMealButtonText}>Agregar</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      </View>
+      
+      {/* Seguimiento de Hidratación */}
+      <View style={styles.waterTrackingSection}>
+        <View style={styles.waterTrackingHeader}>
+          <View style={styles.waterTrackingTitleContainer}>
+            <Icon name="water" size={18} color="#4A90E2" />
+            <Text style={styles.waterTrackingTitle}>Seguimiento de Hidratación</Text>
+          </View>
+          <Text style={styles.waterTrackingSubtitle}>
+            Meta: 8 vasos de agua al día
+          </Text>
+        </View>
+        
+        <View style={styles.waterGlassesGrid}>
+          {Array.from({length: 8}, (_, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={[
+                styles.waterGlassCard, 
+                index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) && styles.waterGlassCardFilled
+              ]}
+              onPress={() => toggleWaterGlass(index + 1)}
+            >
+              <Icon 
+                name="water" 
+                size={24} 
+                color={index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) ? "#4A90E2" : "#D1D5DB"} 
+              />
+              <Text style={[
+                styles.waterGlassNumber,
+                index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) && styles.waterGlassNumberFilled
+              ]}>
+                {index + 1}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        
+        <View style={styles.waterProgressContainer}>
+          <View style={styles.waterProgressBar}>
+            <View 
+              style={[
+                styles.waterProgressFill,
+                { width: `${((mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) / 8) * 100}%` }
+              ]}
+            />
+          </View>
+          <Text style={styles.waterProgressText}>
+            {mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0} de 8 vasos completados
+          </Text>
+        </View>
+      </View>
+      
+      {/* Accesos Rápidos */}
+      <View style={styles.quickAccessContainer}>
+        <Text style={styles.quickAccessTitle}>Accesos Rápidos</Text>
+        <View style={styles.quickAccessGrid}>
+          <TouchableOpacity style={styles.quickAccessCard}>
+            <View style={styles.quickAccessIcon}>
+              <Icon name="restaurant" size={24} color="#4A6B8A" />
+            </View>
+            <Text style={styles.quickAccessText}>Recetas</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.quickAccessCard}>
+            <View style={styles.quickAccessIcon}>
+              <Icon name="list" size={24} color="#10B981" />
+            </View>
+            <Text style={styles.quickAccessText}>Lista de Compras</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.quickAccessCard}>
+            <View style={styles.quickAccessIcon}>
+              <Icon name="analytics" size={24} color="#F59E0B" />
+            </View>
+            <Text style={styles.quickAccessText}>Nutrición</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.quickAccessCard}>
+            <View style={styles.quickAccessIcon}>
+              <Icon name="calendar" size={24} color="#8B5CF6" />
+            </View>
+            <Text style={styles.quickAccessText}>Plan Semanal</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -506,7 +738,19 @@ const HealthSections = () => {
   const renderMarketList = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>LISTA DE COMPRAS</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Lista de Compras</Text>
+          <Text style={styles.sectionSubtitle}>
+            Organiza tus compras saludables
+          </Text>
+        </View>
       </View>
       
       <View style={styles.marketListContainer}>
@@ -520,7 +764,7 @@ const HealthSections = () => {
                 style={styles.addItemButton}
                 onPress={() => openAddItemModal(category.id)}
               >
-                <Icon name="add" size={16} color="#45B7D1" />
+                <Icon name="add" size={16} color="#4A7C59" />
                 <Text style={styles.addItemText}>Agregar</Text>
               </TouchableOpacity>
             </View>
@@ -534,7 +778,7 @@ const HealthSections = () => {
                   <Icon 
                     name={item.purchased ? "checkbox" : "square-outline"} 
                     size={20} 
-                    color={item.purchased ? "#28a745" : "#6c757d"} 
+                    color={item.purchased ? "#28a745" : "#4A6741"} 
                   />
                 </TouchableOpacity>
                 <View style={styles.itemInfo}>
@@ -562,7 +806,19 @@ const HealthSections = () => {
   const renderRecipes = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>RECETAS</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Recetas</Text>
+          <Text style={styles.sectionSubtitle}>
+            Descubre recetas saludables
+          </Text>
+        </View>
         <TouchableOpacity onPress={openAddRecipeModal} style={styles.addButton}>
           <Icon name="add" size={16} color="#FFFFFF" />
         </TouchableOpacity>
@@ -584,7 +840,19 @@ const HealthSections = () => {
   const renderGymRoutine = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>RUTINA DE GIMNASIO</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Rutina de Gimnasio</Text>
+          <Text style={styles.sectionSubtitle}>
+            Planifica tu entrenamiento
+          </Text>
+        </View>
         <TouchableOpacity onPress={openAddGymModal} style={styles.addButton}>
           <Icon name="add" size={16} color="#FFFFFF" />
         </TouchableOpacity>
@@ -640,7 +908,19 @@ const HealthSections = () => {
   const renderSportsGoals = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>OBJETIVOS DEPORTIVOS</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Objetivos Deportivos</Text>
+          <Text style={styles.sectionSubtitle}>
+            Establece tus metas deportivas
+          </Text>
+        </View>
         <TouchableOpacity onPress={openAddSportsModal} style={styles.addButton}>
           <Icon name="add" size={16} color="#FFFFFF" />
         </TouchableOpacity>
@@ -685,7 +965,7 @@ const HealthSections = () => {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Planificar Comidas</Text>
             <TouchableOpacity onPress={closeAddMealModal} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#6c757d" />
+              <Icon name="close" size={24} color="#4A6741" />
             </TouchableOpacity>
           </View>
 
@@ -699,7 +979,7 @@ const HealthSections = () => {
                 <Text style={styles.dateButtonText}>
                   {selectedMealDate.toLocaleDateString('es-ES')}
                 </Text>
-                <Icon name="calendar-outline" size={20} color="#45B7D1" />
+                <Icon name="calendar-outline" size={20} color="#4A7C59" />
               </TouchableOpacity>
               {showMealDatePicker && (
                 <DateTimePicker
@@ -785,7 +1065,7 @@ const HealthSections = () => {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Nueva Receta</Text>
             <TouchableOpacity onPress={closeAddRecipeModal} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#6c757d" />
+              <Icon name="close" size={24} color="#4A6741" />
             </TouchableOpacity>
           </View>
 
@@ -861,7 +1141,7 @@ const HealthSections = () => {
               Agregar a {mealCategories.find(cat => cat.id === selectedCategory)?.name}
             </Text>
             <TouchableOpacity onPress={closeAddItemModal} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#6c757d" />
+              <Icon name="close" size={24} color="#4A6741" />
             </TouchableOpacity>
           </View>
 
@@ -887,7 +1167,7 @@ const HealthSections = () => {
                   onPress={decrementQuantity}
                   disabled={newItemQuantity <= 1}
                 >
-                  <Icon name="remove" size={20} color={newItemQuantity <= 1 ? "#ccc" : "#45B7D1"} />
+                  <Icon name="remove" size={20} color={newItemQuantity <= 1 ? "#ccc" : "#4A7C59"} />
                 </TouchableOpacity>
                 
                 <View style={styles.quantityDisplay}>
@@ -898,7 +1178,7 @@ const HealthSections = () => {
                   style={styles.quantityButton}
                   onPress={incrementQuantity}
                 >
-                  <Icon name="add" size={20} color="#45B7D1" />
+                  <Icon name="add" size={20} color="#4A7C59" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -962,7 +1242,7 @@ const HealthSections = () => {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Nueva Rutina de Gimnasio</Text>
             <TouchableOpacity onPress={closeAddGymModal} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#6c757d" />
+              <Icon name="close" size={24} color="#4A6741" />
             </TouchableOpacity>
           </View>
 
@@ -1145,7 +1425,7 @@ const HealthSections = () => {
                   exercises: [...newRoutine.exercises, {name: '', sets: '', reps: '', weight: '', rest: ''}]
                 })}
               >
-                <Icon name="add" size={16} color="#45B7D1" />
+                <Icon name="add" size={16} color="#4A7C59" />
                 <Text style={styles.addExerciseText}>Agregar Ejercicio</Text>
               </TouchableOpacity>
             </View>
@@ -1182,7 +1462,7 @@ const HealthSections = () => {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Nuevo Objetivo Deportivo</Text>
             <TouchableOpacity onPress={closeAddSportsModal} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#6c757d" />
+              <Icon name="close" size={24} color="#4A6741" />
             </TouchableOpacity>
           </View>
 
@@ -1232,7 +1512,7 @@ const HealthSections = () => {
                 <Text style={styles.dateButtonText}>
                   {newGoal.targetDate.toLocaleDateString('es-ES')}
                 </Text>
-                <Icon name="calendar-outline" size={20} color="#45B7D1" />
+                <Icon name="calendar-outline" size={20} color="#4A7C59" />
               </TouchableOpacity>
               {showGoalDatePicker && (
                 <DateTimePicker
@@ -1293,11 +1573,23 @@ const HealthSections = () => {
     </Modal>
   );
 
-  // Función para renderizar Fitness Tracker
+  // Función para renderizar Seguimiento de Fitness
   const renderFitnessTracker = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Fitness Tracker</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Seguimiento de Fitness</Text>
+          <Text style={styles.sectionSubtitle}>
+            Registra tu actividad física
+          </Text>
+        </View>
         <TouchableOpacity 
           style={styles.addButton}
           onPress={() => setShowFitnessDatePicker(true)}
@@ -1403,11 +1695,23 @@ const HealthSections = () => {
     </View>
   );
 
-  // Función para renderizar Body Measurements
+  // Función para renderizar Medidas Corporales
   const renderBodyMeasurements = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Medidas Corporales</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Medidas Corporales</Text>
+          <Text style={styles.sectionSubtitle}>
+            Registra tu progreso físico
+          </Text>
+        </View>
         <TouchableOpacity 
           style={styles.addButton}
           onPress={() => setShowMeasurementDatePicker(true)}
@@ -1442,11 +1746,23 @@ const HealthSections = () => {
     </View>
   );
 
-  // Función para renderizar Workout Tracker
+  // Función para renderizar Seguimiento de Entrenamientos
   const renderWorkoutTracker = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Workout Tracker</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Seguimiento de Entrenamientos</Text>
+          <Text style={styles.sectionSubtitle}>
+            Registra tus entrenamientos
+          </Text>
+        </View>
         <TouchableOpacity 
           style={styles.addButton}
           onPress={() => setShowAddWorkoutModal(true)}
@@ -1499,11 +1815,23 @@ const HealthSections = () => {
     </View>
   );
 
-  // Función para renderizar Weight Loss Tracker
+  // Función para renderizar Pérdida de Peso
   const renderWeightLossTracker = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Pérdida de Peso</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Pérdida de Peso</Text>
+          <Text style={styles.sectionSubtitle}>
+            Controla tu peso y objetivos
+          </Text>
+        </View>
         <TouchableOpacity 
           style={styles.addButton}
           onPress={() => setShowAddWeightGoalModal(true)}
@@ -1533,11 +1861,23 @@ const HealthSections = () => {
     </View>
   );
 
-  // Función para renderizar Nutrition Tracker
+  // Función para renderizar Seguimiento Nutricional
   const renderNutritionTracker = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Seguimiento Nutricional</Text>
+        <View style={styles.headerDecoration}>
+          <Image
+            source={require('../../android/app/src/main/assets/salud.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.headerContent}>
+          <Text style={styles.sectionTitle}>Seguimiento Nutricional</Text>
+          <Text style={styles.sectionSubtitle}>
+            Monitorea tu alimentación
+          </Text>
+        </View>
         <TouchableOpacity 
           style={styles.addButton}
           onPress={() => setShowNutritionDatePicker(true)}
@@ -1616,8 +1956,6 @@ const HealthSections = () => {
     switch (activeSection) {
       case 'meal-planner': 
         return renderMealPlanner();
-      case 'shopping-list': 
-        return renderMarketList();
       case 'recipes': 
         return renderRecipes();
       case 'fitness-tracker': 
@@ -1661,28 +1999,65 @@ const HealthSections = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8FAFC', // Blanco azulado
   },
   tabsContainer: {
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingVertical: 8,
-  },
-  tabsScroll: {
+    backgroundColor: '#F8FAFC', // Blanco azulado
+    paddingVertical: 12,
     paddingHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    shadowColor: '#1E3A5F',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tabsWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC', // Blanco azulado
+    padding: 8,
+    borderRadius: 16,
   },
   tab: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
+    flex: 1,
     alignItems: 'center',
-    marginRight: 6,
-    borderRadius: 10,
-    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
   },
   activeTab: {
-    backgroundColor: '#45B7D1',
+    backgroundColor: '#4A6B8A', // Azul grisáceo
+    shadowColor: '#4A6B8A', // Azul grisáceo
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  tabContent: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    position: 'relative',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: -8,
+    left: '50%',
+    marginLeft: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4A6B8A', // Azul grisáceo
   },
   content: {
     flex: 1,
@@ -1690,12 +2065,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   section: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC', // Blanco azulado
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    marginHorizontal: 0,
-    shadowColor: '#000',
+    marginHorizontal: 16,
+    shadowColor: '#1E3A5F', // Azul montaña profundo
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1705,62 +2080,363 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: '#1E3A5F', // Azul montaña profundo
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    shadowColor: '#1E3A5F',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+    borderBottomWidth: 3,
+    borderBottomColor: '#4A6B8A', // Azul grisáceo
+  },
+  headerDecoration: {
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  mascotImage: {
+    width: 60,
+    height: 60,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2d4150',
-    flex: 1,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   addButton: {
-    backgroundColor: '#45B7D1',
+    backgroundColor: '#4A6B8A', // Azul grisáceo
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1E3A5F', // Azul montaña profundo
+    shadowColor: '#1E3A5F',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  // Estilos para alimentación
-  mealPlannerContainer: {
-    gap: 16,
+  // Estilos mejorados para planificador de comidas
+  nutritionSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 12,
   },
-  currentDayTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2d4150',
+  nutritionSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#4A6B8A',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nutritionSummaryIcon: {
+    marginBottom: 8,
+  },
+  nutritionSummaryContent: {
+    alignItems: 'center',
+  },
+  nutritionSummaryTitle: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginBottom: 4,
     textAlign: 'center',
+  },
+  nutritionSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#4A6B8A',
+  },
+  dailyMealPlan: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#4A6B8A',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  dailyMealHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  mealCards: {
+  dailyMealTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dailyMealTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4A6B8A',
+  },
+  dailyMealDate: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  mealsContainer: {
     gap: 12,
   },
   mealCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F8F9FA',
     borderRadius: 8,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#45B7D1',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
   },
-  mealTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2d4150',
+  mealCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  mealContent: {
+  mealCardIcon: {
+    marginRight: 12,
+  },
+  mealCardContent: {
+    flex: 1,
+  },
+  mealCardTitle: {
     fontSize: 14,
-    color: '#6c757d',
-    fontStyle: 'italic',
+    fontWeight: '700',
+    color: '#4A6B8A',
+    marginBottom: 2,
+  },
+  mealCardTime: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  mealActionButton: {
+    padding: 4,
+  },
+  mealCardBody: {
+    minHeight: 60,
+  },
+  mealContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mealContentText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#4A6B8A',
+    lineHeight: 18,
+  },
+  mealContentActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginLeft: 8,
+  },
+  mealContentAction: {
+    padding: 4,
+  },
+  emptyMealState: {
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    borderStyle: 'dashed',
+  },
+  emptyMealText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  addMealButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A6B8A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  addMealButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  waterTrackingSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#4A6B8A',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  waterTrackingHeader: {
+    marginBottom: 16,
+  },
+  waterTrackingTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  waterTrackingTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4A6B8A',
+  },
+  waterTrackingSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  waterGlassesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 8,
+  },
+  waterGlassCard: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  waterGlassCardFilled: {
+    backgroundColor: '#E6F3FF',
+    borderColor: '#4A90E2',
+  },
+  waterGlassNumber: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  waterGlassNumberFilled: {
+    color: '#4A90E2',
+  },
+  waterProgressContainer: {
+    alignItems: 'center',
+  },
+  waterProgressBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  waterProgressFill: {
+    height: '100%',
+    backgroundColor: '#4A90E2',
+    borderRadius: 4,
+  },
+  waterProgressText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  quickAccessContainer: {
+    marginTop: 8,
+  },
+  quickAccessTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4A6B8A',
+    marginBottom: 12,
+  },
+  quickAccessGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickAccessCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#4A6B8A',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  quickAccessIcon: {
+    marginBottom: 8,
+  },
+  quickAccessText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4A6B8A',
+    textAlign: 'center',
   },
   marketListContainer: {
     gap: 16,
   },
   categorySection: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     padding: 12,
   },
@@ -1773,7 +2449,7 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
   },
   addItemButton: {
     flexDirection: 'row',
@@ -1786,7 +2462,7 @@ const styles = StyleSheet.create({
   },
   addItemText: {
     fontSize: 12,
-    color: '#45B7D1',
+    color: '#4A7C59',
     fontWeight: '600',
   },
   itemRow: {
@@ -1798,7 +2474,7 @@ const styles = StyleSheet.create({
   },
   itemRowPurchased: {
     opacity: 0.6,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
   },
   checkboxContainer: {
     padding: 8,
@@ -1810,15 +2486,15 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
   },
   itemTextPurchased: {
     textDecorationLine: 'line-through',
-    color: '#6c757d',
+    color: '#4A6741',
   },
   itemQuantity: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
     fontStyle: 'italic',
     marginTop: 2,
   },
@@ -1833,26 +2509,26 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   recipeCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#45B7D1',
+    borderLeftColor: '#4A7C59',
   },
   recipeName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 8,
   },
   recipeIngredients: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     marginBottom: 4,
   },
   recipeInstructions: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     fontStyle: 'italic',
   },
   // Estilos para ejercicio
@@ -1860,11 +2536,11 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   routineCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#45B7D1',
+    borderLeftColor: '#4A7C59',
   },
   routineHeader: {
     flexDirection: 'row',
@@ -1875,7 +2551,7 @@ const styles = StyleSheet.create({
   routineName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     flex: 1,
   },
   difficultyBadge: {
@@ -1899,13 +2575,13 @@ const styles = StyleSheet.create({
   },
   routineDescription: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     marginBottom: 8,
     fontStyle: 'italic',
   },
   routineDuration: {
     fontSize: 12,
-    color: '#45B7D1',
+    color: '#4A7C59',
     fontWeight: '600',
     marginBottom: 12,
   },
@@ -1915,31 +2591,31 @@ const styles = StyleSheet.create({
   exercisesTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 4,
   },
   exerciseItem: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAF6',
     padding: 8,
     borderRadius: 4,
     borderLeftWidth: 2,
-    borderLeftColor: '#45B7D1',
+    borderLeftColor: '#4A7C59',
   },
   exerciseName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 2,
   },
   exerciseDetails: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
   },
   goalsContainer: {
     gap: 16,
   },
   goalCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     padding: 16,
     borderLeftWidth: 4,
@@ -1954,12 +2630,12 @@ const styles = StyleSheet.create({
   goalSport: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     flex: 1,
   },
   goalDate: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
     backgroundColor: '#e9ecef',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -1967,7 +2643,7 @@ const styles = StyleSheet.create({
   },
   goalObjective: {
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 12,
     fontStyle: 'italic',
   },
@@ -1982,11 +2658,11 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
   },
   goalNotes: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
     fontStyle: 'italic',
   },
   // Estilos para modales
@@ -1998,7 +2674,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAF6',
     borderRadius: 16,
     width: '100%',
     maxWidth: 400,
@@ -2023,7 +2699,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     flex: 1,
   },
   closeButton: {
@@ -2046,14 +2722,14 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 8,
   },
   textInput: {
     fontSize: 16,
-    color: '#2d4150',
+    color: '#2D5016',
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -2070,18 +2746,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
     alignItems: 'center',
   },
   difficultyOptionSelected: {
-    backgroundColor: '#45B7D1',
-    borderColor: '#45B7D1',
+    backgroundColor: '#4A7C59',
+    borderColor: '#4A7C59',
   },
   difficultyOptionText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     fontWeight: '500',
   },
   difficultyOptionTextSelected: {
@@ -2097,17 +2773,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
   sportOptionSelected: {
-    backgroundColor: '#45B7D1',
-    borderColor: '#45B7D1',
+    backgroundColor: '#4A7C59',
+    borderColor: '#4A7C59',
   },
   sportOptionText: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
     fontWeight: '500',
   },
   sportOptionTextSelected: {
@@ -2117,7 +2793,7 @@ const styles = StyleSheet.create({
   exerciseInput: {
     marginBottom: 12,
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -2125,7 +2801,7 @@ const styles = StyleSheet.create({
   exerciseNumber: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#45B7D1',
+    color: '#4A7C59',
     marginBottom: 8,
   },
   exerciseDetails: {
@@ -2143,16 +2819,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#45B7D1',
+    borderColor: '#4A7C59',
     borderStyle: 'dashed',
     gap: 8,
   },
   addExerciseText: {
     fontSize: 14,
-    color: '#45B7D1',
+    color: '#4A7C59',
     fontWeight: '600',
   },
   quantityContainer: {
@@ -2165,7 +2841,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
     justifyContent: 'center',
@@ -2175,7 +2851,7 @@ const styles = StyleSheet.create({
   quantityDisplay: {
     minWidth: 60,
     height: 40,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
     borderRadius: 8,
@@ -2186,7 +2862,7 @@ const styles = StyleSheet.create({
   quantityText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
   },
   unitSelector: {
     marginVertical: 10,
@@ -2199,17 +2875,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
   unitButtonSelected: {
-    backgroundColor: '#45B7D1',
-    borderColor: '#45B7D1',
+    backgroundColor: '#4A7C59',
+    borderColor: '#4A7C59',
   },
   unitButtonText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     fontWeight: '500',
   },
   unitButtonTextSelected: {
@@ -2220,21 +2896,21 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
     alignItems: 'center',
   },
   cancelButtonText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#4A6741',
     fontWeight: '600',
   },
   saveButton: {
     flex: 1,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#45B7D1',
+    backgroundColor: '#4A7C59',
     alignItems: 'center',
   },
   saveButtonDisabled: {
@@ -2249,7 +2925,7 @@ const styles = StyleSheet.create({
   scheduleContainer: {
     marginTop: 12,
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -2257,17 +2933,17 @@ const styles = StyleSheet.create({
   scheduleTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#45B7D1',
+    color: '#4A7C59',
     marginBottom: 4,
   },
   scheduleText: {
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 4,
   },
   scheduleFrequency: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
     fontStyle: 'italic',
   },
   daysSelector: {
@@ -2279,17 +2955,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
   dayButtonSelected: {
-    backgroundColor: '#45B7D1',
-    borderColor: '#45B7D1',
+    backgroundColor: '#4A7C59',
+    borderColor: '#4A7C59',
   },
   dayButtonText: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#4A6741',
     fontWeight: '500',
   },
   dayButtonTextSelected: {
@@ -2304,18 +2980,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderWidth: 1,
     borderColor: '#e9ecef',
     alignItems: 'center',
   },
   frequencyOptionSelected: {
-    backgroundColor: '#45B7D1',
-    borderColor: '#45B7D1',
+    backgroundColor: '#4A7C59',
+    borderColor: '#4A7C59',
   },
   frequencyOptionText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     fontWeight: '500',
   },
   frequencyOptionTextSelected: {
@@ -2328,17 +3004,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#2d4150',
+    color: '#2D5016',
     fontWeight: '500',
   },
-  // Estilos para Fitness Tracker
+  // Estilos para Seguimiento de Fitness
   fitnessGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -2352,7 +3028,7 @@ const styles = StyleSheet.create({
   dayLabel: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -2364,7 +3040,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e9ecef',
     paddingVertical: 5,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
   },
   fitnessGoals: {
     marginBottom: 20,
@@ -2382,7 +3058,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#45B7D1',
+    borderColor: '#4A7C59',
   },
   goalInput: {
     flex: 1,
@@ -2390,7 +3066,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e9ecef',
     paddingVertical: 5,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
   },
   fitnessNotes: {
     marginBottom: 20,
@@ -2398,15 +3074,15 @@ const styles = StyleSheet.create({
   notesTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 8,
   },
   notesInput: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -2416,19 +3092,19 @@ const styles = StyleSheet.create({
   motivationTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 8,
   },
   motivationInput: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
     minHeight: 60,
     textAlignVertical: 'top',
   },
-  // Estilos para Body Measurements
+  // Estilos para Medidas Corporales
   measurementsContainer: {
     gap: 20,
   },
@@ -2444,7 +3120,7 @@ const styles = StyleSheet.create({
   measurementLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 5,
   },
   measurementInput: {
@@ -2452,13 +3128,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e9ecef',
     paddingVertical: 8,
     fontSize: 16,
-    color: '#2d4150',
+    color: '#2D5016',
     textAlign: 'center',
   },
   measurementNotes: {
     marginTop: 20,
   },
-  // Estilos para Workout Tracker
+  // Estilos para Seguimiento de Entrenamientos
   workoutContainer: {
     gap: 20,
   },
@@ -2469,7 +3145,7 @@ const styles = StyleSheet.create({
   },
   workoutDate: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#4A6741',
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
     paddingBottom: 5,
@@ -2482,7 +3158,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   workoutGoalCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 12,
     padding: 15,
     borderWidth: 1,
@@ -2491,15 +3167,15 @@ const styles = StyleSheet.create({
   goalCardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 10,
   },
   goalCardInput: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAF6',
     borderRadius: 8,
     padding: 10,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
     minHeight: 60,
     textAlignVertical: 'top',
     marginBottom: 15,
@@ -2507,7 +3183,7 @@ const styles = StyleSheet.create({
   actionStepsTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 10,
   },
   actionStep: {
@@ -2521,7 +3197,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#45B7D1',
+    borderColor: '#4A7C59',
   },
   actionInput: {
     flex: 1,
@@ -2529,12 +3205,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e9ecef',
     paddingVertical: 5,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
   },
   workoutNotes: {
     marginTop: 20,
   },
-  // Estilos para Weight Loss Tracker
+  // Estilos para Pérdida de Peso
   weightLossContainer: {
     alignItems: 'center',
     gap: 20,
@@ -2564,7 +3240,7 @@ const styles = StyleSheet.create({
   weightLossLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     textAlign: 'center',
   },
   getNowButton: {
@@ -2598,7 +3274,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
   },
-  // Estilos para Nutrition Tracker
+  // Estilos para Seguimiento Nutricional
   nutritionContainer: {
     gap: 20,
   },
@@ -2606,7 +3282,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   mealSection: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F5F7F0',
     borderRadius: 12,
     padding: 15,
     borderWidth: 1,
@@ -2615,7 +3291,7 @@ const styles = StyleSheet.create({
   mealTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
     marginBottom: 10,
   },
   nutritionInputs: {
@@ -2628,7 +3304,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e9ecef',
     paddingVertical: 8,
     fontSize: 14,
-    color: '#2d4150',
+    color: '#2D5016',
     textAlign: 'center',
   },
   supplementsSection: {
@@ -2637,7 +3313,7 @@ const styles = StyleSheet.create({
   supplementsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
   },
   supplementsGrid: {
     flexDirection: 'row',
@@ -2663,69 +3339,15 @@ const styles = StyleSheet.create({
   waterTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#2D5016',
   },
   waterInput: {
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
     paddingVertical: 10,
     fontSize: 16,
-    color: '#2d4150',
+    color: '#2D5016',
     textAlign: 'center',
-  },
-  // Estilos para la barrita de tomas de agua
-  waterIntakeSection: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  waterIntakeTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2d4150',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  waterGlassesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  waterGlass: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#ffffff',
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  waterGlassFilled: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#4A90E2',
-    shadowColor: '#4A90E2',
-    shadowOpacity: 0.3,
-  },
-  waterIntakeText: {
-    fontSize: 14,
-    color: '#6c757d',
-    textAlign: 'center',
-    fontWeight: '500',
   },
 });
 
