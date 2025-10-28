@@ -4,7 +4,7 @@ import {
   Text,
   ScrollView,
 } from 'react-native';
-import { SectionHeader, SubsectionTabs } from '../shared';
+import { SectionHeader, ElegantSubsectionTabs } from '../shared';
 import { useTheme } from '../shared/hooks/useTheme';
 import { workSectionsStyles } from './styles/workSectionsStyles';
 
@@ -66,7 +66,7 @@ const WorkSections = ({
             <SectionHeader
               title="Sección de Trabajo"
               subtitle="Gestiona tu trabajo diario"
-              image={require('../../android/app/src/main/assets/trabajo.png')}
+              image={require('../../../android/app/src/main/assets/trabajo.png')}
               theme={currentTheme}
               size="medium"
             />
@@ -82,14 +82,14 @@ const WorkSections = ({
 
   return (
     <View style={[workSectionsStyles.container, { backgroundColor: themeColors.background }]}>
-      <SubsectionTabs
+      <ElegantSubsectionTabs
         sections={sections}
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        theme={currentTheme}
+        theme="desert"
         size="medium"
         showIcons={true}
-        showLabels={true}
+        showLabels={false}
       />
       
       <ScrollView style={workSectionsStyles.content} showsVerticalScrollIndicator={false}>

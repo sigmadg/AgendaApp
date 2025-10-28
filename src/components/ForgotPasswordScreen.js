@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -72,48 +73,93 @@ const ForgotPasswordScreen = ({ onNavigateToLogin }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          {/* Header con gradiente y mascota */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <View style={styles.brainContainer}>
-                <Icon name="brain" size={50} color="#2c3e50" />
-                <Icon name="flash" size={25} color="#e74c3c" style={styles.lightningIcon} />
+              <View style={styles.logoBackground}>
+                <Image 
+                  source={require('../assets/images/mascota.png')} 
+                  style={styles.mascotaImage}
+                  resizeMode="contain"
+                />
               </View>
+              <View style={styles.logoGlow} />
             </View>
-            <Text style={styles.title}>Email Enviado</Text>
-            <Text style={styles.subtitle}>Revisa tu bandeja de entrada</Text>
+            <Text style={styles.title}>Cortexa</Text>
+            <Text style={styles.subtitle}>Email enviado exitosamente</Text>
           </View>
 
+          {/* Formulario de éxito mejorado */}
           <View style={styles.formContainer}>
+            <View style={styles.formHeader}>
+              <Text style={styles.formTitle}>¡Listo!</Text>
+              <Text style={styles.formSubtitle}>Revisa tu bandeja de entrada</Text>
+            </View>
+
             <View style={styles.successContainer}>
-              <Icon name="checkmark-circle" size={80} color="#28a745" />
-              <Text style={styles.successTitle}>¡Listo!</Text>
+              <View style={styles.successIconContainer}>
+                <Icon name="checkmark-circle" size={60} color="#10B981" />
+              </View>
               <Text style={styles.successText}>
                 Hemos enviado un enlace de recuperación a:
               </Text>
-              <Text style={styles.emailText}>{email}</Text>
+              <View style={styles.emailContainer}>
+                <Icon name="mail" size={20} color="#4F46E5" />
+                <Text style={styles.emailText}>{email}</Text>
+              </View>
               <Text style={styles.instructionsText}>
                 Sigue las instrucciones en el email para restablecer tu contraseña.
               </Text>
             </View>
 
+            {/* Botón de reenviar mejorado */}
             <TouchableOpacity
               style={[styles.resendButton, isLoading && styles.resendButtonDisabled]}
               onPress={handleResendEmail}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
-              {isLoading ? (
-                <Text style={styles.resendButtonText}>Reenviando...</Text>
-              ) : (
-                <Text style={styles.resendButtonText}>Reenviar Email</Text>
-              )}
+              <View style={styles.resendButtonContent}>
+                <Text style={styles.resendButtonText}>
+                  {isLoading ? 'Reenviando...' : 'Reenviar Email'}
+                </Text>
+                <View style={styles.resendButtonIcon}>
+                  <Icon name="refresh" size={20} color="#FFFFFF" />
+                </View>
+              </View>
+              {isLoading && <View style={styles.loadingOverlay} />}
             </TouchableOpacity>
 
+            {/* Divider mejorado */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>¿Recordaste tu contraseña?</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Botón de volver al login mejorado */}
             <TouchableOpacity
               style={styles.backToLoginButton}
               onPress={onNavigateToLogin}
+              activeOpacity={0.8}
             >
-              <Text style={styles.backToLoginButtonText}>Volver al Login</Text>
+              <View style={styles.backToLoginButtonContent}>
+                <Text style={styles.backToLoginButtonText}>Volver al Login</Text>
+                <View style={styles.backToLoginButtonIcon}>
+                  <Icon name="arrow-back" size={20} color="#4F46E5" />
+                </View>
+              </View>
             </TouchableOpacity>
+          </View>
+
+          {/* Footer mejorado */}
+          <View style={styles.footer}>
+            <View style={styles.demoContainer}>
+              <Icon name="information-circle-outline" size={16} color="#6B7280" />
+              <Text style={styles.footerText}>
+                ¿No recibiste el email? Revisa tu carpeta de spam
+              </Text>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -125,77 +171,121 @@ const ForgotPasswordScreen = ({ onNavigateToLogin }) => {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header con gradiente y mascota */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <View style={styles.brainContainer}>
-              <Icon name="brain" size={50} color="#2c3e50" />
-              <Icon name="flash" size={25} color="#e74c3c" style={styles.lightningIcon} />
+            <View style={styles.logoBackground}>
+              <Image 
+                source={require('../assets/images/mascota.png')} 
+                style={styles.mascotaImage}
+                resizeMode="contain"
+              />
             </View>
+            <View style={styles.logoGlow} />
           </View>
-            <Text style={styles.title}>Recuperar Contraseña</Text>
-            <Text style={styles.subtitle}>Te ayudamos a recuperar tu cuenta en Cortexa</Text>
+          <Text style={styles.title}>Cortexa</Text>
+          <Text style={styles.subtitle}>Te ayudamos a recuperar tu cuenta</Text>
         </View>
 
+        {/* Formulario mejorado */}
         <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>¿Olvidaste tu contraseña?</Text>
+          <View style={styles.formHeader}>
+            <Text style={styles.formTitle}>¿Olvidaste tu contraseña?</Text>
+            <Text style={styles.formSubtitle}>No te preocupes, es normal</Text>
+          </View>
           
+          {/* Instrucciones mejoradas */}
           <View style={styles.instructionContainer}>
+            <View style={styles.instructionIconContainer}>
+              <Icon name="help-circle-outline" size={24} color="#4F46E5" />
+            </View>
             <Text style={styles.instructionText}>
-              No te preocupes, es normal. Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+              Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña de forma segura.
             </Text>
           </View>
           
+          {/* Campo de Email mejorado */}
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <Icon name="mail-outline" size={20} color="#6c757d" style={styles.inputIcon} />
+            <Text style={styles.inputLabel}>Correo electrónico</Text>
+            <View style={[styles.inputWrapper, email && styles.inputWrapperFocused]}>
+              <View style={styles.inputIconContainer}>
+                <Icon name="mail-outline" size={22} color={email ? "#4F46E5" : "#9CA3AF"} />
+              </View>
               <TextInput
                 style={styles.textInput}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="tu@email.com"
+                placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={handleSendResetEmail}
+                blurOnSubmit={true}
+                editable={true}
+                selectTextOnFocus={false}
+                autoFocus={false}
+                caretHidden={false}
+                contextMenuHidden={false}
+                textContentType="emailAddress"
               />
             </View>
           </View>
 
+          {/* Botón de enviar mejorado */}
           <TouchableOpacity
             style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
             onPress={handleSendResetEmail}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
-            <Text style={styles.sendButtonText}>
-              {isLoading ? 'Enviando...' : 'Enviar Enlace'}
-            </Text>
-            <View style={styles.sendButtonIcon}>
-              <Icon name="mail" size={16} color="#000000" />
+            <View style={styles.sendButtonContent}>
+              <Text style={styles.sendButtonText}>
+                {isLoading ? 'Enviando...' : 'Enviar Enlace'}
+              </Text>
+              <View style={styles.sendButtonIcon}>
+                <Icon name="arrow-forward" size={20} color="#FFFFFF" />
+              </View>
             </View>
+            {isLoading && <View style={styles.loadingOverlay} />}
           </TouchableOpacity>
 
+          {/* Divider mejorado */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>o</Text>
+            <Text style={styles.dividerText}>¿Recordaste tu contraseña?</Text>
             <View style={styles.dividerLine} />
           </View>
 
+          {/* Botón de volver al login mejorado */}
           <TouchableOpacity
             style={styles.backToLoginButton}
             onPress={onNavigateToLogin}
+            activeOpacity={0.8}
           >
-            <Text style={styles.backToLoginButtonText}>Volver al Login</Text>
-            <View style={styles.backToLoginButtonIcon}>
-              <Icon name="arrow-back" size={16} color="#000000" />
+            <View style={styles.backToLoginButtonContent}>
+              <Text style={styles.backToLoginButtonText}>Volver al Login</Text>
+              <View style={styles.backToLoginButtonIcon}>
+                <Icon name="arrow-back" size={20} color="#4F46E5" />
+              </View>
             </View>
           </TouchableOpacity>
         </View>
 
+        {/* Footer mejorado */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            ¿No recibiste el email? Revisa tu carpeta de spam
-          </Text>
+          <View style={styles.demoContainer}>
+            <Icon name="shield-checkmark-outline" size={16} color="#6B7280" />
+            <Text style={styles.footerText}>
+              Tu información está protegida y segura
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -205,262 +295,349 @@ const ForgotPasswordScreen = ({ onNavigateToLogin }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#F8FAFC',
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
   },
+  
+  // Header mejorado
   header: {
     alignItems: 'center',
     marginBottom: 40,
+    paddingTop: 20,
   },
   logoContainer: {
+    position: 'relative',
+    marginBottom: 24,
+  },
+  logoBackground: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 25,
-    shadowColor: '#2c3e50',
+    shadowColor: '#4F46E5',
     shadowOffset: {
       width: 0,
       height: 8,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
     elevation: 8,
     borderWidth: 3,
-    borderColor: '#34495e',
+    borderColor: '#E5E7EB',
   },
-  brainContainer: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lightningIcon: {
+  logoGlow: {
     position: 'absolute',
-    top: -5,
-    right: -8,
-    transform: [{ rotate: '15deg' }],
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+    top: -10,
+    left: -10,
+  },
+  mascotaImage: {
+    width: 80,
+    height: 80,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: '#1F2937',
     marginBottom: 8,
-    textShadowColor: 'rgba(44, 62, 80, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#7f8c8d',
+    fontSize: 16,
+    color: '#6B7280',
     textAlign: 'center',
     fontWeight: '500',
     lineHeight: 24,
   },
+
+  // Formulario mejorado
   formContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
+    marginBottom: 24,
+  },
+  formHeader: {
+    marginBottom: 28,
+    alignItems: 'center',
   },
   formTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#1F2937',
+    marginBottom: 8,
     textAlign: 'center',
-    marginBottom: 20,
   },
+  formSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+
+  // Instrucciones mejoradas
   instructionContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  instructionIconContainer: {
+    marginRight: 12,
+    marginTop: 2,
   },
   instructionText: {
+    flex: 1,
     fontSize: 14,
-    color: '#6c757d',
-    textAlign: 'center',
+    color: '#6B7280',
     lineHeight: 20,
   },
+
+  // Inputs mejorados
   inputContainer: {
     marginBottom: 24,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2d4150',
+    color: '#374151',
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
     paddingHorizontal: 16,
+    minHeight: 56,
   },
-  inputIcon: {
+  inputWrapperFocused: {
+    borderColor: '#4F46E5',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#4F46E5',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  inputIconContainer: {
     marginRight: 12,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: '#2d4150',
+    color: '#1F2937',
     paddingVertical: 16,
+    paddingHorizontal: 0,
+    textAlignVertical: 'center',
   },
+
+  // Botón de enviar mejorado
   sendButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginBottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderWidth: 2,
-    borderColor: '#d1b3ff',
-    shadowColor: '#d1b3ff',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#4F46E5',
+    borderRadius: 16,
+    paddingVertical: 18,
+    marginBottom: 24,
+    position: 'relative',
+    overflow: 'hidden',
   },
   sendButtonDisabled: {
-    backgroundColor: '#e9ecef',
-    borderColor: '#ced4da',
+    backgroundColor: '#9CA3AF',
+  },
+  sendButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sendButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#495057',
-    flex: 1,
-    textAlign: 'left',
+    color: '#FFFFFF',
+    marginRight: 12,
   },
   sendButtonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#d1b3ff',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Divider mejorado
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#E5E7EB',
   },
   dividerText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9CA3AF',
     marginHorizontal: 16,
+    fontWeight: '500',
   },
+
+  // Botón de volver al login mejorado
   backToLoginButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 18,
     borderWidth: 2,
-    borderColor: '#ffcccb',
-    shadowColor: '#ffcccb',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    borderColor: '#E5E7EB',
+  },
+  backToLoginButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backToLoginButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#495057',
-    flex: 1,
-    textAlign: 'left',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4F46E5',
+    marginRight: 12,
   },
   backToLoginButtonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#ffcccb',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  // Pantalla de éxito mejorada
   successContainer: {
     alignItems: 'center',
     marginBottom: 30,
   },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#28a745',
-    marginTop: 16,
-    marginBottom: 16,
+  successIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   successText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#6B7280',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    lineHeight: 24,
+  },
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 20,
   },
   emailText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2d4150',
-    marginBottom: 16,
+    color: '#1F2937',
+    marginLeft: 8,
   },
   instructionsText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 20,
   },
+
+  // Botón de reenviar mejorado
   resendButton: {
-    backgroundColor: '#28a745',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingVertical: 18,
+    marginBottom: 24,
+    position: 'relative',
+    overflow: 'hidden',
   },
   resendButtonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#9CA3AF',
+  },
+  resendButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   resendButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#FFFFFF',
+    marginRight: 12,
   },
+  resendButtonIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Footer mejorado
   footer: {
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 20,
+  },
+  demoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   footerText: {
-    fontSize: 12,
-    color: '#6c757d',
-    textAlign: 'center',
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
 

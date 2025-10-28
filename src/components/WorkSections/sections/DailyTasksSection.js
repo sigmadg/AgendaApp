@@ -67,9 +67,7 @@ const DailyTasksSection = ({
   ]);
 
   const [newDailyTaskText, setNewDailyTaskText] = useState('');
-  const [newDailyTaskDate, setNewDailyTaskDate] = useState(new Date());
   const [newDailyTaskTime, setNewDailyTaskTime] = useState(new Date());
-  const [showDailyDatePicker, setShowDailyDatePicker] = useState(false);
   const [showDailyTimePicker, setShowDailyTimePicker] = useState(false);
   const [showDailyNotesModal, setShowDailyNotesModal] = useState(false);
   const [selectedDailyTaskNotes, setSelectedDailyTaskNotes] = useState('');
@@ -84,7 +82,7 @@ const DailyTasksSection = ({
     const newTask = {
       id: Date.now(),
       title: newDailyTaskText.trim(),
-      date: newDailyTaskDate.toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0], // Usar fecha actual
       time: newDailyTaskTime.toTimeString().split(' ')[0].substring(0, 5),
       notes: selectedDailyTaskNotes,
       completed: false,
@@ -96,7 +94,6 @@ const DailyTasksSection = ({
     setDailyTasks(prev => [...prev, newTask]);
     setNewDailyTaskText('');
     setSelectedDailyTaskNotes('');
-    setNewDailyTaskDate(new Date());
     setNewDailyTaskTime(new Date());
   };
 
@@ -178,7 +175,7 @@ const DailyTasksSection = ({
     <View style={dailyTasksStyles.container}>
       <SectionHeader
         title="Tareas Diarias"
-        subtitle="Gestiona tus tareas del día"
+        subtitle="Tareas para hoy - fecha automática"
         image={require('../../../android/app/src/main/assets/trabajo.png')}
         onAddPress={handleAddDailyTaskPress}
         theme={theme}
@@ -285,19 +282,6 @@ const DailyTasksSection = ({
               </View>
 
               <View style={dailyTasksStyles.inputGroup}>
-                <Text style={dailyTasksStyles.inputLabel}>Fecha</Text>
-                <TouchableOpacity
-                  style={dailyTasksStyles.datePickerButton}
-                  onPress={() => setShowDailyDatePicker(true)}
-                >
-                  <Icon name="calendar-outline" size={20} color="#6B7280" />
-                  <Text style={dailyTasksStyles.datePickerText}>
-                    {newDailyTaskDate.toLocaleDateString()}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={dailyTasksStyles.inputGroup}>
                 <Text style={dailyTasksStyles.inputLabel}>Hora</Text>
                 <TouchableOpacity
                   style={dailyTasksStyles.datePickerButton}
@@ -345,21 +329,6 @@ const DailyTasksSection = ({
           </View>
         </View>
       </Modal>
-
-      {/* Date Picker */}
-      {showDailyDatePicker && (
-        <DateTimePicker
-          value={newDailyTaskDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
-            setShowDailyDatePicker(false);
-            if (selectedDate) {
-              setNewDailyTaskDate(selectedDate);
-            }
-          }}
-        />
-      )}
 
       {/* Time Picker */}
       {showDailyTimePicker && (

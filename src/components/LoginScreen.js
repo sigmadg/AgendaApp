@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import SocialAuthButtons from './SocialAuthButtons';
@@ -24,6 +25,9 @@ const LoginScreen = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword
     onLogin(userData);
   };
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Referencias para navegación entre campos
+  const passwordInputRef = useRef(null);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -66,48 +70,85 @@ const LoginScreen = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Header con gradiente y mascota */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <View style={styles.brainContainer}>
-              <Icon name="brain" size={50} color="#2c3e50" />
-              <Icon name="flash" size={25} color="#e74c3c" style={styles.lightningIcon} />
+            <View style={styles.logoBackground}>
+              <Image 
+                source={require('../assets/images/mascota.png')} 
+                style={styles.mascotaImage}
+                resizeMode="contain"
+              />
             </View>
+            <View style={styles.logoGlow} />
           </View>
           <Text style={styles.title}>Cortexa</Text>
           <Text style={styles.subtitle}>Organiza tu vida de manera inteligente</Text>
         </View>
 
+        {/* Formulario mejorado */}
         <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>Iniciar Sesión</Text>
+          <View style={styles.formHeader}>
+            <Text style={styles.formTitle}>¡Bienvenido de vuelta!</Text>
+            <Text style={styles.formSubtitle}>Inicia sesión para continuar</Text>
+          </View>
           
+          {/* Campo de Email mejorado */}
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <Icon name="mail-outline" size={20} color="#6c757d" style={styles.inputIcon} />
+            <Text style={styles.inputLabel}>Correo electrónico</Text>
+            <View style={[styles.inputWrapper, email && styles.inputWrapperFocused]}>
+              <View style={styles.inputIconContainer}>
+                <Icon name="mail-outline" size={22} color={email ? "#4F46E5" : "#9CA3AF"} />
+              </View>
               <TextInput
                 style={styles.textInput}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="tu@email.com"
+                placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => {
+                  // Enfocar el siguiente campo (contraseña)
+                  passwordInputRef.current?.focus();
+                }}
+                autoFocus={false}
+                caretHidden={false}
+                contextMenuHidden={false}
+                selectTextOnFocus={false}
+                textContentType="emailAddress"
               />
             </View>
           </View>
 
+          {/* Campo de Contraseña mejorado */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Contraseña</Text>
-            <View style={styles.inputWrapper}>
-              <Icon name="lock-closed-outline" size={20} color="#6c757d" style={styles.inputIcon} />
+            <View style={[styles.inputWrapper, password && styles.inputWrapperFocused]}>
+              <View style={styles.inputIconContainer}>
+                <Icon name="lock-closed-outline" size={22} color={password ? "#4F46E5" : "#9CA3AF"} />
+              </View>
               <TextInput
+                ref={passwordInputRef}
                 style={styles.textInput}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Tu contraseña"
+                placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="done"
+                blurOnSubmit={true}
+                onSubmitEditing={handleLogin}
+                autoFocus={false}
+                caretHidden={false}
+                contextMenuHidden={false}
+                selectTextOnFocus={false}
+                textContentType="password"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -115,47 +156,54 @@ const LoginScreen = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword
               >
                 <Icon 
                   name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                  size={20} 
-                  color="#6c757d" 
+                  size={22} 
+                  color={password ? "#4F46E5" : "#9CA3AF"} 
                 />
               </TouchableOpacity>
             </View>
           </View>
 
-          <View style={styles.rememberMeContainer}>
+          {/* Recordarme y Olvidé contraseña */}
+          <View style={styles.optionsContainer}>
             <TouchableOpacity
               style={styles.checkboxContainer}
               onPress={() => setRememberMe(!rememberMe)}
             >
               <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
                 {rememberMe && (
-                  <Icon name="checkmark" size={16} color="#ffffff" />
+                  <Icon name="checkmark" size={16} color="#FFFFFF" />
                 )}
               </View>
               <Text style={styles.rememberMeText}>Recordarme</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={onNavigateToForgotPassword}
+              style={styles.forgotPasswordButton}
+            >
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            onPress={onNavigateToForgotPassword}
-            style={styles.forgotPasswordButton}
-          >
-            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-          </TouchableOpacity>
-
+          {/* Botón de Login mejorado */}
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </Text>
-            <View style={styles.loginButtonIcon}>
-              <Icon name="arrow-forward" size={16} color="#000000" />
+            <View style={styles.loginButtonContent}>
+              <Text style={styles.loginButtonText}>
+                {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              </Text>
+              <View style={styles.loginButtonIcon}>
+                <Icon name="arrow-forward" size={20} color="#FFFFFF" />
+              </View>
             </View>
+            {isLoading && <View style={styles.loadingOverlay} />}
           </TouchableOpacity>
 
+          {/* Botones sociales mejorados */}
           <SocialAuthButtons
             onGoogleLogin={handleSocialLogin}
             onFacebookLogin={handleSocialLogin}
@@ -163,27 +211,36 @@ const LoginScreen = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword
             onWhatsAppLogin={handleSocialLogin}
           />
 
+          {/* Divider mejorado */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>o</Text>
+            <Text style={styles.dividerText}>o continúa con</Text>
             <View style={styles.dividerLine} />
           </View>
 
+          {/* Botón de Registro mejorado */}
           <TouchableOpacity
             style={styles.registerButton}
             onPress={onNavigateToRegister}
+            activeOpacity={0.8}
           >
-            <Text style={styles.registerButtonText}>Crear cuenta nueva</Text>
-            <View style={styles.registerButtonIcon}>
-              <Icon name="person-add" size={16} color="#000000" />
+            <View style={styles.registerButtonContent}>
+              <Text style={styles.registerButtonText}>¿No tienes cuenta? Crear una</Text>
+              <View style={styles.registerButtonIcon}>
+                <Icon name="person-add" size={20} color="#4F46E5" />
+              </View>
             </View>
           </TouchableOpacity>
         </View>
 
+        {/* Footer mejorado */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Demo: usa demo@agenda.com / demo123
-          </Text>
+          <View style={styles.demoContainer}>
+            <Icon name="information-circle-outline" size={16} color="#6B7280" />
+            <Text style={styles.footerText}>
+              Demo: usa demo@agenda.com / demo123
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -193,124 +250,154 @@ const LoginScreen = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#F8FAFC',
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
   },
+  
+  // Header mejorado
   header: {
     alignItems: 'center',
     marginBottom: 40,
+    paddingTop: 20,
   },
   logoContainer: {
+    position: 'relative',
+    marginBottom: 24,
+  },
+  logoBackground: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 25,
-    shadowColor: '#2c3e50',
+    shadowColor: '#4F46E5',
     shadowOffset: {
       width: 0,
       height: 8,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
     elevation: 8,
     borderWidth: 3,
-    borderColor: '#34495e',
+    borderColor: '#E5E7EB',
   },
-  brainContainer: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lightningIcon: {
+  logoGlow: {
     position: 'absolute',
-    top: -5,
-    right: -8,
-    transform: [{ rotate: '15deg' }],
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+    top: -10,
+    left: -10,
+  },
+  mascotaImage: {
+    width: 80,
+    height: 80,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: '#1F2937',
     marginBottom: 8,
-    textShadowColor: 'rgba(44, 62, 80, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#7f8c8d',
+    fontSize: 16,
+    color: '#6B7280',
     textAlign: 'center',
     fontWeight: '500',
     lineHeight: 24,
   },
+
+  // Formulario mejorado
   formContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 28,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 8,
+    marginBottom: 24,
+  },
+  formHeader: {
+    marginBottom: 28,
+    alignItems: 'center',
   },
   formTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2d4150',
+    color: '#1F2937',
+    marginBottom: 8,
     textAlign: 'center',
-    marginBottom: 24,
   },
+  formSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+
+  // Inputs mejorados
   inputContainer: {
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2d4150',
+    color: '#374151',
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
     paddingHorizontal: 16,
+    minHeight: 56,
   },
-  inputIcon: {
+  inputWrapperFocused: {
+    borderColor: '#4F46E5',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#4F46E5',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  inputIconContainer: {
     marginRight: 12,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: '#2d4150',
+    color: '#1F2937',
     paddingVertical: 16,
   },
   eyeIcon: {
-    padding: 4,
+    padding: 8,
+    marginLeft: 8,
   },
-  forgotPasswordButton: {
-    alignSelf: 'flex-end',
+
+  // Opciones mejoradas
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#2c3e50',
-    fontWeight: '500',
-  },
-  rememberMeContainer: {
-    marginBottom: 16,
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -319,120 +406,140 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#a8e6cf',
-    backgroundColor: '#f8f9fa',
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: '#a8e6cf',
-    borderColor: '#a8e6cf',
+    backgroundColor: '#4F46E5',
+    borderColor: '#4F46E5',
   },
   rememberMeText: {
     fontSize: 14,
-    color: '#495057',
+    color: '#6B7280',
     fontWeight: '500',
   },
+  forgotPasswordButton: {
+    padding: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#4F46E5',
+    fontWeight: '600',
+  },
+
+  // Botón de login mejorado
   loginButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginBottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderWidth: 2,
-    borderColor: '#a8e6cf',
-    shadowColor: '#a8e6cf',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#4F46E5',
+    borderRadius: 16,
+    paddingVertical: 18,
+    marginBottom: 24,
+    position: 'relative',
+    overflow: 'hidden',
   },
   loginButtonDisabled: {
-    backgroundColor: '#e9ecef',
-    borderColor: '#ced4da',
+    backgroundColor: '#9CA3AF',
+  },
+  loginButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loginButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#495057',
-    flex: 1,
-    textAlign: 'left',
+    color: '#FFFFFF',
+    marginRight: 12,
   },
   loginButtonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#a8e6cf',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Divider mejorado
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#a8e6cf',
+    backgroundColor: '#E5E7EB',
   },
   dividerText: {
     fontSize: 14,
-    color: '#495057',
+    color: '#9CA3AF',
     marginHorizontal: 16,
     fontWeight: '500',
   },
+
+  // Botón de registro mejorado
   registerButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 18,
     borderWidth: 2,
-    borderColor: '#ffb3ba',
-    shadowColor: '#ffb3ba',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    borderColor: '#E5E7EB',
+  },
+  registerButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   registerButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#495057',
-    flex: 1,
-    textAlign: 'left',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4F46E5',
+    marginRight: 12,
   },
   registerButtonIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#ffb3ba',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  // Footer mejorado
   footer: {
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 20,
+  },
+  demoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   footerText: {
-    fontSize: 12,
-    color: '#6c757d',
-    textAlign: 'center',
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
 

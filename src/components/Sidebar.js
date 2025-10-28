@@ -120,7 +120,7 @@ const CATEGORIES = [
   }
 ];
 
-const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeSections }) => {
+const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeSections, onLogout }) => {
   console.log('Sidebar renderizado, visible:', visible, 'selectedCategory:', selectedCategory);
   if (!visible) {
     console.log('Sidebar no visible, no renderizando');
@@ -138,13 +138,23 @@ const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeS
         {/* Iconos decorativos removidos para evitar conflictos */}
         
         <View style={styles.header}>
-          <CuteTitle style={styles.title}>Categorías</CuteTitle>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Icon name="close" size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <View style={styles.titleContainer}>
+              <CuteElement type="sparkle" size={20} color={colors.primary} />
+              <CuteTitle style={styles.title}>Categorías</CuteTitle>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Icon name="close" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          <CuteText style={styles.subtitle}>Elige tu área de enfoque</CuteText>
         </View>
 
-        <ScrollView style={styles.categoriesContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.categoriesContainer} 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {filteredCategories.map((category) => (
             <TouchableOpacity
               key={category.id}
@@ -174,7 +184,9 @@ const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeS
                   </CuteText>
                 </View>
                 {selectedCategory === category.id && (
-                  <CuteElement type={category.cuteIcon} size={20} color={category.color} />
+                  <View style={styles.selectedIndicator}>
+                    <CuteElement type={category.cuteIcon} size={20} color={category.color} />
+                  </View>
                 )}
               </View>
             </TouchableOpacity>
@@ -188,6 +200,29 @@ const Sidebar = ({ visible, onClose, selectedCategory, onCategorySelect, activeS
               Cada categoría tiene su propia agenda
             </CuteText>
           </View>
+          
+          {/* Botón de Cerrar Sesión */}
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => {
+              onLogout();
+              onClose();
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.logoutButtonContent}>
+              <View style={styles.logoutIconContainer}>
+                <Icon name="log-out-outline" size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.logoutTextContainer}>
+                <CuteText style={styles.logoutButtonText}>Cerrar Sesión</CuteText>
+                <CuteText style={styles.logoutButtonSubtext}>Salir de tu cuenta</CuteText>
+              </View>
+              <View style={styles.logoutArrowContainer}>
+                <Icon name="arrow-forward" size={20} color="#FFFFFF" />
+              </View>
+            </View>
+          </TouchableOpacity>
         </View>
         
         {/* Iconos decorativos removidos para evitar conflictos */}
@@ -211,44 +246,71 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   sidebar: {
-    width: 320,
-    backgroundColor: colors.surface,
-    ...shadows.lg,
+    width: 340,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: borderRadius.xl,
+    borderBottomLeftRadius: borderRadius.xl,
+    ...shadows.xl,
   },
   header: {
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    backgroundColor: '#F8F9FA',
+    borderTopLeftRadius: borderRadius.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.md,
-    paddingTop: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.textTertiary,
+    marginBottom: spacing.sm,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
     fontSize: typography.h4,
     fontWeight: typography.bold,
-    color: colors.textPrimary,
+    color: '#212529',
+    marginLeft: spacing.sm,
     lineHeight: typography.lineHeight.tight * typography.h4,
     letterSpacing: typography.letterSpacing.tight,
   },
+  subtitle: {
+    fontSize: typography.body,
+    color: '#6C757D',
+    lineHeight: typography.lineHeight.comfortable * typography.body,
+    letterSpacing: typography.letterSpacing.normal,
+  },
   closeButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DEE2E6',
+    ...shadows.sm,
   },
   categoriesContainer: {
     flex: 1,
-    padding: spacing.md,
+    padding: spacing.lg,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl,
   },
   categoryItem: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#F1F3F4',
     ...shadows.sm,
   },
   selectedCategory: {
-    backgroundColor: colors.lavender,
+    backgroundColor: '#F8F9FA',
     borderColor: colors.primary,
+    ...shadows.md,
   },
   categoryContent: {
     flexDirection: 'row',
@@ -270,24 +332,34 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: typography.h6,
     fontWeight: typography.semiBold,
-    color: colors.textPrimary,
+    color: '#212529',
     marginBottom: spacing.xs,
-    lineHeight: typography.lineHeight.normal * typography.h6,
-    letterSpacing: typography.letterSpacing.normal,
+    lineHeight: typography.lineHeight.tight * typography.h6,
+    letterSpacing: typography.letterSpacing.tight,
   },
   selectedCategoryName: {
     color: colors.primary,
   },
   categoryDescription: {
     fontSize: typography.caption,
-    color: colors.textSecondary,
+    color: '#6C757D',
     lineHeight: typography.lineHeight.normal * typography.caption,
     letterSpacing: typography.letterSpacing.normal,
   },
+  selectedIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   footer: {
-    padding: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+    backgroundColor: '#F8F9FA',
     borderTopWidth: 1,
-    borderTopColor: colors.textTertiary,
+    borderTopColor: '#E9ECEF',
   },
   footerInfo: {
     flexDirection: 'row',
@@ -300,6 +372,49 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: typography.lineHeight.normal * typography.caption,
     letterSpacing: typography.letterSpacing.normal,
+  },
+  
+  // Estilos para el botón de cerrar sesión
+  logoutButton: {
+    backgroundColor: '#DC3545',
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.md,
+    ...shadows.md,
+  },
+  logoutButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  logoutIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  logoutTextContainer: {
+    flex: 1,
+  },
+  logoutButtonText: {
+    fontSize: typography.h6,
+    fontWeight: typography.semiBold,
+    color: '#FFFFFF',
+    marginBottom: spacing.xs,
+  },
+  logoutButtonSubtext: {
+    fontSize: typography.caption,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  logoutArrowContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // decorativeBackground y gradientBackground removidos para evitar conflictos
 });

@@ -686,121 +686,188 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
     </View>
   );
 
-  const renderWeeklyTasks = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image 
-            source={require('../../android/app/src/main/assets/trabajo.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Tareas Semanales</Text>
-          <Text style={styles.sectionSubtitle}>
-            Organiza tus tareas de trabajo semanalmente
-          </Text>
-        </View>
-      </View>
+  const renderWeeklyTasks = () => {
+    const completedTasks = weeklyTasks.filter(task => task.completed).length;
+    const totalTasks = weeklyTasks.length;
+    const urgentTasks = weeklyTasks.filter(task => task.status === 'urgent').length;
+    const overdueTasks = weeklyTasks.filter(task => task.status === 'overdue').length;
 
-      {/* Caja de texto para capturar nueva tarea */}
-      <View style={styles.addTaskContainer}>
-        <TextInput
-          style={styles.newTaskInput}
-          placeholder="Escribe una nueva tarea..."
-          value={newTaskText}
-          onChangeText={setNewTaskText}
-          onSubmitEditing={addWeeklyTask}
-          returnKeyType="done"
-        />
-        <TouchableOpacity 
-          style={styles.iconButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Icon name="calendar-outline" size={20} color="#007AFF" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={addWeeklyTask} style={styles.addTaskButton}>
-          <Icon name="add" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Lista de tareas */}
-      <View style={styles.tasksList}>
-        {weeklyTasks.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Icon name="list-outline" size={48} color="#dee2e6" />
-            <Text style={styles.emptyText}>No hay tareas agregadas</Text>
-            <Text style={styles.emptySubtext}>Escribe una tarea arriba y toca el botón +</Text>
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.weeklyHeader}>
+          <View style={styles.weeklyHeaderContent}>
+            <View style={styles.weeklyIconContainer}>
+              <Icon name="calendar-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.weeklyHeaderText}>
+              <Text style={styles.weeklyHeaderTitle}>Tareas Semanales</Text>
+              <Text style={styles.weeklyHeaderSubtitle}>Planifica tu semana de trabajo</Text>
+            </View>
           </View>
-        ) : (
-          weeklyTasks
-            .sort((a, b) => {
-              // Ordenar por fecha (más reciente primero)
-              const dateA = new Date(a.date);
-              const dateB = new Date(b.date);
-              return dateA - dateB;
-            })
-            .map((task, index) => {
-              const taskStatus = task.status || getTaskStatus(task.date);
-              const statusLabel = getTaskStatusLabel(taskStatus);
-              const statusColor = getTaskStatusColor(taskStatus);
-              
-              return (
-              <View key={task.id} style={[styles.taskListItem, task.completed && styles.completedTaskListItem]}>
-                <TouchableOpacity
-                  onPress={() => toggleTaskCompleted(index)}
-                  style={styles.taskCheckbox}
-                >
-                  <Icon 
-                    name={task.completed ? "checkmark-circle" : "ellipse-outline"} 
-                    size={24} 
-                    color={task.completed ? "#28a745" : "#6c757d"} 
-                  />
-                </TouchableOpacity>
-                
-                <View style={styles.taskContent}>
-                  <Text style={[styles.taskText, task.completed && styles.completedTaskText]}>
-                    {task.task}
-                  </Text>
-                  {task.date && (
-                    <Text style={styles.taskDate}>
-                      📅 {new Date(task.date).toLocaleDateString('es-ES')}
-                    </Text>
-                  )}
-                  {statusLabel && (
-                    <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-                      <Text style={styles.statusText}>{statusLabel}</Text>
-                    </View>
-                  )}
-                </View>
-                
-                <View style={styles.taskActions}>
-                  <TouchableOpacity
-                    onPress={() => showTaskNotes(task.notes, index)}
-                    style={[styles.notesButton, task.notes.trim() !== '' && styles.notesButtonActive]}
-                  >
-                    <Icon 
-                      name="create-outline" 
-                      size={18} 
-                      color={task.notes.trim() !== '' ? "#007AFF" : "#6c757d"} 
-                    />
-                  </TouchableOpacity>
+          <View style={styles.weeklyHeaderBadge}>
+            <Icon name="time-outline" size={16} color="#D2691E" />
+          </View>
+        </View>
+
+        {/* Resumen de tareas mejorado */}
+        <View style={styles.weeklySummary}>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{completedTasks}/{totalTasks}</Text>
+              <Text style={styles.summaryLabel}>Completadas</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="flash-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{urgentTasks}</Text>
+              <Text style={styles.summaryLabel}>Urgentes</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="warning-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{overdueTasks}</Text>
+              <Text style={styles.summaryLabel}>Vencidas</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para agregar tarea */}
+        <View style={styles.addWeeklyContainer}>
+          <TouchableOpacity style={styles.addWeeklyButton} onPress={addWeeklyTask}>
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addWeeklyText}>Agregar Tarea Semanal</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Lista de tareas mejorada */}
+        <View style={styles.weeklyContainer}>
+          <View style={styles.weeklyHeader}>
+            <Text style={styles.weeklyTitle}>Mis Tareas Semanales</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="filter-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Filtrar</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {weeklyTasks.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Icon name="calendar-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.emptyTitle}>No hay tareas semanales</Text>
+              <Text style={styles.emptySubtitle}>Agrega tu primera tarea para comenzar a planificar tu semana</Text>
+              <TouchableOpacity style={styles.emptyButton} onPress={addWeeklyTask}>
+                <Icon name="add-outline" size={20} color="#D2691E" />
+                <Text style={styles.emptyButtonText}>Agregar Primera Tarea</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {weeklyTasks
+                .sort((a, b) => {
+                  // Ordenar por fecha (más reciente primero)
+                  const dateA = new Date(a.date);
+                  const dateB = new Date(b.date);
+                  return dateA - dateB;
+                })
+                .map((task, index) => {
+                  const taskStatus = task.status || getTaskStatus(task.date);
+                  const statusLabel = getTaskStatusLabel(taskStatus);
+                  const statusColor = getTaskStatusColor(taskStatus);
                   
-                  <TouchableOpacity
-                    onPress={() => removeWeeklyTask(index)}
-                    style={styles.taskDeleteButton}
-                  >
-                    <Icon name="trash-outline" size={18} color="#dc3545" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            );
-          })
-        )}
+                  return (
+                    <View key={task.id} style={styles.weeklyItem}>
+                      <View style={styles.weeklyItemHeader}>
+                        <TouchableOpacity
+                          onPress={() => toggleTaskCompleted(index)}
+                          style={styles.weeklyCheckboxContainer}
+                        >
+                          <View style={[
+                            styles.weeklyCheckbox,
+                            task.completed && styles.weeklyCheckboxChecked
+                          ]}>
+                            {task.completed && (
+                              <Icon name="checkmark" size={16} color="#FFFFFF" />
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                        
+                        <View style={styles.weeklyItemInfo}>
+                          <Text style={[
+                            styles.weeklyItemName,
+                            task.completed && styles.weeklyItemNameCompleted
+                          ]}>
+                            {task.task}
+                          </Text>
+                          {task.date && (
+                            <Text style={[
+                              styles.weeklyItemDate,
+                              task.completed && styles.weeklyItemDateCompleted
+                            ]}>
+                              {new Date(task.date).toLocaleDateString('es-ES')}
+                            </Text>
+                          )}
+                        </View>
+                        
+                        <View style={styles.weeklyItemActions}>
+                          <TouchableOpacity
+                            onPress={() => showTaskNotes(task.notes, index)}
+                            style={styles.weeklyActionButton}
+                          >
+                            <Icon name="create-outline" size={16} color="#6B7280" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => removeWeeklyTask(index)}
+                            style={styles.weeklyActionButton}
+                          >
+                            <Icon name="trash-outline" size={16} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      
+                      {/* Notas de la tarea */}
+                      {task.notes && task.notes.trim() !== '' && (
+                        <View style={styles.weeklyItemNotes}>
+                          <Text style={styles.weeklyNotesText}>{task.notes}</Text>
+                        </View>
+                      )}
+                      
+                      {/* Indicador de estado */}
+                      <View style={styles.weeklyItemStatus}>
+                        <View style={[
+                          styles.weeklyStatusIndicator,
+                          task.completed ? styles.weeklyStatusCompleted : 
+                          taskStatus === 'urgent' ? styles.weeklyStatusUrgent :
+                          taskStatus === 'overdue' ? styles.weeklyStatusOverdue : styles.weeklyStatusPending
+                        ]} />
+                        <Text style={[
+                          styles.weeklyStatusText,
+                          task.completed ? styles.weeklyStatusCompletedText : 
+                          taskStatus === 'urgent' ? styles.weeklyStatusUrgentText :
+                          taskStatus === 'overdue' ? styles.weeklyStatusOverdueText : styles.weeklyStatusPendingText
+                        ]}>
+                          {task.completed ? 'Completada' : 
+                           taskStatus === 'urgent' ? 'Urgente' :
+                           taskStatus === 'overdue' ? 'Vencida' : 'Pendiente'}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+            </ScrollView>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderDailyTasks = () => {
     const currentDate = formatDate(newDailyTaskDate);
@@ -820,113 +887,194 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
         // Si es la misma fecha, ordenar por hora
         return a.time.localeCompare(b.time);
       });
+
+    const completedTasks = allDailyTasks.filter(task => task.completed).length;
+    const totalTasks = allDailyTasks.length;
+    const todayTasks = allDailyTasks.filter(task => task.date === currentDate).length;
+    const overdueTasks = allDailyTasks.filter(task => {
+      const taskDate = new Date(task.date);
+      const today = new Date();
+      return taskDate < today && !task.completed;
+    }).length;
     
     return (
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.headerDecoration}>
-            <Image 
-              source={require('../../android/app/src/main/assets/trabajo.png')}
-              style={styles.mascotImage}
-              resizeMode="contain"
-            />
+        {/* Header mejorado */}
+        <View style={styles.dailyHeader}>
+          <View style={styles.dailyHeaderContent}>
+            <View style={styles.dailyIconContainer}>
+              <Icon name="today-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.dailyHeaderText}>
+              <Text style={styles.dailyHeaderTitle}>Tareas Diarias</Text>
+              <Text style={styles.dailyHeaderSubtitle}>Organiza tu trabajo día a día</Text>
+            </View>
           </View>
-          <View style={styles.headerContent}>
-            <Text style={styles.sectionTitle}>Tareas Diarias</Text>
-            <Text style={styles.sectionSubtitle}>
-              Organiza tus tareas por fecha y hora
-            </Text>
+          <View style={styles.dailyHeaderBadge}>
+            <Icon name="calendar-outline" size={16} color="#D2691E" />
           </View>
         </View>
-        
-        <View style={styles.sectionContent}>
-        
-        {/* Caja de texto para capturar nueva tarea diaria */}
-        <View style={styles.addTaskContainer}>
-          <TextInput
-            style={styles.newTaskInput}
-            placeholder="Escribe una nueva tarea diaria..."
-            value={newDailyTaskText}
-            onChangeText={setNewDailyTaskText}
-            onSubmitEditing={addDailyTask}
-            returnKeyType="done"
-          />
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setShowDailyDatePicker(true)}
-          >
-            <Icon name="calendar-outline" size={20} color="#007AFF" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setShowDailyTimePicker(true)}
-          >
-            <Icon name="time-outline" size={20} color="#007AFF" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={addDailyTask} style={styles.addTaskButton}>
-            <Icon name="add" size={20} color="#FFFFFF" />
+
+        {/* Resumen de tareas mejorado */}
+        <View style={styles.dailySummary}>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{completedTasks}/{totalTasks}</Text>
+              <Text style={styles.summaryLabel}>Completadas</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="today-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{todayTasks}</Text>
+              <Text style={styles.summaryLabel}>Hoy</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="warning-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{overdueTasks}</Text>
+              <Text style={styles.summaryLabel}>Vencidas</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para agregar tarea */}
+        <View style={styles.addDailyContainer}>
+          <TouchableOpacity style={styles.addDailyButton} onPress={addDailyTask}>
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addDailyText}>Agregar Tarea Diaria</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Lista de tareas diarias */}
-        <View style={styles.tasksList}>
+        {/* Lista de tareas mejorada */}
+        <View style={styles.dailyContainer}>
+          <View style={styles.dailyHeader}>
+            <Text style={styles.dailyTitle}>Mis Tareas Diarias</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="filter-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Filtrar</Text>
+            </TouchableOpacity>
+          </View>
+          
           {allDailyTasks.length === 0 ? (
             <View style={styles.emptyState}>
-              <Icon name="calendar-outline" size={48} color="#dee2e6" />
-              <Text style={styles.emptyText}>No hay tareas diarias</Text>
-              <Text style={styles.emptySubtext}>Agrega una tarea arriba y toca el botón +</Text>
+              <Icon name="today-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.emptyTitle}>No hay tareas diarias</Text>
+              <Text style={styles.emptySubtitle}>Agrega tu primera tarea para comenzar a organizar tu día</Text>
+              <TouchableOpacity style={styles.emptyButton} onPress={addDailyTask}>
+                <Icon name="add-outline" size={20} color="#D2691E" />
+                <Text style={styles.emptyButtonText}>Agregar Primera Tarea</Text>
+              </TouchableOpacity>
             </View>
           ) : (
-            allDailyTasks.map((task, index) => {
-              const taskDate = task.date;
-              const taskIndex = dailyTasks[taskDate]?.findIndex(t => t.id === task.id) || 0;
-              
-              return (
-                <View key={task.id} style={[styles.taskListItem, task.completed && styles.completedTaskListItem]}>
-                  <TouchableOpacity
-                    onPress={() => toggleDailyTaskCompleted(taskDate, taskIndex)}
-                    style={styles.taskCheckbox}
-                  >
-                    <Icon 
-                      name={task.completed ? "checkmark-circle" : "ellipse-outline"} 
-                      size={24} 
-                      color={task.completed ? "#28a745" : "#6c757d"} 
-                    />
-                  </TouchableOpacity>
-                  
-                  <View style={styles.taskContent}>
-                    <Text style={[styles.taskText, task.completed && styles.completedTaskText]}>
-                      {task.task}
-                    </Text>
-                    <Text style={styles.taskTime}>
-                      📅 {formatDisplayDate(new Date(task.date))} 🕐 {task.time}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.taskActions}>
-                    <TouchableOpacity
-                      onPress={() => showDailyTaskNotes(task.notes, taskDate, taskIndex)}
-                      style={[styles.notesButton, task.notes.trim() !== '' && styles.notesButtonActive]}
-                    >
-                      <Icon 
-                        name="create-outline" 
-                        size={18} 
-                        color={task.notes.trim() !== '' ? "#007AFF" : "#6c757d"} 
-                      />
-                    </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {allDailyTasks.map((task, index) => {
+                const taskDate = task.date;
+                const taskIndex = dailyTasks[taskDate]?.findIndex(t => t.id === task.id) || 0;
+                const isOverdue = new Date(task.date) < new Date() && !task.completed;
+                const isToday = task.date === currentDate;
+                
+                return (
+                  <View key={task.id} style={styles.dailyItem}>
+                    <View style={styles.dailyItemHeader}>
+                      <TouchableOpacity
+                        onPress={() => toggleDailyTaskCompleted(taskDate, taskIndex)}
+                        style={styles.dailyCheckboxContainer}
+                      >
+                        <View style={[
+                          styles.dailyCheckbox,
+                          task.completed && styles.dailyCheckboxChecked
+                        ]}>
+                          {task.completed && (
+                            <Icon name="checkmark" size={16} color="#FFFFFF" />
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                      
+                      <View style={styles.dailyItemInfo}>
+                        <Text style={[
+                          styles.dailyItemName,
+                          task.completed && styles.dailyItemNameCompleted
+                        ]}>
+                          {task.task}
+                        </Text>
+                        <View style={styles.dailyItemDateTime}>
+                          <View style={styles.dailyItemDateContainer}>
+                            <Icon name="calendar-outline" size={14} color="#6B7280" />
+                            <Text style={[
+                              styles.dailyItemDate,
+                              task.completed && styles.dailyItemDateCompleted
+                            ]}>
+                              {formatDisplayDate(new Date(task.date))}
+                            </Text>
+                          </View>
+                          <View style={styles.dailyItemTimeContainer}>
+                            <Icon name="time-outline" size={14} color="#6B7280" />
+                            <Text style={[
+                              styles.dailyItemTime,
+                              task.completed && styles.dailyItemTimeCompleted
+                            ]}>
+                              {task.time}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.dailyItemActions}>
+                        <TouchableOpacity
+                          onPress={() => showDailyTaskNotes(task.notes, taskDate, taskIndex)}
+                          style={styles.dailyActionButton}
+                        >
+                          <Icon name="create-outline" size={16} color="#6B7280" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => removeDailyTask(taskDate, taskIndex)}
+                          style={styles.dailyActionButton}
+                        >
+                          <Icon name="trash-outline" size={16} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                     
-                    <TouchableOpacity
-                      onPress={() => removeDailyTask(taskDate, taskIndex)}
-                      style={styles.taskDeleteButton}
-                    >
-                      <Icon name="trash-outline" size={18} color="#dc3545" />
-                    </TouchableOpacity>
+                    {/* Notas de la tarea */}
+                    {task.notes && task.notes.trim() !== '' && (
+                      <View style={styles.dailyItemNotes}>
+                        <Text style={styles.dailyNotesText}>{task.notes}</Text>
+                      </View>
+                    )}
+                    
+                    {/* Indicador de estado */}
+                    <View style={styles.dailyItemStatus}>
+                      <View style={[
+                        styles.dailyStatusIndicator,
+                        task.completed ? styles.dailyStatusCompleted : 
+                        isOverdue ? styles.dailyStatusOverdue :
+                        isToday ? styles.dailyStatusToday : styles.dailyStatusPending
+                      ]} />
+                      <Text style={[
+                        styles.dailyStatusText,
+                        task.completed ? styles.dailyStatusCompletedText : 
+                        isOverdue ? styles.dailyStatusOverdueText :
+                        isToday ? styles.dailyStatusTodayText : styles.dailyStatusPendingText
+                      ]}>
+                        {task.completed ? 'Completada' : 
+                         isOverdue ? 'Vencida' :
+                         isToday ? 'Hoy' : 'Pendiente'}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              );
-            })
+                );
+              })}
+            </ScrollView>
           )}
-        </View>
         </View>
       </View>
     );
@@ -1295,220 +1443,461 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
     </View>
   );
 
-  const renderProjects = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image 
-            source={require('../../android/app/src/main/assets/trabajo.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Proyectos</Text>
-          <Text style={styles.sectionSubtitle}>
-            Gestiona y organiza tus proyectos de trabajo
-          </Text>
-        </View>
-      </View>
-      
-      <View style={styles.sectionContent}>
-        {projects.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Icon name="folder-outline" size={48} color="#dee2e6" />
-          <Text style={styles.emptyText}>No hay proyectos creados</Text>
-          <Text style={styles.emptySubtext}>Toca el botón + para crear tu primer proyecto</Text>
-        </View>
-      ) : (
-        <View style={styles.projectsGrid}>
-          {projects.map((project) => (
-            <View key={project.id} style={styles.projectCard}>
-              <View style={styles.projectCardHeader}>
-                <Text style={styles.projectCardTitle}>{project.name}</Text>
-                <TouchableOpacity
-                  onPress={() => removeProject(project.id)}
-                  style={styles.projectDeleteButton}
-                >
-                  <Icon name="close" size={16} color="#dc3545" />
-                </TouchableOpacity>
-              </View>
-              
-              {project.description && (
-                <Text style={styles.projectCardDescription}>{project.description}</Text>
-              )}
-              
-              {project.deadline && (
-                <View style={styles.projectCardMeta}>
-                  <Icon name="calendar-outline" size={14} color="#6c757d" />
-                  <Text style={styles.projectCardMetaText}>Vence: {project.deadline}</Text>
-                </View>
-              )}
-              
-              <View style={styles.projectCardMeta}>
-                <Icon name="flag-outline" size={14} color="#6c757d" />
-                <Text style={styles.projectCardMetaText}>
-                  {project.goals.length} meta{project.goals.length !== 1 ? 's' : ''}
-                </Text>
-              </View>
-              
-              <View style={styles.projectCardMeta}>
-                <Icon name="time-outline" size={14} color="#6c757d" />
-                <Text style={styles.projectCardMetaText}>
-                  Creado: {new Date(project.createdAt).toLocaleDateString()}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-        
-        <TouchableOpacity 
-          onPress={() => setShowAddProjectModal(true)}
-          style={styles.addProjectButton}
-        >
-          <Icon name="add" size={20} color="#FFFFFF" />
-          <Text style={styles.addProjectButtonText}>Nuevo Proyecto</Text>
-        </TouchableOpacity>
-    </View>
-    </View>
-  );
+  const renderProjects = () => {
+    const completedProjects = projects.filter(project => {
+      const completedGoals = project.goals.filter(goal => goal.completed).length;
+      return completedGoals === project.goals.length && project.goals.length > 0;
+    }).length;
+    const totalProjects = projects.length;
+    const activeProjects = projects.filter(project => {
+      const completedGoals = project.goals.filter(goal => goal.completed).length;
+      return completedGoals < project.goals.length && project.goals.length > 0;
+    }).length;
+    const overdueProjects = projects.filter(project => {
+      if (!project.deadline) return false;
+      const deadline = new Date(project.deadline);
+      const today = new Date();
+      const completedGoals = project.goals.filter(goal => goal.completed).length;
+      return deadline < today && completedGoals < project.goals.length;
+    }).length;
 
-  const renderWorkPlanning = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image 
-            source={require('../../android/app/src/main/assets/trabajo.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.projectsHeader}>
+          <View style={styles.projectsHeaderContent}>
+            <View style={styles.projectsIconContainer}>
+              <Icon name="folder-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.projectsHeaderText}>
+              <Text style={styles.projectsHeaderTitle}>Proyectos</Text>
+              <Text style={styles.projectsHeaderSubtitle}>Gestiona y organiza tus proyectos de trabajo</Text>
+            </View>
+          </View>
+          <View style={styles.projectsHeaderBadge}>
+            <Icon name="rocket-outline" size={16} color="#D2691E" />
+          </View>
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Planificación de Trabajo</Text>
-          <Text style={styles.sectionSubtitle}>
-            Analiza tu productividad y progreso
-          </Text>
+
+        {/* Resumen de proyectos mejorado */}
+        <View style={styles.projectsSummary}>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{completedProjects}/{totalProjects}</Text>
+              <Text style={styles.summaryLabel}>Completados</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="play-circle-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{activeProjects}</Text>
+              <Text style={styles.summaryLabel}>Activos</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="warning-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{overdueProjects}</Text>
+              <Text style={styles.summaryLabel}>Vencidos</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para agregar proyecto */}
+        <View style={styles.addProjectsContainer}>
+          <TouchableOpacity 
+            style={styles.addProjectsButton}
+            onPress={() => setShowAddProjectModal(true)}
+          >
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addProjectsText}>Nuevo Proyecto</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Lista de proyectos mejorada */}
+        <View style={styles.projectsContainer}>
+          <View style={styles.projectsHeader}>
+            <Text style={styles.projectsTitle}>Mis Proyectos</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="filter-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Filtrar</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {projects.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Icon name="folder-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.emptyTitle}>No hay proyectos creados</Text>
+              <Text style={styles.emptySubtitle}>Crea tu primer proyecto para comenzar a organizar tu trabajo</Text>
+              <TouchableOpacity 
+                style={styles.emptyButton}
+                onPress={() => setShowAddProjectModal(true)}
+              >
+                <Icon name="add-outline" size={20} color="#D2691E" />
+                <Text style={styles.emptyButtonText}>Crear Primer Proyecto</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {projects.map((project) => {
+                const completedGoals = project.goals.filter(goal => goal.completed).length;
+                const totalGoals = project.goals.length;
+                const progressPercentage = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+                const isCompleted = completedGoals === totalGoals && totalGoals > 0;
+                const isOverdue = project.deadline && new Date(project.deadline) < new Date() && !isCompleted;
+                const isActive = completedGoals < totalGoals && totalGoals > 0;
+                
+                return (
+                  <View key={project.id} style={styles.projectItem}>
+                    <View style={styles.projectItemHeader}>
+                      <View style={styles.projectItemInfo}>
+                        <Text style={[
+                          styles.projectItemName,
+                          isCompleted && styles.projectItemNameCompleted
+                        ]}>
+                          {project.name}
+                        </Text>
+                        {project.description && (
+                          <Text style={[
+                            styles.projectItemDescription,
+                            isCompleted && styles.projectItemDescriptionCompleted
+                          ]}>
+                            {project.description}
+                          </Text>
+                        )}
+                      </View>
+                      
+                      <View style={styles.projectItemActions}>
+                        <TouchableOpacity
+                          style={styles.projectActionButton}
+                        >
+                          <Icon name="eye-outline" size={16} color="#6B7280" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.projectActionButton}
+                        >
+                          <Icon name="create-outline" size={16} color="#6B7280" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => removeProject(project.id)}
+                          style={styles.projectActionButton}
+                        >
+                          <Icon name="trash-outline" size={16} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    
+                    {/* Metadatos del proyecto */}
+                    <View style={styles.projectItemMeta}>
+                      {project.deadline && (
+                        <View style={styles.projectMetaItem}>
+                          <Icon name="calendar-outline" size={14} color="#6B7280" />
+                          <Text style={[
+                            styles.projectMetaText,
+                            isOverdue && styles.projectMetaTextOverdue
+                          ]}>
+                            Vence: {new Date(project.deadline).toLocaleDateString('es-ES')}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.projectMetaItem}>
+                        <Icon name="flag-outline" size={14} color="#6B7280" />
+                        <Text style={styles.projectMetaText}>
+                          {completedGoals}/{totalGoals} metas
+                        </Text>
+                      </View>
+                      <View style={styles.projectMetaItem}>
+                        <Icon name="time-outline" size={14} color="#6B7280" />
+                        <Text style={styles.projectMetaText}>
+                          Creado: {new Date(project.createdAt).toLocaleDateString('es-ES')}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    {/* Barra de progreso */}
+                    {totalGoals > 0 && (
+                      <View style={styles.projectProgressContainer}>
+                        <View style={styles.projectProgressHeader}>
+                          <Text style={styles.projectProgressLabel}>Progreso</Text>
+                          <Text style={styles.projectProgressPercentage}>{Math.round(progressPercentage)}%</Text>
+                        </View>
+                        <View style={styles.projectProgressBar}>
+                          <View style={[
+                            styles.projectProgressFill,
+                            { width: `${progressPercentage}%` },
+                            isCompleted && styles.projectProgressFillCompleted
+                          ]} />
+                        </View>
+                      </View>
+                    )}
+                    
+                    {/* Indicador de estado */}
+                    <View style={styles.projectItemStatus}>
+                      <View style={[
+                        styles.projectStatusIndicator,
+                        isCompleted ? styles.projectStatusCompleted : 
+                        isOverdue ? styles.projectStatusOverdue :
+                        isActive ? styles.projectStatusActive : styles.projectStatusPending
+                      ]} />
+                      <Text style={[
+                        styles.projectStatusText,
+                        isCompleted ? styles.projectStatusCompletedText : 
+                        isOverdue ? styles.projectStatusOverdueText :
+                        isActive ? styles.projectStatusActiveText : styles.projectStatusPendingText
+                      ]}>
+                        {isCompleted ? 'Completado' : 
+                         isOverdue ? 'Vencido' :
+                         isActive ? 'En Progreso' : 'Pendiente'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
       </View>
-      
-      {/* Resumen de Productividad */}
-      <View style={styles.planningSummary}>
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Icon name="checkmark-circle" size={24} color="#28a745" />
+    );
+  };
+
+  const renderWorkPlanning = () => {
+    const totalTasks = workPlanningData.productivity.totalTasks;
+    const completedTasks = workPlanningData.productivity.tasksCompleted;
+    const efficiency = workPlanningData.productivity.efficiency;
+    const focusTime = workPlanningData.productivity.focusTime;
+    const totalHours = workPlanningData.timeTracking.totalHours;
+    const averagePerDay = workPlanningData.timeTracking.averagePerDay;
+
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.planningHeader}>
+          <View style={styles.planningHeaderContent}>
+            <View style={styles.planningIconContainer}>
+              <Icon name="analytics-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.planningHeaderText}>
+              <Text style={styles.planningHeaderTitle}>Planificación de Trabajo</Text>
+              <Text style={styles.planningHeaderSubtitle}>Analiza tu productividad y progreso</Text>
+            </View>
           </View>
-          <View style={styles.summaryContent}>
-            <Text style={styles.summaryTitle}>Tareas Completadas</Text>
-            <Text style={styles.summaryValue}>
-              {workPlanningData.productivity.tasksCompleted} / {workPlanningData.productivity.totalTasks}
-            </Text>
-          </View>
-        </View>
-        
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Icon name="trending-up" size={24} color="#17a2b8" />
-          </View>
-          <View style={styles.summaryContent}>
-            <Text style={styles.summaryTitle}>Eficiencia</Text>
-            <Text style={styles.summaryValue}>{workPlanningData.productivity.efficiency}%</Text>
-          </View>
-        </View>
-        
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Icon name="time" size={24} color="#ffc107" />
-          </View>
-          <View style={styles.summaryContent}>
-            <Text style={styles.summaryTitle}>Tiempo de Enfoque</Text>
-            <Text style={styles.summaryValue}>{workPlanningData.productivity.focusTime}h</Text>
+          <View style={styles.planningHeaderBadge}>
+            <Icon name="trending-up-outline" size={16} color="#D2691E" />
           </View>
         </View>
-      </View>
-      
-      {/* Gráfica de Progreso Semanal */}
-      <View style={styles.weeklyProgressContainer}>
-        <Text style={styles.progressTitle}>Progreso Semanal</Text>
-        <View style={styles.progressChart}>
-          {workPlanningData.weeklyProgress.map((day, index) => {
-            const completionRate = (day.completed / day.tasks) * 100;
-            return (
-              <View key={index} style={styles.progressBarContainer}>
-                <View style={styles.progressBarBackground}>
-                  <View 
-                    style={[
-                      styles.progressBarFill, 
-                      { width: `${completionRate}%` }
-                    ]} 
-                  />
+
+        {/* Resumen de Productividad mejorado */}
+        <View style={styles.planningSummary}>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{completedTasks}/{totalTasks}</Text>
+              <Text style={styles.summaryLabel}>Tareas Completadas</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="trending-up-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{efficiency}%</Text>
+              <Text style={styles.summaryLabel}>Eficiencia</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="time-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{focusTime}h</Text>
+              <Text style={styles.summaryLabel}>Tiempo de Enfoque</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Gráfica de Progreso Semanal mejorada */}
+        <View style={styles.weeklyProgressContainer}>
+          <View style={styles.weeklyProgressHeader}>
+            <Text style={styles.weeklyProgressTitle}>Progreso Semanal</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="calendar-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Esta Semana</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.progressChart}>
+            {workPlanningData.weeklyProgress.map((day, index) => {
+              const completionRate = day.tasks > 0 ? (day.completed / day.tasks) * 100 : 0;
+              const isToday = index === new Date().getDay();
+              
+              return (
+                <View key={index} style={styles.progressBarContainer}>
+                  <View style={styles.progressBarBackground}>
+                    <View 
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${completionRate}%` },
+                        isToday && styles.progressBarFillToday
+                      ]} 
+                    />
+                  </View>
+                  <View style={styles.progressBarInfo}>
+                    <Text style={[
+                      styles.progressBarDay,
+                      isToday && styles.progressBarDayToday
+                    ]}>
+                      {day.day}
+                    </Text>
+                    <Text style={styles.progressBarStats}>
+                      {day.completed}/{day.tasks} tareas
+                    </Text>
+                    <Text style={styles.progressBarHours}>
+                      {day.hours}h
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.progressBarInfo}>
-                  <Text style={styles.progressBarDay}>{day.day}</Text>
-                  <Text style={styles.progressBarStats}>
-                    {day.completed}/{day.tasks} tareas • {day.hours}h
-                  </Text>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Objetivos Mensuales mejorados */}
+        <View style={styles.monthlyGoalsContainer}>
+          <View style={styles.monthlyGoalsHeader}>
+            <Text style={styles.monthlyGoalsTitle}>Objetivos Mensuales</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="add-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Agregar</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.goalsList}>
+            {workPlanningData.monthlyGoals.map((goal) => {
+              const isCompleted = goal.progress === 100;
+              const isOverdue = new Date(goal.deadline) < new Date() && !isCompleted;
+              
+              return (
+                <View key={goal.id} style={styles.goalCard}>
+                  <View style={styles.goalCardHeader}>
+                    <Text style={[
+                      styles.goalTitle,
+                      isCompleted && styles.goalTitleCompleted
+                    ]}>
+                      {goal.title}
+                    </Text>
+                    <Text style={[
+                      styles.goalDeadline,
+                      isOverdue && styles.goalDeadlineOverdue
+                    ]}>
+                      {goal.deadline}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.goalProgress}>
+                    <View style={styles.goalProgressBar}>
+                      <View 
+                        style={[
+                          styles.goalProgressFill,
+                          { width: `${goal.progress}%` },
+                          isCompleted && styles.goalProgressFillCompleted,
+                          isOverdue && styles.goalProgressFillOverdue
+                        ]} 
+                      />
+                    </View>
+                    <Text style={[
+                      styles.goalProgressText,
+                      isCompleted && styles.goalProgressTextCompleted,
+                      isOverdue && styles.goalProgressTextOverdue
+                    ]}>
+                      {goal.progress}%
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.goalStatus}>
+                    <View style={[
+                      styles.goalStatusIndicator,
+                      isCompleted ? styles.goalStatusCompleted : 
+                      isOverdue ? styles.goalStatusOverdue : styles.goalStatusPending
+                    ]} />
+                    <Text style={[
+                      styles.goalStatusText,
+                      isCompleted ? styles.goalStatusCompletedText : 
+                      isOverdue ? styles.goalStatusOverdueText : styles.goalStatusPendingText
+                    ]}>
+                      {isCompleted ? 'Completado' : 
+                       isOverdue ? 'Vencido' : 'En Progreso'}
+                    </Text>
+                  </View>
                 </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Seguimiento de Tiempo mejorado */}
+        <View style={styles.timeTrackingContainer}>
+          <View style={styles.timeTrackingHeader}>
+            <Text style={styles.timeTrackingTitle}>Seguimiento de Tiempo</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="stats-chart-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Ver Estadísticas</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.timeTrackingStats}>
+            <View style={styles.timeStat}>
+              <View style={styles.timeStatIconContainer}>
+                <Icon name="time-outline" size={20} color="#3B82F6" />
               </View>
-            );
-          })}
-        </View>
-      </View>
-      
-      {/* Objetivos Mensuales */}
-      <View style={styles.monthlyGoalsContainer}>
-        <Text style={styles.goalsTitle}>Objetivos Mensuales</Text>
-        <View style={styles.goalsList}>
-          {workPlanningData.monthlyGoals.map((goal) => (
-            <View key={goal.id} style={styles.goalCard}>
-              <View style={styles.goalHeader}>
-                <Text style={styles.goalTitle}>{goal.title}</Text>
-                <Text style={styles.goalDeadline}>{goal.deadline}</Text>
-              </View>
-              <View style={styles.goalProgress}>
-                <View style={styles.goalProgressBar}>
-                  <View 
-                    style={[
-                      styles.goalProgressFill, 
-                      { width: `${goal.progress}%` }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.goalProgressText}>{goal.progress}%</Text>
+              <View style={styles.timeStatContent}>
+                <Text style={styles.timeStatValue}>{totalHours}h</Text>
+                <Text style={styles.timeStatLabel}>Total de Horas</Text>
               </View>
             </View>
-          ))}
+            
+            <View style={styles.timeStat}>
+              <View style={styles.timeStatIconContainer}>
+                <Icon name="calendar-outline" size={20} color="#10B981" />
+              </View>
+              <View style={styles.timeStatContent}>
+                <Text style={styles.timeStatValue}>{averagePerDay}h</Text>
+                <Text style={styles.timeStatLabel}>Promedio Diario</Text>
+              </View>
+            </View>
+            
+            <View style={styles.timeStat}>
+              <View style={styles.timeStatIconContainer}>
+                <Icon name="trending-up-outline" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.timeStatContent}>
+                <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.mostProductiveDay}</Text>
+                <Text style={styles.timeStatLabel}>Día Más Productivo</Text>
+              </View>
+            </View>
+            
+            <View style={styles.timeStat}>
+              <View style={styles.timeStatIconContainer}>
+                <Icon name="trending-down-outline" size={20} color="#EF4444" />
+              </View>
+              <View style={styles.timeStatContent}>
+                <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.leastProductiveDay}</Text>
+                <Text style={styles.timeStatLabel}>Día Menos Productivo</Text>
+              </View>
+            </View>
+          </View>
         </View>
       </View>
-      
-      {/* Seguimiento de Tiempo */}
-      <View style={styles.timeTrackingContainer}>
-        <Text style={styles.timeTrackingTitle}>Seguimiento de Tiempo</Text>
-        <View style={styles.timeTrackingStats}>
-          <View style={styles.timeStat}>
-            <Icon name="time-outline" size={20} color="#6c757d" />
-            <Text style={styles.timeStatLabel}>Total de Horas</Text>
-            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.totalHours}h</Text>
-          </View>
-          <View style={styles.timeStat}>
-            <Icon name="calendar-outline" size={20} color="#6c757d" />
-            <Text style={styles.timeStatLabel}>Promedio Diario</Text>
-            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.averagePerDay}h</Text>
-          </View>
-          <View style={styles.timeStat}>
-            <Icon name="trending-up-outline" size={20} color="#28a745" />
-            <Text style={styles.timeStatLabel}>Día Más Productivo</Text>
-            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.mostProductiveDay}</Text>
-          </View>
-          <View style={styles.timeStat}>
-            <Icon name="trending-down-outline" size={20} color="#dc3545" />
-            <Text style={styles.timeStatLabel}>Día Menos Productivo</Text>
-            <Text style={styles.timeStatValue}>{workPlanningData.timeTracking.leastProductiveDay}</Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderPriorities = () => (
     <View style={styles.section}>
@@ -1757,47 +2146,65 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
     </View>
   );
 
-  const renderGoals = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image 
-            source={require('../../android/app/src/main/assets/trabajo.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+  const renderGoals = () => {
+    const completedGoals = goalsList.filter(goal => goal.completed).length;
+    const totalGoals = goalsList.length;
+    const activeGoals = goalsList.filter(goal => !goal.completed).length;
+    const progressPercentage = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.goalsHeader}>
+          <View style={styles.goalsHeaderContent}>
+            <View style={styles.goalsIconContainer}>
+              <Icon name="trophy-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.goalsHeaderText}>
+              <Text style={styles.goalsHeaderTitle}>Objetivos</Text>
+              <Text style={styles.goalsHeaderSubtitle}>Define y gestiona tus objetivos de trabajo</Text>
+            </View>
+          </View>
+          <View style={styles.goalsHeaderBadge}>
+            <Icon name="flag-outline" size={16} color="#D2691E" />
+          </View>
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Objetivos</Text>
-          <Text style={styles.sectionSubtitle}>
-            Define y gestiona tus objetivos de trabajo
-          </Text>
+
+        {/* Resumen de objetivos mejorado */}
+        <View style={styles.goalsSummary}>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{completedGoals}/{totalGoals}</Text>
+              <Text style={styles.summaryLabel}>Completados</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="play-circle-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{activeGoals}</Text>
+              <Text style={styles.summaryLabel}>Activos</Text>
+            </View>
+          </View>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryIconContainer}>
+              <Icon name="trending-up-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryValue}>{Math.round(progressPercentage)}%</Text>
+              <Text style={styles.summaryLabel}>Progreso</Text>
+            </View>
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.sectionContent}>
-        {/* Caja de texto para capturar nuevo objetivo */}
-        <View style={styles.addTaskContainer}>
-          <TextInput
-            style={styles.newTaskInput}
-            placeholder="Escribe un nuevo objetivo..."
-            value={newGoalText}
-            onChangeText={setNewGoalText}
-            onSubmitEditing={async () => {
-              if (newGoalText.trim() !== '' && goalsList.length < 5) {
-                const newGoalsList = [...goalsList, { id: Date.now(), text: newGoalText.trim(), completed: false }];
-                setGoalsList(newGoalsList);
-                setNewGoalText('');
-                
-                // Guardar en Supabase
-                await saveWorkData({
-                  goals: newGoalsList
-                });
-              }
-            }}
-            returnKeyType="done"
-          />
+
+        {/* Botón para agregar objetivo */}
+        <View style={styles.addGoalsContainer}>
           <TouchableOpacity 
+            style={styles.addGoalsButton}
             onPress={async () => {
               if (newGoalText.trim() !== '' && goalsList.length < 5) {
                 const newGoalsList = [...goalsList, { id: Date.now(), text: newGoalText.trim(), completed: false }];
@@ -1809,85 +2216,156 @@ const WorkSections = ({ selectedDate, events, onAddEvent, onEditEvent, onDeleteE
                   goals: newGoalsList
                 });
               }
-            }} 
-            style={styles.addTaskButton}
+            }}
           >
-            <Icon name="add" size={20} color="#FFFFFF" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addGoalsText}>Nuevo Objetivo</Text>
           </TouchableOpacity>
         </View>
 
-        {goalsList.length === 0 ? (
-        <View style={styles.emptyGoalsState}>
-          <Icon name="trophy-outline" size={64} color="#dee2e6" />
-          <Text style={styles.emptyGoalsText}>No hay objetivos definidos</Text>
-          <Text style={styles.emptyGoalsSubtext}>Escribe un objetivo arriba y toca el botón +</Text>
-        </View>
-      ) : (
+        {/* Lista de objetivos mejorada */}
         <View style={styles.goalsContainer}>
-          {goalsList.map((goal, index) => (
-            <View key={goal.id} style={[
-              styles.goalCard,
-              { borderLeftColor: goalsColors[index % goalsColors.length] },
-              goal.completed && styles.completedGoalCard
-            ]}>
-              <View style={styles.goalCardHeader}>
-                <View style={styles.goalContentContainer}>
-                  <Text style={[
-                    styles.goalNumber,
-                    { backgroundColor: goalsColors[index % goalsColors.length] }
-                  ]}>
-                    {index + 1}
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.goalTextInput,
-                      goal.completed && styles.completedGoalText
-                    ]}
-                    value={goal.text}
-                    onChangeText={(text) => {
-                      const newList = goalsList.map(g => 
-                        g.id === goal.id ? { ...g, text } : g
-                      );
-                      setGoalsList(newList);
-                    }}
-                    placeholder={`Objetivo ${index + 1}...`}
-                    multiline
-                    numberOfLines={2}
-                    textAlignVertical="top"
-                  />
-                </View>
-                <View style={styles.goalActions}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const newList = goalsList.map(g => 
-                        g.id === goal.id ? { ...g, completed: !g.completed } : g
-                      );
-                      setGoalsList(newList);
-                    }}
-                    style={[
-                      styles.goalCheckbox,
-                      goal.completed && styles.goalCheckboxCompleted
-                    ]}
-                  >
-                    {goal.completed && <Icon name="checkmark" size={16} color="#FFFFFF" />}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setGoalsList(goalsList.filter(g => g.id !== goal.id));
-                    }}
-                    style={styles.goalDeleteButton}
-                  >
-                    <Icon name="close" size={16} color="#dc3545" />
-                  </TouchableOpacity>
-                </View>
-              </View>
+          <View style={styles.goalsHeader}>
+            <Text style={styles.goalsTitle}>Mis Objetivos</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="filter-outline" size={16} color="#D2691E" />
+              <Text style={styles.filterText}>Filtrar</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {goalsList.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Icon name="trophy-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.emptyTitle}>No hay objetivos definidos</Text>
+              <Text style={styles.emptySubtitle}>Define tus objetivos para comenzar a trabajar hacia tus metas</Text>
+              <TouchableOpacity 
+                style={styles.emptyButton}
+                onPress={async () => {
+                  if (newGoalText.trim() !== '' && goalsList.length < 5) {
+                    const newGoalsList = [...goalsList, { id: Date.now(), text: newGoalText.trim(), completed: false }];
+                    setGoalsList(newGoalsList);
+                    setNewGoalText('');
+                    
+                    // Guardar en Supabase
+                    await saveWorkData({
+                      goals: newGoalsList
+                    });
+                  }
+                }}
+              >
+                <Icon name="add-outline" size={20} color="#D2691E" />
+                <Text style={styles.emptyButtonText}>Crear Primer Objetivo</Text>
+              </TouchableOpacity>
             </View>
-          ))}
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {goalsList.map((goal, index) => {
+                const goalColor = goalsColors[index % goalsColors.length];
+                
+                return (
+                  <View key={goal.id} style={styles.goalItem}>
+                    <View style={styles.goalItemHeader}>
+                      <View style={styles.goalItemInfo}>
+                        <View style={styles.goalNumberContainer}>
+                          <Text style={[
+                            styles.goalNumber,
+                            { backgroundColor: goalColor }
+                          ]}>
+                            {index + 1}
+                          </Text>
+                        </View>
+                        <View style={styles.goalTextContainer}>
+                          <TextInput
+                            style={[
+                              styles.goalTextInput,
+                              goal.completed && styles.goalTextInputCompleted
+                            ]}
+                            value={goal.text}
+                            onChangeText={(text) => {
+                              const newList = goalsList.map(g => 
+                                g.id === goal.id ? { ...g, text } : g
+                              );
+                              setGoalsList(newList);
+                            }}
+                            placeholder={`Objetivo ${index + 1}...`}
+                            multiline
+                            numberOfLines={2}
+                            textAlignVertical="top"
+                            editable={!goal.completed}
+                          />
+                        </View>
+                      </View>
+                      
+                      <View style={styles.goalItemActions}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            const newList = goalsList.map(g => 
+                              g.id === goal.id ? { ...g, completed: !g.completed } : g
+                            );
+                            setGoalsList(newList);
+                          }}
+                          style={styles.goalActionButton}
+                        >
+                          <Icon 
+                            name={goal.completed ? "checkmark-circle" : "ellipse-outline"} 
+                            size={20} 
+                            color={goal.completed ? "#10B981" : "#6B7280"} 
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setGoalsList(goalsList.filter(g => g.id !== goal.id));
+                          }}
+                          style={styles.goalActionButton}
+                        >
+                          <Icon name="trash-outline" size={16} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    
+                    {/* Barra de progreso del objetivo */}
+                    <View style={styles.goalProgressContainer}>
+                      <View style={styles.goalProgressBar}>
+                        <View 
+                          style={[
+                            styles.goalProgressFill,
+                            { 
+                              width: goal.completed ? '100%' : '0%',
+                              backgroundColor: goalColor
+                            }
+                          ]} 
+                        />
+                      </View>
+                      <Text style={[
+                        styles.goalProgressText,
+                        { color: goalColor }
+                      ]}>
+                        {goal.completed ? 'Completado' : 'En Progreso'}
+                      </Text>
+                    </View>
+                    
+                    {/* Indicador de estado */}
+                    <View style={styles.goalItemStatus}>
+                      <View style={[
+                        styles.goalStatusIndicator,
+                        goal.completed ? styles.goalStatusCompleted : styles.goalStatusPending
+                      ]} />
+                      <Text style={[
+                        styles.goalStatusText,
+                        goal.completed ? styles.goalStatusCompletedText : styles.goalStatusPendingText
+                      ]}>
+                        {goal.completed ? 'Completado' : 'En Progreso'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
-      )}
-    </View>
-    </View>
-  );
+      </View>
+    );
+  };
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -4797,6 +5275,1366 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#8B4513',
     marginTop: 2,
+  },
+  
+  // Estilos mejorados para Tareas Semanales
+  weeklyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  weeklyHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  weeklyIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  weeklyHeaderText: {
+    flex: 1,
+  },
+  weeklyHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  weeklyHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  weeklyHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Resumen de tareas mejorado
+  weeklySummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  summaryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  summaryContent: {
+    alignItems: 'center',
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  
+  // Botón para agregar tarea
+  addWeeklyContainer: {
+    marginBottom: 20,
+  },
+  addWeeklyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addWeeklyText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Contenedor de tareas
+  weeklyContainer: {
+    flex: 1,
+  },
+  weeklyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  weeklyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  filterText: {
+    color: '#D2691E',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  
+  // Estado vacío
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  emptyButtonText: {
+    color: '#D2691E',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Tarjetas de tareas mejoradas
+  weeklyItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weeklyItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  weeklyCheckboxContainer: {
+    marginRight: 12,
+  },
+  weeklyCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weeklyCheckboxChecked: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  weeklyItemInfo: {
+    flex: 1,
+  },
+  weeklyItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  weeklyItemNameCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#9CA3AF',
+  },
+  weeklyItemDate: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  weeklyItemDateCompleted: {
+    color: '#9CA3AF',
+  },
+  weeklyItemActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  weeklyActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Notas de la tarea
+  weeklyItemNotes: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  weeklyNotesText: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  
+  // Estado de la tarea
+  weeklyItemStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  weeklyStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  weeklyStatusCompleted: {
+    backgroundColor: '#10B981',
+  },
+  weeklyStatusUrgent: {
+    backgroundColor: '#EF4444',
+  },
+  weeklyStatusOverdue: {
+    backgroundColor: '#F59E0B',
+  },
+  weeklyStatusPending: {
+    backgroundColor: '#6B7280',
+  },
+  weeklyStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  weeklyStatusCompletedText: {
+    color: '#10B981',
+  },
+  weeklyStatusUrgentText: {
+    color: '#EF4444',
+  },
+  weeklyStatusOverdueText: {
+    color: '#F59E0B',
+  },
+  weeklyStatusPendingText: {
+    color: '#6B7280',
+  },
+  
+  // Estilos mejorados para Tareas Diarias
+  dailyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  dailyHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dailyIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  dailyHeaderText: {
+    flex: 1,
+  },
+  dailyHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  dailyHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  dailyHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Resumen de tareas diarias mejorado
+  dailySummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  
+  // Botón para agregar tarea diaria
+  addDailyContainer: {
+    marginBottom: 20,
+  },
+  addDailyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addDailyText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Contenedor de tareas diarias
+  dailyContainer: {
+    flex: 1,
+  },
+  dailyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  
+  // Tarjetas de tareas diarias mejoradas
+  dailyItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dailyItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dailyCheckboxContainer: {
+    marginRight: 12,
+  },
+  dailyCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dailyCheckboxChecked: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  dailyItemInfo: {
+    flex: 1,
+  },
+  dailyItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  dailyItemNameCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#9CA3AF',
+  },
+  dailyItemDateTime: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  dailyItemDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dailyItemDate: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  dailyItemDateCompleted: {
+    color: '#9CA3AF',
+  },
+  dailyItemTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dailyItemTime: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  dailyItemTimeCompleted: {
+    color: '#9CA3AF',
+  },
+  dailyItemActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  dailyActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Notas de la tarea diaria
+  dailyItemNotes: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  dailyNotesText: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  
+  // Estado de la tarea diaria
+  dailyItemStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dailyStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  dailyStatusCompleted: {
+    backgroundColor: '#10B981',
+  },
+  dailyStatusOverdue: {
+    backgroundColor: '#EF4444',
+  },
+  dailyStatusToday: {
+    backgroundColor: '#3B82F6',
+  },
+  dailyStatusPending: {
+    backgroundColor: '#6B7280',
+  },
+  dailyStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  dailyStatusCompletedText: {
+    color: '#10B981',
+  },
+  dailyStatusOverdueText: {
+    color: '#EF4444',
+  },
+  dailyStatusTodayText: {
+    color: '#3B82F6',
+  },
+  dailyStatusPendingText: {
+    color: '#6B7280',
+  },
+  
+  // Estilos mejorados para Proyectos
+  projectsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  projectsHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  projectsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  projectsHeaderText: {
+    flex: 1,
+  },
+  projectsHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  projectsHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  projectsHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Resumen de proyectos mejorado
+  projectsSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  
+  // Botón para agregar proyecto
+  addProjectsContainer: {
+    marginBottom: 20,
+  },
+  addProjectsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addProjectsText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Contenedor de proyectos
+  projectsContainer: {
+    flex: 1,
+  },
+  projectsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  
+  // Tarjetas de proyectos mejoradas
+  projectItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  projectItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  projectItemInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  projectItemName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  projectItemNameCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#9CA3AF',
+  },
+  projectItemDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  projectItemDescriptionCompleted: {
+    color: '#9CA3AF',
+  },
+  projectItemActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  projectActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Metadatos del proyecto
+  projectItemMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginBottom: 12,
+  },
+  projectMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  projectMetaText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  projectMetaTextOverdue: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  
+  // Barra de progreso del proyecto
+  projectProgressContainer: {
+    marginBottom: 12,
+  },
+  projectProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  projectProgressLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  projectProgressPercentage: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  projectProgressBar: {
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  projectProgressFill: {
+    height: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
+  },
+  projectProgressFillCompleted: {
+    backgroundColor: '#10B981',
+  },
+  
+  // Estado del proyecto
+  projectItemStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  projectStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  projectStatusCompleted: {
+    backgroundColor: '#10B981',
+  },
+  projectStatusOverdue: {
+    backgroundColor: '#EF4444',
+  },
+  projectStatusActive: {
+    backgroundColor: '#3B82F6',
+  },
+  projectStatusPending: {
+    backgroundColor: '#6B7280',
+  },
+  projectStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  projectStatusCompletedText: {
+    color: '#10B981',
+  },
+  projectStatusOverdueText: {
+    color: '#EF4444',
+  },
+  projectStatusActiveText: {
+    color: '#3B82F6',
+  },
+  projectStatusPendingText: {
+    color: '#6B7280',
+  },
+  
+  // Estilos mejorados para Planificación de Trabajo
+  planningHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  planningHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  planningIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  planningHeaderText: {
+    flex: 1,
+  },
+  planningHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  planningHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  planningHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Resumen de planificación mejorado
+  planningSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  
+  // Gráfica de progreso semanal mejorada
+  weeklyProgressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weeklyProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  weeklyProgressTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  progressChart: {
+    gap: 12,
+  },
+  progressBarContainer: {
+    marginBottom: 8,
+  },
+  progressBarBackground: {
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
+  },
+  progressBarFillToday: {
+    backgroundColor: '#D2691E',
+  },
+  progressBarInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressBarDay: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  progressBarDayToday: {
+    color: '#D2691E',
+  },
+  progressBarStats: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  progressBarHours: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  
+  // Objetivos mensuales mejorados
+  monthlyGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  monthlyGoalsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  monthlyGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  goalsList: {
+    gap: 12,
+  },
+  goalCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  goalCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  goalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    flex: 1,
+    marginRight: 8,
+  },
+  goalTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#9CA3AF',
+  },
+  goalDeadline: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  goalDeadlineOverdue: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  goalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  goalProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginRight: 12,
+  },
+  goalProgressFill: {
+    height: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 3,
+  },
+  goalProgressFillCompleted: {
+    backgroundColor: '#10B981',
+  },
+  goalProgressFillOverdue: {
+    backgroundColor: '#EF4444',
+  },
+  goalProgressText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1F2937',
+    minWidth: 35,
+    textAlign: 'right',
+  },
+  goalProgressTextCompleted: {
+    color: '#10B981',
+  },
+  goalProgressTextOverdue: {
+    color: '#EF4444',
+  },
+  goalStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  goalStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  goalStatusCompleted: {
+    backgroundColor: '#10B981',
+  },
+  goalStatusOverdue: {
+    backgroundColor: '#EF4444',
+  },
+  goalStatusPending: {
+    backgroundColor: '#3B82F6',
+  },
+  goalStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  goalStatusCompletedText: {
+    color: '#10B981',
+  },
+  goalStatusOverdueText: {
+    color: '#EF4444',
+  },
+  goalStatusPendingText: {
+    color: '#3B82F6',
+  },
+  
+  // Seguimiento de tiempo mejorado
+  timeTrackingContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  timeTrackingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  timeTrackingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  timeTrackingStats: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  timeStat: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  timeStatIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  timeStatContent: {
+    alignItems: 'center',
+  },
+  timeStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  timeStatLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  
+  // Estilos mejorados para Objetivos
+  goalsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  goalsHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  goalsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  goalsHeaderText: {
+    flex: 1,
+  },
+  goalsHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  goalsHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  goalsHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Resumen de objetivos mejorado
+  goalsSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  
+  // Botón para agregar objetivo
+  addGoalsContainer: {
+    marginBottom: 20,
+  },
+  addGoalsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D2691E',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    shadowColor: '#D2691E',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addGoalsText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Contenedor de objetivos
+  goalsContainer: {
+    flex: 1,
+  },
+  goalsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  
+  // Tarjetas de objetivos mejoradas
+  goalItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  goalItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  goalItemInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginRight: 12,
+  },
+  goalNumberContainer: {
+    marginRight: 12,
+  },
+  goalNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 32,
+  },
+  goalTextContainer: {
+    flex: 1,
+  },
+  goalTextInput: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    minHeight: 40,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  goalTextInputCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#9CA3AF',
+    backgroundColor: '#F3F4F6',
+  },
+  goalItemActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  goalActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Barra de progreso del objetivo
+  goalProgressContainer: {
+    marginBottom: 12,
+  },
+  goalProgressBar: {
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  goalProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  goalProgressText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'right',
+  },
+  
+  // Estado del objetivo
+  goalItemStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  goalStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  goalStatusCompleted: {
+    backgroundColor: '#10B981',
+  },
+  goalStatusPending: {
+    backgroundColor: '#3B82F6',
+  },
+  goalStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  goalStatusCompletedText: {
+    color: '#10B981',
+  },
+  goalStatusPendingText: {
+    color: '#3B82F6',
   },
 });
 

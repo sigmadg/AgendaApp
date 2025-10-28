@@ -91,6 +91,7 @@ const WeeklyTasksSection = ({
     setNewTaskText('');
     setSelectedTaskNotes('');
     setNewTaskDate(new Date());
+    setShowNotesModal(false);
   };
 
   const handleToggleTask = (taskId) => {
@@ -158,6 +159,7 @@ const WeeklyTasksSection = ({
     setNewTaskText('');
     setSelectedTaskNotes('');
     setNewTaskDate(new Date());
+    setEditingTaskIndex(null);
     setShowNotesModal(true);
   };
 
@@ -168,82 +170,164 @@ const WeeklyTasksSection = ({
 
   return (
     <View style={weeklyTasksStyles.container}>
-      <SectionHeader
-        title="Tareas Semanales"
-        subtitle="Planifica tu semana de trabajo"
-        image={require('../../../android/app/src/main/assets/trabajo.png')}
-        onAddPress={handleAddWeeklyTaskPress}
-        theme={theme}
-        size="medium"
-      />
-
-      {/* Resumen de tareas */}
-      <View style={weeklyTasksStyles.summaryContainer}>
-        <Card
-          title="Completadas"
-          subtitle={`${completedTasks}/${totalTasks}`}
-          icon="checkmark-circle-outline"
-          theme={theme}
-          size="small"
-          style={weeklyTasksStyles.summaryCard}
-        />
-        <Card
-          title="Urgentes"
-          subtitle={`${urgentTasks} tareas`}
-          icon="flash-outline"
-          theme={theme}
-          size="small"
-          style={weeklyTasksStyles.summaryCard}
-        />
-        <Card
-          title="Vencidas"
-          subtitle={`${overdueTasks} tareas`}
-          icon="warning-outline"
-          theme={theme}
-          size="small"
-          style={weeklyTasksStyles.summaryCard}
-        />
+      {/* Header mejorado */}
+      <View style={weeklyTasksStyles.weeklyHeader}>
+        <View style={weeklyTasksStyles.weeklyHeaderContent}>
+          <View style={weeklyTasksStyles.weeklyIconContainer}>
+            <Icon name="calendar-outline" size={24} color="#FFFFFF" />
+          </View>
+          <View style={weeklyTasksStyles.weeklyHeaderText}>
+            <Text style={weeklyTasksStyles.weeklyHeaderTitle}>Tareas Semanales</Text>
+            <Text style={weeklyTasksStyles.weeklyHeaderSubtitle}>Planifica tu semana de trabajo</Text>
+          </View>
+        </View>
+        <View style={weeklyTasksStyles.weeklyHeaderBadge}>
+          <Icon name="time-outline" size={16} color="#D2691E" />
+        </View>
       </View>
 
-      {/* Lista de tareas */}
-      <View style={weeklyTasksStyles.tasksContainer}>
+      {/* Resumen de tareas mejorado */}
+      <View style={weeklyTasksStyles.weeklySummary}>
+        <View style={weeklyTasksStyles.summaryCard}>
+          <View style={weeklyTasksStyles.summaryIconContainer}>
+            <Icon name="checkmark-circle-outline" size={20} color="#3B82F6" />
+          </View>
+          <View style={weeklyTasksStyles.summaryContent}>
+            <Text style={weeklyTasksStyles.summaryValue}>{completedTasks}/{totalTasks}</Text>
+            <Text style={weeklyTasksStyles.summaryLabel}>Completadas</Text>
+          </View>
+        </View>
+        <View style={weeklyTasksStyles.summaryCard}>
+          <View style={weeklyTasksStyles.summaryIconContainer}>
+            <Icon name="flash-outline" size={20} color="#10B981" />
+          </View>
+          <View style={weeklyTasksStyles.summaryContent}>
+            <Text style={weeklyTasksStyles.summaryValue}>{urgentTasks}</Text>
+            <Text style={weeklyTasksStyles.summaryLabel}>Urgentes</Text>
+          </View>
+        </View>
+        <View style={weeklyTasksStyles.summaryCard}>
+          <View style={weeklyTasksStyles.summaryIconContainer}>
+            <Icon name="warning-outline" size={20} color="#F59E0B" />
+          </View>
+          <View style={weeklyTasksStyles.summaryContent}>
+            <Text style={weeklyTasksStyles.summaryValue}>{overdueTasks}</Text>
+            <Text style={weeklyTasksStyles.summaryLabel}>Vencidas</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Botón para agregar tarea */}
+      <View style={weeklyTasksStyles.addWeeklyContainer}>
+        <TouchableOpacity style={weeklyTasksStyles.addWeeklyButton} onPress={handleAddWeeklyTaskPress}>
+          <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+          <Text style={weeklyTasksStyles.addWeeklyText}>Agregar Tarea Semanal</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Lista de tareas mejorada */}
+      <View style={weeklyTasksStyles.weeklyContainer}>
+        <View style={weeklyTasksStyles.weeklyHeader}>
+          <Text style={weeklyTasksStyles.weeklyTitle}>Mis Tareas Semanales</Text>
+          <TouchableOpacity style={weeklyTasksStyles.filterButton}>
+            <Icon name="filter-outline" size={16} color="#D2691E" />
+            <Text style={weeklyTasksStyles.filterText}>Filtrar</Text>
+          </TouchableOpacity>
+        </View>
+        
         {weeklyTasks.length === 0 ? (
-          <Card
-            title="No hay tareas"
-            subtitle="Agrega tu primera tarea semanal"
-            icon="add-circle-outline"
-            theme={theme}
-            size="medium"
-          >
-            <Button
-              title="Agregar Tarea"
-              onPress={handleAddWeeklyTaskPress}
-              variant="primary"
-              size="medium"
-              theme={theme}
-              icon="add"
-            />
-          </Card>
+          <View style={weeklyTasksStyles.emptyState}>
+            <Icon name="calendar-outline" size={48} color="#9CA3AF" />
+            <Text style={weeklyTasksStyles.emptyTitle}>No hay tareas semanales</Text>
+            <Text style={weeklyTasksStyles.emptySubtitle}>Agrega tu primera tarea para comenzar a planificar tu semana</Text>
+            <TouchableOpacity style={weeklyTasksStyles.emptyButton} onPress={handleAddWeeklyTaskPress}>
+              <Icon name="add-outline" size={20} color="#D2691E" />
+              <Text style={weeklyTasksStyles.emptyButtonText}>Agregar Primera Tarea</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false}>
             {weeklyTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggle={handleToggleTask}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-                onAddNotes={handleAddNotes}
-                theme={theme}
-                size="medium"
-                variant={task.completed ? 'completed' : task.overdue ? 'overdue' : task.urgent ? 'urgent' : 'default'}
-              />
+              <View key={task.id} style={weeklyTasksStyles.weeklyItem}>
+                <View style={weeklyTasksStyles.weeklyItemHeader}>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTask(task.id)}
+                    style={weeklyTasksStyles.weeklyCheckboxContainer}
+                  >
+                    <View style={[
+                      weeklyTasksStyles.weeklyCheckbox,
+                      task.completed && weeklyTasksStyles.weeklyCheckboxChecked
+                    ]}>
+                      {task.completed && (
+                        <Icon name="checkmark" size={16} color="#FFFFFF" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                  
+                  <View style={weeklyTasksStyles.weeklyItemInfo}>
+                    <Text style={[
+                      weeklyTasksStyles.weeklyItemName,
+                      task.completed && weeklyTasksStyles.weeklyItemNameCompleted
+                    ]}>
+                      {task.title}
+                    </Text>
+                    <Text style={[
+                      weeklyTasksStyles.weeklyItemDate,
+                      task.completed && weeklyTasksStyles.weeklyItemDateCompleted
+                    ]}>
+                      {new Date(task.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  
+                  <View style={weeklyTasksStyles.weeklyItemActions}>
+                    <TouchableOpacity
+                      onPress={() => handleAddNotes(task.id)}
+                      style={weeklyTasksStyles.weeklyActionButton}
+                    >
+                      <Icon name="create-outline" size={16} color="#6B7280" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteTask(task.id)}
+                      style={weeklyTasksStyles.weeklyActionButton}
+                    >
+                      <Icon name="trash-outline" size={16} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                {/* Notas de la tarea */}
+                {task.notes && (
+                  <View style={weeklyTasksStyles.weeklyItemNotes}>
+                    <Text style={weeklyTasksStyles.weeklyNotesText}>{task.notes}</Text>
+                  </View>
+                )}
+                
+                {/* Indicador de estado */}
+                <View style={weeklyTasksStyles.weeklyItemStatus}>
+                  <View style={[
+                    weeklyTasksStyles.weeklyStatusIndicator,
+                    task.completed ? weeklyTasksStyles.weeklyStatusCompleted : 
+                    task.urgent ? weeklyTasksStyles.weeklyStatusUrgent :
+                    task.overdue ? weeklyTasksStyles.weeklyStatusOverdue : weeklyTasksStyles.weeklyStatusPending
+                  ]} />
+                  <Text style={[
+                    weeklyTasksStyles.weeklyStatusText,
+                    task.completed ? weeklyTasksStyles.weeklyStatusCompletedText : 
+                    task.urgent ? weeklyTasksStyles.weeklyStatusUrgentText :
+                    task.overdue ? weeklyTasksStyles.weeklyStatusOverdueText : weeklyTasksStyles.weeklyStatusPendingText
+                  ]}>
+                    {task.completed ? 'Completada' : 
+                     task.urgent ? 'Urgente' :
+                     task.overdue ? 'Vencida' : 'Pendiente'}
+                  </Text>
+                </View>
+              </View>
             ))}
           </ScrollView>
         )}
       </View>
 
-      {/* Modal para agregar/editar tarea */}
+      {/* Modal para agregar/editar tarea mejorado */}
       <Modal
         visible={showNotesModal}
         transparent={true}
@@ -253,9 +337,19 @@ const WeeklyTasksSection = ({
         <View style={weeklyTasksStyles.modalOverlay}>
           <View style={weeklyTasksStyles.modalContainer}>
             <View style={weeklyTasksStyles.modalHeader}>
-              <Text style={weeklyTasksStyles.modalTitle}>
-                {editingTaskIndex ? 'Editar Tarea' : 'Nueva Tarea Semanal'}
-              </Text>
+              <View style={weeklyTasksStyles.modalHeaderContent}>
+                <View style={weeklyTasksStyles.modalIconContainer}>
+                  <Icon name="calendar-outline" size={24} color="#FFFFFF" />
+                </View>
+                <View style={weeklyTasksStyles.modalHeaderText}>
+                  <Text style={weeklyTasksStyles.modalTitle}>
+                    {editingTaskIndex ? 'Editar Tarea Semanal' : 'Nueva Tarea Semanal'}
+                  </Text>
+                  <Text style={weeklyTasksStyles.modalSubtitle}>
+                    {editingTaskIndex ? 'Modifica los detalles de tu tarea' : 'Agrega una nueva tarea a tu planificación semanal'}
+                  </Text>
+                </View>
+              </View>
               <TouchableOpacity
                 onPress={() => setShowNotesModal(false)}
                 style={weeklyTasksStyles.closeButton}
@@ -266,60 +360,60 @@ const WeeklyTasksSection = ({
 
             <ScrollView style={weeklyTasksStyles.modalContent}>
               <View style={weeklyTasksStyles.inputGroup}>
-                <Text style={weeklyTasksStyles.inputLabel}>Tarea</Text>
+                <Text style={weeklyTasksStyles.inputLabel}>Título de la Tarea</Text>
                 <TextInput
                   style={weeklyTasksStyles.textInput}
                   value={newTaskText}
                   onChangeText={setNewTaskText}
-                  placeholder="Ingresa la tarea"
+                  placeholder="Ingresa el título de la tarea"
                   placeholderTextColor="#9CA3AF"
                 />
               </View>
 
               <View style={weeklyTasksStyles.inputGroup}>
-                <Text style={weeklyTasksStyles.inputLabel}>Fecha</Text>
+                <Text style={weeklyTasksStyles.inputLabel}>Fecha de Vencimiento</Text>
                 <TouchableOpacity
                   style={weeklyTasksStyles.datePickerButton}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <Icon name="calendar-outline" size={20} color="#6B7280" />
+                  <Icon name="calendar-outline" size={20} color="#D2691E" />
                   <Text style={weeklyTasksStyles.datePickerText}>
                     {newTaskDate.toLocaleDateString()}
                   </Text>
+                  <Icon name="chevron-down" size={16} color="#6B7280" />
                 </TouchableOpacity>
               </View>
 
               <View style={weeklyTasksStyles.inputGroup}>
-                <Text style={weeklyTasksStyles.inputLabel}>Notas</Text>
+                <Text style={weeklyTasksStyles.inputLabel}>Notas Adicionales</Text>
                 <TextInput
                   style={[weeklyTasksStyles.textInput, weeklyTasksStyles.textArea]}
                   value={selectedTaskNotes}
                   onChangeText={setSelectedTaskNotes}
-                  placeholder="Agrega notas adicionales"
+                  placeholder="Agrega notas, detalles o recordatorios adicionales"
                   placeholderTextColor="#9CA3AF"
                   multiline
-                  numberOfLines={3}
+                  numberOfLines={4}
                 />
               </View>
             </ScrollView>
 
             <View style={weeklyTasksStyles.modalActions}>
-              <Button
-                title="Cancelar"
+              <TouchableOpacity
+                style={weeklyTasksStyles.modalCancelButton}
                 onPress={() => setShowNotesModal(false)}
-                variant="outline"
-                size="medium"
-                theme={theme}
-                style={weeklyTasksStyles.modalButton}
-              />
-              <Button
-                title={editingTaskIndex ? 'Guardar' : 'Agregar'}
+              >
+                <Text style={weeklyTasksStyles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={weeklyTasksStyles.modalSaveButton}
                 onPress={editingTaskIndex ? handleSaveNotes : handleAddWeeklyTask}
-                variant="primary"
-                size="medium"
-                theme={theme}
-                style={weeklyTasksStyles.modalButton}
-              />
+              >
+                <Icon name="checkmark" size={20} color="#FFFFFF" />
+                <Text style={weeklyTasksStyles.modalSaveText}>
+                  {editingTaskIndex ? 'Guardar Cambios' : 'Agregar Tarea'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>

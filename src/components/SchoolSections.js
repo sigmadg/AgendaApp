@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { ElegantSubsectionTabs } from './shared';
 
 const SchoolSections = ({ onUpdateSection, user }) => {
   // Estados para las diferentes secciones
@@ -260,37 +261,6 @@ const SchoolSections = ({ onUpdateSection, user }) => {
       }
     }
   };
-
-  const renderSectionTabs = () => (
-    <View style={styles.tabsContainer}>
-      <View style={styles.tabsWrapper}>
-        {sections.map((section) => (
-          <TouchableOpacity
-            key={section.id}
-            style={[
-              styles.tab,
-              activeSection === section.id && styles.activeTab
-            ]}
-            onPress={() => setActiveSection(section.id)}
-          >
-            <View style={[styles.tabContent, {
-              backgroundColor: activeSection === section.id ? '#4A90E2' : 'transparent',
-              borderColor: activeSection === section.id ? '#4A90E2' : '#0066CC',
-            }]}>
-            <Icon 
-              name={section.icon} 
-              size={20} 
-                color={activeSection === section.id ? '#FFFFFF' : '#1E3A8A'} 
-            />
-              {activeSection === section.id && (
-                <View style={styles.activeIndicator} />
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
 
   const renderTimetable = () => {
     // Usar el día seleccionado en lugar del día actual
@@ -590,66 +560,62 @@ const SchoolSections = ({ onUpdateSection, user }) => {
 
   const renderTodoLists = () => (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image 
-            source={require('../../android/app/src/main/assets/escuela.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Tareas Académicas</Text>
-          <Text style={styles.sectionSubtitle}>
-            Organiza tus tareas y proyectos académicos
-          </Text>
-        </View>
-        <TouchableOpacity onPress={() => {
-          setModalType('todo');
-          setShowAddModal(true);
-        }} style={styles.addTaskButton}>
-          <View style={styles.addTaskButtonContent}>
-            <View style={styles.addTaskIconContainer}>
-              <Icon name="add-circle" size={24} color="#FFFFFF" />
-            </View>
-            <View style={styles.addTaskTextContainer}>
-              <Text style={styles.addTaskButtonText}>Nueva Tarea</Text>
-              <Text style={styles.addTaskButtonSubtext}>Agregar tarea académica</Text>
-            </View>
-            <View style={styles.addTaskArrowContainer}>
-              <Icon name="chevron-forward" size={16} color="#FFFFFF" />
-            </View>
+      {/* Header mejorado */}
+      <View style={styles.tasksHeader}>
+        <View style={styles.tasksHeaderContent}>
+          <View style={styles.tasksIconContainer}>
+            <Icon name="checkmark-circle-outline" size={24} color="#FFFFFF" />
           </View>
-        </TouchableOpacity>
+          <View style={styles.tasksHeaderText}>
+            <Text style={styles.tasksHeaderTitle}>
+              Tareas Académicas
+            </Text>
+            <Text style={styles.tasksHeaderSubtitle}>
+              Gestiona tus tareas y proyectos académicos
+            </Text>
+          </View>
+        </View>
+        <View style={styles.tasksHeaderBadge}>
+          <Icon name="school-outline" size={16} color="#1E3A8A" />
+        </View>
       </View>
       
-      {/* Resumen de tareas */}
-      <View style={styles.todoSummary}>
+      {/* Resumen de tareas mejorado */}
+      <View style={styles.tasksSummary}>
         <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Icon name="checkmark-circle" size={20} color="#10B981" />
+          <View style={styles.summaryIconContainer}>
+            <Icon name="list-outline" size={20} color="#3B82F6" />
+          </View>
+          <View style={styles.summaryContent}>
+            <Text style={styles.summaryValue}>{academicTasks.length}</Text>
+            <Text style={styles.summaryLabel}>Total</Text>
+          </View>
+        </View>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryIconContainer}>
+            <Icon name="checkmark-circle-outline" size={20} color="#10B981" />
           </View>
           <View style={styles.summaryContent}>
             <Text style={styles.summaryValue}>
               {academicTasks.filter(todo => todo.completed).length}
             </Text>
+            <Text style={styles.summaryLabel}>Completadas</Text>
           </View>
         </View>
-        
         <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Icon name="time" size={20} color="#F59E0B" />
+          <View style={styles.summaryIconContainer}>
+            <Icon name="time-outline" size={20} color="#F59E0B" />
           </View>
           <View style={styles.summaryContent}>
             <Text style={styles.summaryValue}>
               {academicTasks.filter(todo => !todo.completed).length}
             </Text>
+            <Text style={styles.summaryLabel}>Pendientes</Text>
           </View>
         </View>
-        
         <View style={styles.summaryCard}>
-          <View style={styles.summaryIcon}>
-            <Icon name="calendar" size={20} color="#EF4444" />
+          <View style={styles.summaryIconContainer}>
+            <Icon name="alert-circle-outline" size={20} color="#EF4444" />
           </View>
           <View style={styles.summaryContent}>
             <Text style={styles.summaryValue}>
@@ -659,145 +625,185 @@ const SchoolSections = ({ onUpdateSection, user }) => {
                 return dueDate < today && !todo.completed;
               }).length}
             </Text>
+            <Text style={styles.summaryLabel}>Urgentes</Text>
           </View>
         </View>
       </View>
       
+      {/* Botón para agregar tarea */}
+      <View style={styles.addTaskContainer}>
+        <TouchableOpacity 
+          style={styles.addTaskButton}
+          onPress={() => {
+            setModalType('todo');
+            setShowAddModal(true);
+          }}
+        >
+          <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.addTaskText}>Nueva Tarea Académica</Text>
+        </TouchableOpacity>
+      </View>
+      
       {/* Lista de tareas mejorada */}
-      <View style={styles.todoContainer}>
+      <View style={styles.tasksContainer}>
+        <View style={styles.tasksHeader}>
+          <Text style={styles.tasksTitle}>Mis Tareas</Text>
+          <TouchableOpacity style={styles.filterButton}>
+            <Icon name="filter-outline" size={16} color="#1E3A8A" />
+            <Text style={styles.filterText}>Filtrar</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView style={styles.tasksBody} showsVerticalScrollIndicator={false}>
         {academicTasks.length === 0 ? (
           <View style={styles.emptyState}>
-            <Icon name="clipboard-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyStateTitle}>No hay tareas</Text>
-            <Text style={styles.emptyStateSubtitle}>
-              Agrega tu primera tarea académica
-            </Text>
+            <Icon name="document-outline" size={48} color="#9CA3AF" />
+            <Text style={styles.emptyTitle}>No hay tareas académicas</Text>
+            <Text style={styles.emptySubtitle}>Agrega tu primera tarea para comenzar a organizarte</Text>
+            <TouchableOpacity 
+              style={styles.emptyButton}
+              onPress={() => {
+                setModalType('todo');
+                setShowAddModal(true);
+              }}
+            >
+              <Icon name="add-outline" size={20} color="#1E3A8A" />
+              <Text style={styles.emptyButtonText}>Crear Primera Tarea</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <ScrollView style={styles.todoList} showsVerticalScrollIndicator={false}>
-            {academicTasks.map((todo, index) => {
-              const dueDate = new Date(todo.date);
-              const today = new Date();
-              const isOverdue = dueDate < today && !todo.completed;
-              const isDueToday = dueDate.toDateString() === today.toDateString();
-              
-              return (
-                <View key={todo.id} style={[
-                  styles.todoCard,
-                  isOverdue && styles.todoCardOverdue,
-                  isDueToday && !todo.completed && styles.todoCardDueToday,
-                  todo.completed && styles.todoCardCompleted
-                ]}>
-                  <View style={styles.todoCardHeader}>
-              <View style={styles.todoCheckbox}>
-                      <TouchableOpacity onPress={() => {
+          academicTasks.map((todo, index) => {
+            const dueDate = new Date(todo.date);
+            const today = new Date();
+            const isOverdue = dueDate < today && !todo.completed;
+            const isDueToday = dueDate.toDateString() === today.toDateString();
+            
+            return (
+              <View key={todo.id} style={styles.taskItem}>
+                <View style={styles.taskItemHeader}>
+                  <View style={styles.taskItemInfo}>
+                    <TouchableOpacity
+                      onPress={() => {
                         const updatedTasks = academicTasks.map(task => 
                           task.id === todo.id 
                             ? { ...task, completed: !task.completed }
                             : task
                         );
                         setAcademicTasks(updatedTasks);
-                      }}>
-                <Icon 
-                          name={todo.completed ? "checkmark-circle" : "ellipse-outline"} 
-                          size={24} 
-                          color={todo.completed ? "#10B981" : "#6B7280"} 
-                        />
-                      </TouchableOpacity>
-              </View>
+                      }}
+                      style={[
+                        styles.taskCheckbox,
+                        todo.completed && styles.taskCheckboxCompleted
+                      ]}
+                    >
+                      {todo.completed && <Icon name="checkmark" size={16} color="#FFFFFF" />}
+                    </TouchableOpacity>
                     
-                    <View style={styles.todoCardContent}>
+                    <View style={styles.taskContent}>
                       <Text style={[
-                        styles.todoTitle,
-                        todo.completed && styles.todoTitleCompleted
+                        styles.taskTitle,
+                        todo.completed && styles.taskTitleCompleted
                       ]}>
-                {todo.task}
-              </Text>
+                        {todo.task}
+                      </Text>
                       
-                      <View style={styles.todoMeta}>
-                        <View style={styles.todoDateContainer}>
-                          <Icon name="calendar" size={14} color="#6B7280" />
+                      <View style={styles.taskMeta}>
+                        <View style={styles.taskMetaItem}>
+                          <Icon name="book-outline" size={14} color="#6B7280" />
+                          <Text style={styles.taskMetaText}>{todo.subject}</Text>
+                        </View>
+                        <View style={styles.taskMetaItem}>
+                          <Icon name="calendar-outline" size={14} color="#6B7280" />
                           <Text style={[
-                            styles.todoDate,
-                            isOverdue && styles.todoDateOverdue,
-                            isDueToday && !todo.completed && styles.todoDateDueToday
+                            styles.taskMetaText,
+                            isOverdue && styles.taskMetaTextOverdue
                           ]}>
                             {todo.date}
                           </Text>
-            </View>
-                        
-                        {todo.subject && (
-                          <View style={styles.todoSubjectContainer}>
-                            <Icon name="book" size={14} color="#6B7280" />
-                            <Text style={styles.todoSubject}>{todo.subject}</Text>
-        </View>
-                        )}
-                        
-                        {todo.estimatedTime && (
-                          <View style={styles.todoTimeContainer}>
-                            <Icon name="time" size={14} color="#6B7280" />
-                            <Text style={styles.todoEstimatedTime}>{todo.estimatedTime}</Text>
-                          </View>
-                        )}
-                        
-                        {todo.notes && (
-                          <View style={styles.todoNotesContainer}>
-                            <Icon name="document-text" size={14} color="#6B7280" />
-                            <Text style={styles.todoNotes} numberOfLines={1}>
-                              {todo.notes}
-                            </Text>
-                          </View>
-                        )}
+                        </View>
+                        <View style={styles.taskMetaItem}>
+                          <Icon name="time-outline" size={14} color="#6B7280" />
+                          <Text style={styles.taskMetaText}>{todo.estimatedTime}</Text>
+                        </View>
                       </View>
-                    </View>
-                    
-                    <View style={styles.todoActions}>
-                      {todo.priority === 'high' && (
-                        <View style={styles.priorityBadgeHigh}>
-                          <Text style={styles.priorityTextHigh}>Alta</Text>
-                        </View>
-                      )}
-                      {todo.priority === 'medium' && (
-                        <View style={styles.priorityBadgeMedium}>
-                          <Text style={styles.priorityTextMedium}>Media</Text>
-                        </View>
-                      )}
-                      {todo.priority === 'low' && (
-                        <View style={styles.priorityBadgeLow}>
-                          <Text style={styles.priorityTextLow}>Baja</Text>
-                        </View>
-                      )}
-                      
-                      {/* Espacio entre prioridad y estado */}
-                      <View style={styles.badgeSpacer} />
-                      
-                      {isOverdue && !todo.completed && (
-                        <View style={styles.overdueBadge}>
-                          <Text style={styles.overdueText}>VENCIDA</Text>
-                        </View>
-                      )}
-                      {isDueToday && !todo.completed && (
-                        <View style={styles.dueTodayBadge}>
-                          <Text style={styles.dueTodayText}>HOY</Text>
-                        </View>
-                      )}
-                      {todo.completed && (
-                        <View style={styles.completedBadge}>
-                          <Text style={styles.completedText}>✓</Text>
-                        </View>
-                      )}
                     </View>
                   </View>
                   
-                  {todo.notes && (
-                    <View style={styles.todoNotesExpanded}>
-                      <Text style={styles.todoNotesFull}>{todo.notes}</Text>
-                    </View>
-                  )}
+                  <View style={styles.taskItemActions}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        Alert.alert(
+                          'Eliminar Tarea',
+                          '¿Estás seguro de que quieres eliminar esta tarea?',
+                          [
+                            { text: 'Cancelar', style: 'cancel' },
+                            { 
+                              text: 'Eliminar', 
+                              style: 'destructive',
+                              onPress: () => {
+                                setAcademicTasks(prev => prev.filter(task => task.id !== todo.id));
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                      style={styles.taskActionButton}
+                    >
+                      <Icon name="trash-outline" size={16} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              );
-            })}
-          </ScrollView>
+                
+                {/* Información adicional */}
+                <View style={styles.taskItemDetails}>
+                  <View style={styles.taskPriority}>
+                    <View style={[
+                      styles.priorityIndicator,
+                      { backgroundColor: todo.priority === 'high' ? '#EF4444' : 
+                                        todo.priority === 'medium' ? '#F59E0B' : '#10B981' }
+                    ]} />
+                    <Text style={[
+                      styles.priorityText,
+                      { color: todo.priority === 'high' ? '#EF4444' : 
+                               todo.priority === 'medium' ? '#F59E0B' : '#10B981' }
+                    ]}>
+                      {todo.priority === 'high' ? 'Alta' : 
+                       todo.priority === 'medium' ? 'Media' : 'Baja'}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.taskTime}>
+                    <Icon name="time-outline" size={12} color="#6B7280" />
+                    <Text style={styles.taskTimeText}>{todo.estimatedTime}</Text>
+                  </View>
+                </View>
+                
+                {/* Notas */}
+                {todo.notes && (
+                  <View style={styles.taskNotes}>
+                    <Text style={styles.taskNotesText}>{todo.notes}</Text>
+                  </View>
+                )}
+                
+                {/* Estado */}
+                <View style={styles.taskStatus}>
+                  <View style={[
+                    styles.statusIndicator,
+                    todo.completed ? styles.statusCompleted : 
+                    isOverdue ? styles.statusOverdue : styles.statusPending
+                  ]} />
+                  <Text style={[
+                    styles.statusText,
+                    todo.completed ? styles.statusCompletedText : 
+                    isOverdue ? styles.statusOverdueText : styles.statusPendingText
+                  ]}>
+                    {todo.completed ? 'Completada' : 
+                     isOverdue ? 'Vencida' : 'Pendiente'}
+                  </Text>
+                </View>
+              </View>
+            );
+          })
         )}
       </View>
     </View>
@@ -1614,7 +1620,16 @@ const SchoolSections = ({ onUpdateSection, user }) => {
 
   return (
     <View style={styles.container}>
-      {renderSectionTabs()}
+      <ElegantSubsectionTabs
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        theme="forest"
+        size="medium"
+        showIcons={true}
+        showLabels={false}
+      />
+      
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderActiveSection()}
       </ScrollView>
@@ -1949,84 +1964,7 @@ const SchoolSections = ({ onUpdateSection, user }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E6F3FF', // Azul oceánico claro
-  },
-  tabsContainer: {
-    backgroundColor: '#E6F3FF', // Azul oceánico claro
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 20,
-    marginHorizontal: 4,
-    shadowColor: '#0066CC', // Azul oceánico
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 2,
-    borderColor: '#4A90E2', // Azul marino
-  },
-  tabsWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#E6F3FF', // Azul oceánico claro
-    padding: 8,
-    width: '100%',
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    marginHorizontal: 4,
-  },
-  activeTab: {
-    shadowColor: '#4A90E2', // Azul marino
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  tabContent: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    position: 'relative',
-    shadowColor: '#0066CC', // Azul oceánico
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: -8,
-    left: '50%',
-    marginLeft: -4,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1E3A8A', // Azul oceánico profundo
-    shadowColor: '#1E3A8A',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#E8F0E3', // Verde forest claro
   },
   content: {
     flex: 1,
@@ -4020,6 +3958,324 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     padding: 12,
     borderRadius: 8,
+  },
+  
+  // Estilos para la nueva UI de tareas académicas
+  tasksHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1E3A8A',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#1E3A8A',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  tasksHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  tasksIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  tasksHeaderText: {
+    flex: 1,
+  },
+  tasksHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  tasksHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  tasksHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Resumen de tareas mejorado
+  tasksSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 8,
+  },
+  summaryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  
+  // Botón para agregar tarea
+  addTaskContainer: {
+    marginBottom: 20,
+  },
+  addTaskText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Lista de tareas mejorada
+  tasksContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  tasksTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  filterText: {
+    color: '#1E3A8A',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  tasksBody: {
+    maxHeight: 500,
+  },
+  
+  // Estado vacío
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1E3A8A',
+  },
+  emptyButtonText: {
+    color: '#1E3A8A',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  
+  // Tarjetas de tareas
+  taskItem: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  taskItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  taskItemInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flex: 1,
+  },
+  taskCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  taskCheckboxCompleted: {
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  taskContent: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  taskTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#6B7280',
+  },
+  taskMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  taskMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  taskMetaText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  taskMetaTextOverdue: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  taskItemActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  taskActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEF2F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Información adicional de la tarea
+  taskItemDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  taskPriority: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  priorityIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  priorityText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  taskTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  taskTimeText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  
+  // Notas de la tarea
+  taskNotes: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3B82F6',
+  },
+  taskNotesText: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+  },
+  
+  // Estado de la tarea
+  taskStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusCompleted: {
+    backgroundColor: '#10B981',
+  },
+  statusOverdue: {
+    backgroundColor: '#EF4444',
+  },
+  statusPending: {
+    backgroundColor: '#F59E0B',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusCompletedText: {
+    color: '#10B981',
+  },
+  statusOverdueText: {
+    color: '#EF4444',
+  },
+  statusPendingText: {
+    color: '#F59E0B',
   },
 });
 

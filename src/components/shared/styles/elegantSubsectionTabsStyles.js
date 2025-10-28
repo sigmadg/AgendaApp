@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 export const elegantSubsectionTabsStyles = StyleSheet.create({
   container: {
-    borderRadius: 16,
+    borderRadius: 30,
     marginHorizontal: 16,
     marginVertical: 8,
     borderWidth: 1,
@@ -20,6 +20,7 @@ export const elegantSubsectionTabsStyles = StyleSheet.create({
     justifyContent: 'space-around',
     flexGrow: 1,
     paddingHorizontal: 8,
+    paddingVertical: 12,
   },
   verticalContainer: {
     alignItems: 'center',

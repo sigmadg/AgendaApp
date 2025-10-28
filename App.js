@@ -27,9 +27,11 @@ import TabNavigation from './src/components/TabNavigation';
 import Sidebar from './src/components/Sidebar';
 import ConflictWarningModal from './src/components/ConflictWarningModal';
 import AuthNavigator from './src/components/AuthNavigator';
+import PermissionsScreen from './src/components/PermissionsScreen';
 import { loadTasks, saveTasks, loadAllCategoryEvents, saveCategoryEvents } from './src/utils/storage';
 import { detectTimeConflicts } from './src/utils/conflictDetection';
 import authManager from './src/utils/AuthManager';
+import PermissionsManager from './src/utils/PermissionsManager';
 // import useUserData from './src/hooks/useUserData';
 // import SupabaseTest from './src/components/SupabaseTest';
 
@@ -44,6 +46,10 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Estados de permisos
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [showPermissionsScreen, setShowPermissionsScreen] = useState(false);
   
   // Estados de la aplicación
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -96,6 +102,14 @@ export default function App() {
     checkAuthSession();
   }, []);
 
+  // Verificar permisos después de la autenticación
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('Usuario autenticado, verificando permisos...');
+      checkPermissions();
+    }
+  }, [isAuthenticated, user]);
+
   // Listener para cambios de autenticación
   useEffect(() => {
     const unsubscribe = authManager.addAuthListener((authenticated, userData) => {
@@ -137,6 +151,35 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const checkPermissions = async () => {
+    try {
+      console.log('Verificando permisos esenciales...');
+      const essentialGranted = await PermissionsManager.areEssentialPermissionsGranted();
+      console.log('¿Permisos esenciales concedidos?', essentialGranted);
+      
+      if (essentialGranted) {
+        console.log('Permisos ya concedidos, yendo directo a la aplicación');
+        setPermissionsGranted(true);
+        setShowPermissionsScreen(false);
+      } else {
+        console.log('Permisos no concedidos, mostrando pantalla de permisos');
+        setPermissionsGranted(false);
+        setShowPermissionsScreen(true);
+      }
+    } catch (error) {
+      console.error('Error verificando permisos:', error);
+      // En caso de error, permitir continuar sin mostrar pantalla de permisos
+      console.log('Error en verificación de permisos, continuando sin pantalla de permisos');
+      setPermissionsGranted(true);
+      setShowPermissionsScreen(false);
+    }
+  };
+
+  const handlePermissionsGranted = () => {
+    setPermissionsGranted(true);
+    setShowPermissionsScreen(false);
   };
 
   const handleLogin = async (userData: any) => {
@@ -446,6 +489,18 @@ export default function App() {
 
   // Mostrar aplicación principal si está autenticado
   console.log('App: Mostrando aplicación principal');
+  // Mostrar pantalla de permisos si es necesario
+  if (showPermissionsScreen) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+          <PermissionsScreen onPermissionsGranted={handlePermissionsGranted} />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
@@ -461,7 +516,6 @@ export default function App() {
           }}
           selectedCategory={selectedCategory}
           userName={userName}
-          onLogout={handleLogout}
         />
         
         <View style={styles.content}>
@@ -594,6 +648,7 @@ export default function App() {
           selectedCategory={selectedCategory}
           onCategorySelect={setSelectedCategory}
           activeSections={activeSections}
+          onLogout={handleLogout}
         />
 
         <ConflictWarningModal

@@ -88,16 +88,16 @@ const ProfileSection = ({
         <Text style={personalStyles.profileName}>{user?.name || 'Usuario'}</Text>
         <Text style={personalStyles.profileEmail}>{user?.email || 'email@ejemplo.com'}</Text>
         
-        {user?.phone && (
+        {(user?.phone || user?.provider) && (
           <View style={personalStyles.profileInfo}>
             <Icon name="call" size={16} color="#4A6741" />
-            <Text style={personalStyles.profileInfoText}>{user.phone}</Text>
+            <Text style={personalStyles.profileInfoText}>{user?.phone || user?.provider || 'Información adicional'}</Text>
           </View>
         )}
         
-        {user?.bio && (
+        {(user?.bio || user?.loginTime) && (
           <View style={personalStyles.profileBio}>
-            <Text style={personalStyles.profileBioText}>{user.bio}</Text>
+            <Text style={personalStyles.profileBioText}>{user?.bio || `Último acceso: ${new Date(user?.loginTime).toLocaleDateString()}`}</Text>
           </View>
         )}
 

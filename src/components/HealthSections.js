@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { SubsectionTabs } from './shared';
+import { ElegantSubsectionTabs } from './shared';
 
 const HealthSections = () => {
   // Estados para las diferentes secciones
@@ -418,293 +418,309 @@ const HealthSections = () => {
   };
 
   // Renderizado de secciones de alimentación
-  const renderMealPlanner = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Planificador de Comidas</Text>
-          <Text style={styles.sectionSubtitle}>
-            Organiza tu alimentación saludable
-          </Text>
-        </View>
-        <TouchableOpacity onPress={openAddMealModal} style={styles.addButton}>
-          <Icon name="add" size={16} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-      
-      {/* Resumen Nutricional */}
-      <View style={styles.nutritionSummary}>
-        <View style={styles.nutritionSummaryCard}>
-          <View style={styles.nutritionSummaryIcon}>
-            <Icon name="restaurant" size={20} color="#4A6B8A" />
+  const renderMealPlanner = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayMealPlan = mealPlans[today] || {};
+    const plannedMeals = [todayMealPlan.breakfast, todayMealPlan.lunch, todayMealPlan.dinner].filter(Boolean).length;
+    const waterGlasses = todayMealPlan.waterGlasses || 0;
+    
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.mealPlannerHeader}>
+          <View style={styles.mealPlannerHeaderContent}>
+            <View style={styles.mealPlannerIconContainer}>
+              <Icon name="restaurant-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.mealPlannerHeaderText}>
+              <Text style={styles.mealPlannerHeaderTitle}>
+                Planificador de Comidas
+              </Text>
+              <Text style={styles.mealPlannerHeaderSubtitle}>
+                Organiza tu alimentación saludable
+              </Text>
+            </View>
           </View>
-          <View style={styles.nutritionSummaryContent}>
-            <Text style={styles.nutritionSummaryTitle}>Comidas Planificadas</Text>
-            <Text style={styles.nutritionSummaryValue}>3/3</Text>
+          <View style={styles.mealPlannerHeaderBadge}>
+            <Icon name="calendar-outline" size={16} color="#059669" />
           </View>
         </View>
         
-        <View style={styles.nutritionSummaryCard}>
-          <View style={styles.nutritionSummaryIcon}>
-            <Icon name="water" size={20} color="#4A90E2" />
+        {/* Resumen nutricional mejorado */}
+        <View style={styles.mealPlannerSummary}>
+          <View style={styles.mealPlannerSummaryCard}>
+            <View style={styles.mealPlannerSummaryIconContainer}>
+              <Icon name="restaurant-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.mealPlannerSummaryContent}>
+              <Text style={styles.mealPlannerSummaryValue}>{plannedMeals}/3</Text>
+              <Text style={styles.mealPlannerSummaryLabel}>Comidas Planificadas</Text>
+            </View>
           </View>
-          <View style={styles.nutritionSummaryContent}>
-            <Text style={styles.nutritionSummaryTitle}>Hidratación</Text>
-            <Text style={styles.nutritionSummaryValue}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0}/8 vasos
+          <View style={styles.mealPlannerSummaryCard}>
+            <View style={styles.mealPlannerSummaryIconContainer}>
+              <Icon name="water-outline" size={20} color="#0EA5E9" />
+            </View>
+            <View style={styles.mealPlannerSummaryContent}>
+              <Text style={styles.mealPlannerSummaryValue}>{waterGlasses}/8</Text>
+              <Text style={styles.mealPlannerSummaryLabel}>Vasos de Agua</Text>
+            </View>
+          </View>
+          <View style={styles.mealPlannerSummaryCard}>
+            <View style={styles.mealPlannerSummaryIconContainer}>
+              <Icon name="flame-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.mealPlannerSummaryContent}>
+              <Text style={styles.mealPlannerSummaryValue}>1,850</Text>
+              <Text style={styles.mealPlannerSummaryLabel}>Calorías</Text>
+            </View>
+          </View>
+          <View style={styles.mealPlannerSummaryCard}>
+            <View style={styles.mealPlannerSummaryIconContainer}>
+              <Icon name="leaf-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.mealPlannerSummaryContent}>
+              <Text style={styles.mealPlannerSummaryValue}>85%</Text>
+              <Text style={styles.mealPlannerSummaryLabel}>Nutrición</Text>
+            </View>
+          </View>
+        </View>
+        
+        {/* Botón para agregar comida */}
+        <View style={styles.addMealContainer}>
+          <TouchableOpacity 
+            style={styles.addMealButton}
+            onPress={openAddMealModal}
+          >
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addMealText}>Planificar Comida</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Plan de comidas del día mejorado */}
+        <View style={styles.dailyMealPlanContainer}>
+          <View style={styles.dailyMealPlanHeader}>
+            <View style={styles.dailyMealPlanTitleContainer}>
+              <Icon name="calendar-outline" size={20} color="#059669" />
+              <Text style={styles.dailyMealPlanTitle}>Plan de Hoy</Text>
+            </View>
+            <Text style={styles.dailyMealPlanDate}>
+              {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </Text>
+          </View>
+          
+          <View style={styles.mealsGrid}>
+            {/* Desayuno */}
+            <View style={styles.mealCard}>
+              <View style={styles.mealCardHeader}>
+                <View style={styles.mealCardIconContainer}>
+                  <Icon name="sunny-outline" size={20} color="#F59E0B" />
+                </View>
+                <View style={styles.mealCardContent}>
+                  <Text style={styles.mealCardTitle}>Desayuno</Text>
+                  <Text style={styles.mealCardTime}>7:00 - 9:00 AM</Text>
+                </View>
+                <TouchableOpacity style={styles.mealCardActionButton}>
+                  <Icon name="add-outline" size={16} color="#059669" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.mealCardBody}>
+                {todayMealPlan.breakfast ? (
+                  <View style={styles.mealContent}>
+                    <Text style={styles.mealContentText}>{todayMealPlan.breakfast}</Text>
+                    <View style={styles.mealContentActions}>
+                      <TouchableOpacity style={styles.mealContentAction}>
+                        <Icon name="create-outline" size={14} color="#059669" />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.mealContentAction}>
+                        <Icon name="trash-outline" size={14} color="#DC2626" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.emptyMealState}>
+                    <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
+                    <Text style={styles.emptyMealText}>No planificado</Text>
+                    <TouchableOpacity style={styles.addMealButtonSmall}>
+                      <Icon name="add-circle-outline" size={16} color="#059669" />
+                      <Text style={styles.addMealButtonSmallText}>Agregar</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+            
+            {/* Comida */}
+            <View style={styles.mealCard}>
+              <View style={styles.mealCardHeader}>
+                <View style={styles.mealCardIconContainer}>
+                  <Icon name="sunny-outline" size={20} color="#F59E0B" />
+                </View>
+                <View style={styles.mealCardContent}>
+                  <Text style={styles.mealCardTitle}>Comida</Text>
+                  <Text style={styles.mealCardTime}>12:00 - 2:00 PM</Text>
+                </View>
+                <TouchableOpacity style={styles.mealCardActionButton}>
+                  <Icon name="add-outline" size={16} color="#059669" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.mealCardBody}>
+                {todayMealPlan.lunch ? (
+                  <View style={styles.mealContent}>
+                    <Text style={styles.mealContentText}>{todayMealPlan.lunch}</Text>
+                    <View style={styles.mealContentActions}>
+                      <TouchableOpacity style={styles.mealContentAction}>
+                        <Icon name="create-outline" size={14} color="#059669" />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.mealContentAction}>
+                        <Icon name="trash-outline" size={14} color="#DC2626" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.emptyMealState}>
+                    <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
+                    <Text style={styles.emptyMealText}>No planificado</Text>
+                    <TouchableOpacity style={styles.addMealButtonSmall}>
+                      <Icon name="add-circle-outline" size={16} color="#059669" />
+                      <Text style={styles.addMealButtonSmallText}>Agregar</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+            
+            {/* Cena */}
+            <View style={styles.mealCard}>
+              <View style={styles.mealCardHeader}>
+                <View style={styles.mealCardIconContainer}>
+                  <Icon name="moon-outline" size={20} color="#8B5CF6" />
+                </View>
+                <View style={styles.mealCardContent}>
+                  <Text style={styles.mealCardTitle}>Cena</Text>
+                  <Text style={styles.mealCardTime}>7:00 - 9:00 PM</Text>
+                </View>
+                <TouchableOpacity style={styles.mealCardActionButton}>
+                  <Icon name="add-outline" size={16} color="#059669" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.mealCardBody}>
+                {todayMealPlan.dinner ? (
+                  <View style={styles.mealContent}>
+                    <Text style={styles.mealContentText}>{todayMealPlan.dinner}</Text>
+                    <View style={styles.mealContentActions}>
+                      <TouchableOpacity style={styles.mealContentAction}>
+                        <Icon name="create-outline" size={14} color="#059669" />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.mealContentAction}>
+                        <Icon name="trash-outline" size={14} color="#DC2626" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.emptyMealState}>
+                    <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
+                    <Text style={styles.emptyMealText}>No planificado</Text>
+                    <TouchableOpacity style={styles.addMealButtonSmall}>
+                      <Icon name="add-circle-outline" size={16} color="#059669" />
+                      <Text style={styles.addMealButtonSmallText}>Agregar</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+        </View>
+        
+        {/* Seguimiento de hidratación mejorado */}
+        <View style={styles.waterTrackingContainer}>
+          <View style={styles.waterTrackingHeader}>
+            <View style={styles.waterTrackingTitleContainer}>
+              <Icon name="water-outline" size={20} color="#0EA5E9" />
+              <Text style={styles.waterTrackingTitle}>Seguimiento de Hidratación</Text>
+            </View>
+            <Text style={styles.waterTrackingSubtitle}>Meta: 8 vasos de agua al día</Text>
+          </View>
+          
+          <View style={styles.waterGlassesContainer}>
+            {Array.from({length: 8}, (_, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={[
+                  styles.waterGlassCard, 
+                  index < waterGlasses && styles.waterGlassCardFilled
+                ]}
+                onPress={() => toggleWaterGlass(index + 1)}
+              >
+                <Icon 
+                  name="water" 
+                  size={20} 
+                  color={index < waterGlasses ? "#0EA5E9" : "#D1D5DB"} 
+                />
+                <Text style={[
+                  styles.waterGlassNumber,
+                  index < waterGlasses && styles.waterGlassNumberFilled
+                ]}>
+                  {index + 1}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          <View style={styles.waterProgressContainer}>
+            <View style={styles.waterProgressBar}>
+              <View 
+                style={[
+                  styles.waterProgressFill,
+                  { width: `${(waterGlasses / 8) * 100}%` }
+                ]}
+              />
+            </View>
+            <Text style={styles.waterProgressText}>
+              {waterGlasses} de 8 vasos completados
             </Text>
           </View>
         </View>
         
-        <View style={styles.nutritionSummaryCard}>
-          <View style={styles.nutritionSummaryIcon}>
-            <Icon name="fitness" size={20} color="#10B981" />
-          </View>
-          <View style={styles.nutritionSummaryContent}>
-            <Text style={styles.nutritionSummaryTitle}>Calorías</Text>
-            <Text style={styles.nutritionSummaryValue}>1,850 kcal</Text>
-          </View>
-        </View>
-      </View>
-      
-      {/* Plan de Comidas del Día */}
-      <View style={styles.dailyMealPlan}>
-        <View style={styles.dailyMealHeader}>
-          <View style={styles.dailyMealTitleContainer}>
-            <Icon name="calendar" size={18} color="#4A6B8A" />
-            <Text style={styles.dailyMealTitle}>Plan de Hoy</Text>
-          </View>
-          <Text style={styles.dailyMealDate}>
-            {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </Text>
-        </View>
-        
-        <View style={styles.mealsContainer}>
-          {/* Desayuno */}
-          <View style={styles.mealCard}>
-            <View style={styles.mealCardHeader}>
-              <View style={styles.mealCardIcon}>
-                <Icon name="sunny" size={20} color="#F59E0B" />
+        {/* Accesos rápidos mejorados */}
+        <View style={styles.quickAccessContainer}>
+          <Text style={styles.quickAccessTitle}>Accesos Rápidos</Text>
+          <View style={styles.quickAccessGrid}>
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIconContainer}>
+                <Icon name="book-outline" size={24} color="#059669" />
               </View>
-              <View style={styles.mealCardContent}>
-                <Text style={styles.mealCardTitle}>Desayuno</Text>
-                <Text style={styles.mealCardTime}>7:00 - 9:00 AM</Text>
-              </View>
-              <TouchableOpacity style={styles.mealActionButton}>
-                <Icon name="add" size={16} color="#4A6B8A" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.mealCardBody}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.breakfast ? (
-                <View style={styles.mealContent}>
-                  <Text style={styles.mealContentText}>
-                    {mealPlans[new Date().toISOString().split('T')[0]].breakfast}
-                  </Text>
-                  <View style={styles.mealContentActions}>
-                    <TouchableOpacity style={styles.mealContentAction}>
-                      <Icon name="create" size={14} color="#4A6B8A" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.mealContentAction}>
-                      <Icon name="trash" size={14} color="#DC2626" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.emptyMealState}>
-                  <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
-                  <Text style={styles.emptyMealText}>No planificado</Text>
-                  <TouchableOpacity style={styles.addMealButton}>
-                    <Icon name="add-circle" size={16} color="#4A6B8A" />
-                    <Text style={styles.addMealButtonText}>Agregar</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-          
-          {/* Comida */}
-          <View style={styles.mealCard}>
-            <View style={styles.mealCardHeader}>
-              <View style={styles.mealCardIcon}>
-                <Icon name="sunny" size={20} color="#F59E0B" />
-              </View>
-              <View style={styles.mealCardContent}>
-                <Text style={styles.mealCardTitle}>Comida</Text>
-                <Text style={styles.mealCardTime}>12:00 - 2:00 PM</Text>
-              </View>
-              <TouchableOpacity style={styles.mealActionButton}>
-                <Icon name="add" size={16} color="#4A6B8A" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.mealCardBody}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.lunch ? (
-                <View style={styles.mealContent}>
-                  <Text style={styles.mealContentText}>
-                    {mealPlans[new Date().toISOString().split('T')[0]].lunch}
-                  </Text>
-                  <View style={styles.mealContentActions}>
-                    <TouchableOpacity style={styles.mealContentAction}>
-                      <Icon name="create" size={14} color="#4A6B8A" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.mealContentAction}>
-                      <Icon name="trash" size={14} color="#DC2626" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.emptyMealState}>
-                  <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
-                  <Text style={styles.emptyMealText}>No planificado</Text>
-                  <TouchableOpacity style={styles.addMealButton}>
-                    <Icon name="add-circle" size={16} color="#4A6B8A" />
-                    <Text style={styles.addMealButtonText}>Agregar</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-          
-          {/* Cena */}
-          <View style={styles.mealCard}>
-            <View style={styles.mealCardHeader}>
-              <View style={styles.mealCardIcon}>
-                <Icon name="moon" size={20} color="#8B5CF6" />
-              </View>
-              <View style={styles.mealCardContent}>
-                <Text style={styles.mealCardTitle}>Cena</Text>
-                <Text style={styles.mealCardTime}>7:00 - 9:00 PM</Text>
-              </View>
-              <TouchableOpacity style={styles.mealActionButton}>
-                <Icon name="add" size={16} color="#4A6B8A" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.mealCardBody}>
-              {mealPlans[new Date().toISOString().split('T')[0]]?.dinner ? (
-                <View style={styles.mealContent}>
-                  <Text style={styles.mealContentText}>
-                    {mealPlans[new Date().toISOString().split('T')[0]].dinner}
-                  </Text>
-                  <View style={styles.mealContentActions}>
-                    <TouchableOpacity style={styles.mealContentAction}>
-                      <Icon name="create" size={14} color="#4A6B8A" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.mealContentAction}>
-                      <Icon name="trash" size={14} color="#DC2626" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.emptyMealState}>
-                  <Icon name="restaurant-outline" size={24} color="#9CA3AF" />
-                  <Text style={styles.emptyMealText}>No planificado</Text>
-                  <TouchableOpacity style={styles.addMealButton}>
-                    <Icon name="add-circle" size={16} color="#4A6B8A" />
-                    <Text style={styles.addMealButtonText}>Agregar</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-      </View>
-      
-      {/* Seguimiento de Hidratación */}
-      <View style={styles.waterTrackingSection}>
-        <View style={styles.waterTrackingHeader}>
-          <View style={styles.waterTrackingTitleContainer}>
-            <Icon name="water" size={18} color="#4A90E2" />
-            <Text style={styles.waterTrackingTitle}>Seguimiento de Hidratación</Text>
-          </View>
-          <Text style={styles.waterTrackingSubtitle}>
-            Meta: 8 vasos de agua al día
-          </Text>
-        </View>
-        
-        <View style={styles.waterGlassesGrid}>
-          {Array.from({length: 8}, (_, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={[
-                styles.waterGlassCard, 
-                index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) && styles.waterGlassCardFilled
-              ]}
-              onPress={() => toggleWaterGlass(index + 1)}
-            >
-              <Icon 
-                name="water" 
-                size={24} 
-                color={index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) ? "#4A90E2" : "#D1D5DB"} 
-              />
-              <Text style={[
-                styles.waterGlassNumber,
-                index < (mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) && styles.waterGlassNumberFilled
-              ]}>
-                {index + 1}
-              </Text>
+              <Text style={styles.quickAccessText}>Recetas</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-        
-        <View style={styles.waterProgressContainer}>
-          <View style={styles.waterProgressBar}>
-            <View 
-              style={[
-                styles.waterProgressFill,
-                { width: `${((mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0) / 8) * 100}%` }
-              ]}
-            />
+            
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIconContainer}>
+                <Icon name="list-outline" size={24} color="#10B981" />
+              </View>
+              <Text style={styles.quickAccessText}>Lista de Compras</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIconContainer}>
+                <Icon name="analytics-outline" size={24} color="#F59E0B" />
+              </View>
+              <Text style={styles.quickAccessText}>Nutrición</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.quickAccessCard}>
+              <View style={styles.quickAccessIconContainer}>
+                <Icon name="calendar-outline" size={24} color="#8B5CF6" />
+              </View>
+              <Text style={styles.quickAccessText}>Plan Semanal</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.waterProgressText}>
-            {mealPlans[new Date().toISOString().split('T')[0]]?.waterGlasses || 0} de 8 vasos completados
-          </Text>
         </View>
       </View>
-      
-      {/* Accesos Rápidos */}
-      <View style={styles.quickAccessContainer}>
-        <Text style={styles.quickAccessTitle}>Accesos Rápidos</Text>
-        <View style={styles.quickAccessGrid}>
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Icon name="restaurant" size={24} color="#4A6B8A" />
-            </View>
-            <Text style={styles.quickAccessText}>Recetas</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Icon name="list" size={24} color="#10B981" />
-            </View>
-            <Text style={styles.quickAccessText}>Lista de Compras</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Icon name="analytics" size={24} color="#F59E0B" />
-            </View>
-            <Text style={styles.quickAccessText}>Nutrición</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.quickAccessCard}>
-            <View style={styles.quickAccessIcon}>
-              <Icon name="calendar" size={24} color="#8B5CF6" />
-            </View>
-            <Text style={styles.quickAccessText}>Plan Semanal</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderMarketList = () => (
     <View style={styles.section}>
@@ -774,38 +790,280 @@ const HealthSections = () => {
     </View>
   );
 
-  const renderRecipes = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Recetas</Text>
-          <Text style={styles.sectionSubtitle}>
-            Descubre recetas saludables
-          </Text>
-        </View>
-        <TouchableOpacity onPress={openAddRecipeModal} style={styles.addButton}>
-          <Icon name="add" size={16} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.recipesContainer}>
-        {recipes.map((recipe, index) => (
-          <View key={index} style={styles.recipeCard}>
-            <Text style={styles.recipeName}>{recipe.name}</Text>
-            <Text style={styles.recipeIngredients}>Ingredientes: {recipe.ingredients}</Text>
-            <Text style={styles.recipeInstructions}>Instrucciones: {recipe.instructions}</Text>
+  const renderRecipes = () => {
+    const sampleRecipes = [
+      {
+        id: 1,
+        name: 'Ensalada César Saludable',
+        category: 'Ensaladas',
+        difficulty: 'Fácil',
+        time: '15 min',
+        servings: 4,
+        calories: 320,
+        ingredients: [
+          'Lechuga romana fresca',
+          'Pechuga de pollo a la plancha',
+          'Queso parmesano rallado',
+          'Crutones integrales',
+          'Aderezo césar light'
+        ],
+        instructions: 'Corta la lechuga, cocina el pollo, mezcla todos los ingredientes y sirve con el aderezo.',
+        tags: ['proteína', 'vegetales', 'bajo en calorías'],
+        rating: 4.5,
+        image: '🥗'
+      },
+      {
+        id: 2,
+        name: 'Salmón a la Plancha con Vegetales',
+        category: 'Pescados',
+        difficulty: 'Intermedio',
+        time: '25 min',
+        servings: 2,
+        calories: 450,
+        ingredients: [
+          'Filete de salmón fresco',
+          'Brócoli',
+          'Zanahorias',
+          'Aceite de oliva',
+          'Limón',
+          'Hierbas aromáticas'
+        ],
+        instructions: 'Marina el salmón, cocina a la plancha con vegetales al vapor, sirve con limón.',
+        tags: ['omega-3', 'proteína', 'vegetales'],
+        rating: 4.8,
+        image: '🐟'
+      },
+      {
+        id: 3,
+        name: 'Bowl de Quinoa y Aguacate',
+        category: 'Bowls',
+        difficulty: 'Fácil',
+        time: '20 min',
+        servings: 2,
+        calories: 380,
+        ingredients: [
+          'Quinoa cocida',
+          'Aguacate maduro',
+          'Tomates cherry',
+          'Pepino',
+          'Semillas de chía',
+          'Aceite de oliva'
+        ],
+        instructions: 'Cocina la quinoa, corta los vegetales, mezcla todo y adereza con aceite de oliva.',
+        tags: ['superalimento', 'vegetariano', 'fibra'],
+        rating: 4.3,
+        image: '🥑'
+      },
+      {
+        id: 4,
+        name: 'Smoothie Verde Energético',
+        category: 'Bebidas',
+        difficulty: 'Fácil',
+        time: '5 min',
+        servings: 1,
+        calories: 180,
+        ingredients: [
+          'Espinacas frescas',
+          'Plátano congelado',
+          'Piña',
+          'Leche de almendras',
+          'Miel',
+          'Semillas de lino'
+        ],
+        instructions: 'Licúa todos los ingredientes hasta obtener una mezcla suave y cremosa.',
+        tags: ['vitaminas', 'energía', 'verde'],
+        rating: 4.6,
+        image: '🥤'
+      }
+    ];
+
+    const getTotalRecipes = () => sampleRecipes.length;
+    const getEasyRecipes = () => sampleRecipes.filter(recipe => recipe.difficulty === 'Fácil').length;
+    const getAverageRating = () => (sampleRecipes.reduce((sum, recipe) => sum + recipe.rating, 0) / sampleRecipes.length).toFixed(1);
+    const getTotalCalories = () => sampleRecipes.reduce((sum, recipe) => sum + recipe.calories, 0);
+
+    const getDifficultyColor = (difficulty) => {
+      switch (difficulty) {
+        case 'Fácil': return '#10B981';
+        case 'Intermedio': return '#F59E0B';
+        case 'Difícil': return '#EF4444';
+        default: return '#6B7280';
+      }
+    };
+
+    const getCategoryIcon = (category) => {
+      switch (category) {
+        case 'Ensaladas': return 'leaf-outline';
+        case 'Pescados': return 'fish-outline';
+        case 'Bowls': return 'restaurant-outline';
+        case 'Bebidas': return 'wine-outline';
+        default: return 'restaurant-outline';
+      }
+    };
+
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.recipesHeader}>
+          <View style={styles.recipesHeaderContent}>
+            <View style={styles.recipesIconContainer}>
+              <Icon name="book-outline" size={24} color="#FFFFFF" />
+            </View>
+            <View style={styles.recipesHeaderText}>
+              <Text style={styles.recipesHeaderTitle}>
+                Recetas Saludables
+              </Text>
+              <Text style={styles.recipesHeaderSubtitle}>
+                Descubre nuevas recetas nutritivas
+              </Text>
+            </View>
           </View>
-        ))}
+          <View style={styles.recipesHeaderBadge}>
+            <Icon name="flame-outline" size={16} color="#059669" />
+          </View>
+        </View>
+        
+        {/* Resumen de recetas mejorado */}
+        <View style={styles.recipesSummary}>
+          <View style={styles.recipesSummaryCard}>
+            <View style={styles.recipesSummaryIconContainer}>
+              <Icon name="book-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.recipesSummaryContent}>
+              <Text style={styles.recipesSummaryValue}>{getTotalRecipes()}</Text>
+              <Text style={styles.recipesSummaryLabel}>Total Recetas</Text>
+            </View>
+          </View>
+          <View style={styles.recipesSummaryCard}>
+            <View style={styles.recipesSummaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.recipesSummaryContent}>
+              <Text style={styles.recipesSummaryValue}>{getEasyRecipes()}</Text>
+              <Text style={styles.recipesSummaryLabel}>Fáciles</Text>
+            </View>
+          </View>
+          <View style={styles.recipesSummaryCard}>
+            <View style={styles.recipesSummaryIconContainer}>
+              <Icon name="star-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.recipesSummaryContent}>
+              <Text style={styles.recipesSummaryValue}>{getAverageRating()}</Text>
+              <Text style={styles.recipesSummaryLabel}>Calificación</Text>
+            </View>
+          </View>
+          <View style={styles.recipesSummaryCard}>
+            <View style={styles.recipesSummaryIconContainer}>
+              <Icon name="flame-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.recipesSummaryContent}>
+              <Text style={styles.recipesSummaryValue}>{getTotalCalories()}</Text>
+              <Text style={styles.recipesSummaryLabel}>Calorías</Text>
+            </View>
+          </View>
+        </View>
+        
+        {/* Botón para agregar receta */}
+        <View style={styles.addRecipeContainer}>
+          <TouchableOpacity 
+            style={styles.addRecipeButton}
+            onPress={openAddRecipeModal}
+          >
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addRecipeText}>Nueva Receta</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Lista de recetas mejorada */}
+        <View style={styles.recipesContainer}>
+          <View style={styles.recipesListHeader}>
+            <Text style={styles.recipesListTitle}>Mis Recetas</Text>
+            <TouchableOpacity style={styles.filterButton}>
+              <Icon name="filter-outline" size={16} color="#059669" />
+              <Text style={styles.filterText}>Filtrar</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.recipesBody} showsVerticalScrollIndicator={false}>
+            {sampleRecipes.map((recipe) => (
+              <View key={recipe.id} style={styles.recipeCard}>
+                <View style={styles.recipeCardHeader}>
+                  <View style={styles.recipeCardIconContainer}>
+                    <Text style={styles.recipeEmoji}>{recipe.image}</Text>
+                  </View>
+                  <View style={styles.recipeCardContent}>
+                    <Text style={styles.recipeCardTitle}>{recipe.name}</Text>
+                    <Text style={styles.recipeCardCategory}>{recipe.category}</Text>
+                  </View>
+                  <View style={styles.recipeCardActions}>
+                    <TouchableOpacity style={styles.recipeActionButton}>
+                      <Icon name="heart-outline" size={16} color="#EF4444" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.recipeActionButton}>
+                      <Icon name="share-outline" size={16} color="#059669" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                <View style={styles.recipeCardBody}>
+                  <View style={styles.recipeMeta}>
+                    <View style={styles.recipeMetaItem}>
+                      <Icon name="time-outline" size={14} color="#6B7280" />
+                      <Text style={styles.recipeMetaText}>{recipe.time}</Text>
+                    </View>
+                    <View style={styles.recipeMetaItem}>
+                      <Icon name="people-outline" size={14} color="#6B7280" />
+                      <Text style={styles.recipeMetaText}>{recipe.servings} porciones</Text>
+                    </View>
+                    <View style={styles.recipeMetaItem}>
+                      <Icon name="flame-outline" size={14} color="#6B7280" />
+                      <Text style={styles.recipeMetaText}>{recipe.calories} kcal</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.recipeDifficulty}>
+                    <View style={[
+                      styles.difficultyBadge,
+                      { backgroundColor: getDifficultyColor(recipe.difficulty) }
+                    ]}>
+                      <Text style={styles.difficultyText}>{recipe.difficulty}</Text>
+                    </View>
+                    <View style={styles.recipeRating}>
+                      <Icon name="star" size={14} color="#F59E0B" />
+                      <Text style={styles.ratingText}>{recipe.rating}</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={styles.recipeDescription}>
+                    {recipe.instructions}
+                  </Text>
+                  
+                  <View style={styles.recipeTags}>
+                    {recipe.tags.map((tag, index) => (
+                      <View key={index} style={styles.recipeTag}>
+                        <Text style={styles.recipeTagText}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  
+                  <View style={styles.recipeActions}>
+                    <TouchableOpacity style={styles.recipeActionButtonLarge}>
+                      <Icon name="eye-outline" size={16} color="#059669" />
+                      <Text style={styles.recipeActionText}>Ver Receta</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.recipeActionButtonLarge}>
+                      <Icon name="add-outline" size={16} color="#059669" />
+                      <Text style={styles.recipeActionText}>Agregar a Plan</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   // Renderizado de secciones de ejercicio
   const renderGymRoutine = () => (
@@ -1545,126 +1803,301 @@ const HealthSections = () => {
   );
 
   // Función para renderizar Seguimiento de Fitness
-  const renderFitnessTracker = () => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
-        </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Seguimiento de Fitness</Text>
-          <Text style={styles.sectionSubtitle}>
-            Registra tu actividad física
-          </Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setShowFitnessDatePicker(true)}
-        >
-          <Icon name="add" size={20} color="#ffffff" />
-        </TouchableOpacity>
-      </View>
+  const renderFitnessTracker = () => {
+    const sampleFitnessData = {
+      weeklyStats: {
+        totalSteps: 45620,
+        totalCaloriesBurned: 2840,
+        totalWorkouts: 5,
+        averageHeartRate: 142
+      },
+      dailyGoals: {
+        steps: 10000,
+        calories: 500,
+        water: 8,
+        workouts: 1
+      },
+      weeklyProgress: [
+        { day: 'Lun', steps: 8500, calories: 420, water: 6, workout: true },
+        { day: 'Mar', steps: 12000, calories: 580, water: 8, workout: true },
+        { day: 'Mié', steps: 6800, calories: 320, water: 5, workout: false },
+        { day: 'Jue', steps: 15000, calories: 720, water: 9, workout: true },
+        { day: 'Vie', steps: 9200, calories: 450, water: 7, workout: true },
+        { day: 'Sáb', steps: 11000, calories: 520, water: 8, workout: false },
+        { day: 'Dom', steps: 7500, calories: 380, water: 6, workout: true }
+      ],
+      achievements: [
+        { id: 1, title: 'Primera Semana', description: 'Completaste tu primera semana de seguimiento', icon: '🏆', unlocked: true },
+        { id: 2, title: 'Meta de Pasos', description: 'Superaste los 10,000 pasos diarios', icon: '👟', unlocked: true },
+        { id: 3, title: 'Consistencia', description: '5 días consecutivos de ejercicio', icon: '💪', unlocked: false },
+        { id: 4, title: 'Hidratación', description: '8 vasos de agua por 7 días', icon: '💧', unlocked: false }
+      ]
+    };
 
-      <View style={styles.fitnessGrid}>
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>LUNES</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
+    const getCurrentDayProgress = () => {
+      const today = new Date().getDay();
+      const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      return sampleFitnessData.weeklyProgress.find(day => day.day === dayNames[today]) || sampleFitnessData.weeklyProgress[0];
+    };
 
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>MARTES</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
+    const getProgressPercentage = (current, goal) => {
+      return Math.min((current / goal) * 100, 100);
+    };
 
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>MIÉRCOLES</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
+    const getUnlockedAchievements = () => {
+      return sampleFitnessData.achievements.filter(achievement => achievement.unlocked).length;
+    };
 
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>JUEVES</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
-
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>VIERNES</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
-
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>SÁBADO</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
-
-        <View style={styles.fitnessColumn}>
-          <Text style={styles.dayLabel}>DOMINGO</Text>
-          <View style={styles.fitnessInputs}>
-            <TextInput style={styles.fitnessInput} placeholder="Calorías in" />
-            <TextInput style={styles.fitnessInput} placeholder="Calorías out" />
-            <TextInput style={styles.fitnessInput} placeholder="Agua" />
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.fitnessGoals}>
-        <Text style={styles.goalsTitle}>OBJETIVOS</Text>
-        <View style={styles.goalsList}>
-          {[1, 2, 3, 4, 5].map((goal, index) => (
-            <View key={index} style={styles.goalItem}>
-              <View style={styles.goalCheckbox} />
-              <TextInput style={styles.goalInput} placeholder="Objetivo..." />
+    return (
+      <View style={styles.section}>
+        {/* Header mejorado */}
+        <View style={styles.fitnessHeader}>
+          <View style={styles.fitnessHeaderContent}>
+            <View style={styles.fitnessIconContainer}>
+              <Icon name="fitness-outline" size={24} color="#FFFFFF" />
             </View>
-          ))}
+            <View style={styles.fitnessHeaderText}>
+              <Text style={styles.fitnessHeaderTitle}>
+                Seguimiento de Fitness
+              </Text>
+              <Text style={styles.fitnessHeaderSubtitle}>
+                Monitorea tu actividad física diaria
+              </Text>
+            </View>
+          </View>
+          <View style={styles.fitnessHeaderBadge}>
+            <Icon name="pulse-outline" size={16} color="#059669" />
+          </View>
+        </View>
+        
+        {/* Resumen semanal mejorado */}
+        <View style={styles.fitnessSummary}>
+          <View style={styles.fitnessSummaryCard}>
+            <View style={styles.fitnessSummaryIconContainer}>
+              <Icon name="walk-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.fitnessSummaryContent}>
+              <Text style={styles.fitnessSummaryValue}>{sampleFitnessData.weeklyStats.totalSteps.toLocaleString()}</Text>
+              <Text style={styles.fitnessSummaryLabel}>Pasos Totales</Text>
+            </View>
+          </View>
+          <View style={styles.fitnessSummaryCard}>
+            <View style={styles.fitnessSummaryIconContainer}>
+              <Icon name="flame-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.fitnessSummaryContent}>
+              <Text style={styles.fitnessSummaryValue}>{sampleFitnessData.weeklyStats.totalCaloriesBurned}</Text>
+              <Text style={styles.fitnessSummaryLabel}>Calorías Quemadas</Text>
+            </View>
+          </View>
+          <View style={styles.fitnessSummaryCard}>
+            <View style={styles.fitnessSummaryIconContainer}>
+              <Icon name="barbell-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.fitnessSummaryContent}>
+              <Text style={styles.fitnessSummaryValue}>{sampleFitnessData.weeklyStats.totalWorkouts}</Text>
+              <Text style={styles.fitnessSummaryLabel}>Entrenamientos</Text>
+            </View>
+          </View>
+          <View style={styles.fitnessSummaryCard}>
+            <View style={styles.fitnessSummaryIconContainer}>
+              <Icon name="heart-outline" size={20} color="#EC4899" />
+            </View>
+            <View style={styles.fitnessSummaryContent}>
+              <Text style={styles.fitnessSummaryValue}>{sampleFitnessData.weeklyStats.averageHeartRate}</Text>
+              <Text style={styles.fitnessSummaryLabel}>Ritmo Cardíaco</Text>
+            </View>
+          </View>
+        </View>
+        
+        {/* Botón para agregar actividad */}
+        <View style={styles.addActivityContainer}>
+          <TouchableOpacity 
+            style={styles.addActivityButton}
+            onPress={() => setShowFitnessDatePicker(true)}
+          >
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addActivityText}>Registrar Actividad</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Progreso del día actual */}
+        <View style={styles.todayProgressContainer}>
+          <View style={styles.todayProgressHeader}>
+            <View style={styles.todayProgressTitleContainer}>
+              <Icon name="today-outline" size={20} color="#059669" />
+              <Text style={styles.todayProgressTitle}>Progreso de Hoy</Text>
+            </View>
+            <Text style={styles.todayProgressDate}>
+              {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </Text>
+          </View>
+          
+          <View style={styles.todayProgressGrid}>
+            <View style={styles.progressCard}>
+              <View style={styles.progressCardHeader}>
+                <Icon name="walk-outline" size={16} color="#059669" />
+                <Text style={styles.progressCardTitle}>Pasos</Text>
+              </View>
+              <Text style={styles.progressCardValue}>{getCurrentDayProgress().steps.toLocaleString()}</Text>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressBarFill,
+                    { 
+                      width: `${getProgressPercentage(getCurrentDayProgress().steps, sampleFitnessData.dailyGoals.steps)}%`,
+                      backgroundColor: '#059669'
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressCardGoal}>Meta: {sampleFitnessData.dailyGoals.steps.toLocaleString()}</Text>
+            </View>
+            
+            <View style={styles.progressCard}>
+              <View style={styles.progressCardHeader}>
+                <Icon name="flame-outline" size={16} color="#EF4444" />
+                <Text style={styles.progressCardTitle}>Calorías</Text>
+              </View>
+              <Text style={styles.progressCardValue}>{getCurrentDayProgress().calories}</Text>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressBarFill,
+                    { 
+                      width: `${getProgressPercentage(getCurrentDayProgress().calories, sampleFitnessData.dailyGoals.calories)}%`,
+                      backgroundColor: '#EF4444'
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressCardGoal}>Meta: {sampleFitnessData.dailyGoals.calories}</Text>
+            </View>
+            
+            <View style={styles.progressCard}>
+              <View style={styles.progressCardHeader}>
+                <Icon name="water-outline" size={16} color="#0EA5E9" />
+                <Text style={styles.progressCardTitle}>Agua</Text>
+              </View>
+              <Text style={styles.progressCardValue}>{getCurrentDayProgress().water} vasos</Text>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressBarFill,
+                    { 
+                      width: `${getProgressPercentage(getCurrentDayProgress().water, sampleFitnessData.dailyGoals.water)}%`,
+                      backgroundColor: '#0EA5E9'
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressCardGoal}>Meta: {sampleFitnessData.dailyGoals.water} vasos</Text>
+            </View>
+            
+            <View style={styles.progressCard}>
+              <View style={styles.progressCardHeader}>
+                <Icon name="barbell-outline" size={16} color="#F59E0B" />
+                <Text style={styles.progressCardTitle}>Ejercicio</Text>
+              </View>
+              <Text style={styles.progressCardValue}>{getCurrentDayProgress().workout ? 'Completado' : 'Pendiente'}</Text>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressBarFill,
+                    { 
+                      width: getCurrentDayProgress().workout ? '100%' : '0%',
+                      backgroundColor: '#F59E0B'
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressCardGoal}>Meta: {sampleFitnessData.dailyGoals.workouts} sesión</Text>
+            </View>
+          </View>
+        </View>
+        
+        {/* Progreso semanal */}
+        <View style={styles.weeklyProgressContainer}>
+          <View style={styles.weeklyProgressHeader}>
+            <Text style={styles.weeklyProgressTitle}>Progreso Semanal</Text>
+            <TouchableOpacity style={styles.viewStatsButton}>
+              <Icon name="analytics-outline" size={16} color="#059669" />
+              <Text style={styles.viewStatsText}>Ver Estadísticas</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.weeklyProgressGrid}>
+            {sampleFitnessData.weeklyProgress.map((day, index) => (
+              <View key={index} style={styles.dayProgressCard}>
+                <Text style={styles.dayProgressLabel}>{day.day}</Text>
+                <View style={styles.dayProgressIndicators}>
+                  <View style={[
+                    styles.dayProgressIndicator,
+                    { backgroundColor: day.steps >= sampleFitnessData.dailyGoals.steps ? '#059669' : '#E5E7EB' }
+                  ]} />
+                  <View style={[
+                    styles.dayProgressIndicator,
+                    { backgroundColor: day.calories >= sampleFitnessData.dailyGoals.calories ? '#EF4444' : '#E5E7EB' }
+                  ]} />
+                  <View style={[
+                    styles.dayProgressIndicator,
+                    { backgroundColor: day.water >= sampleFitnessData.dailyGoals.water ? '#0EA5E9' : '#E5E7EB' }
+                  ]} />
+                  <View style={[
+                    styles.dayProgressIndicator,
+                    { backgroundColor: day.workout ? '#F59E0B' : '#E5E7EB' }
+                  ]} />
+                </View>
+                <Text style={styles.dayProgressSteps}>{day.steps.toLocaleString()}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        
+        {/* Logros */}
+        <View style={styles.achievementsContainer}>
+          <View style={styles.achievementsHeader}>
+            <Text style={styles.achievementsTitle}>Logros</Text>
+            <Text style={styles.achievementsSubtitle}>
+              {getUnlockedAchievements()}/{sampleFitnessData.achievements.length} desbloqueados
+            </Text>
+          </View>
+          
+          <View style={styles.achievementsGrid}>
+            {sampleFitnessData.achievements.map((achievement) => (
+              <View key={achievement.id} style={[
+                styles.achievementCard,
+                !achievement.unlocked && styles.achievementCardLocked
+              ]}>
+                <View style={styles.achievementIcon}>
+                  <Text style={[
+                    styles.achievementEmoji,
+                    !achievement.unlocked && styles.achievementEmojiLocked
+                  ]}>
+                    {achievement.unlocked ? achievement.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.achievementContent}>
+                  <Text style={[
+                    styles.achievementTitle,
+                    !achievement.unlocked && styles.achievementTitleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.achievementDescription,
+                    !achievement.unlocked && styles.achievementDescriptionLocked
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
-
-      <View style={styles.fitnessNotes}>
-        <Text style={styles.notesTitle}>ENFOQUE</Text>
-        <TextInput 
-          style={styles.notesInput} 
-          placeholder="¿En qué te enfocarás esta semana?"
-          multiline
-        />
-      </View>
-
-      <View style={styles.fitnessMotivation}>
-        <Text style={styles.motivationTitle}>MOTIVACIÓN</Text>
-        <TextInput 
-          style={styles.motivationInput} 
-          placeholder="Tu motivación..."
-          multiline
-        />
-      </View>
-    </View>
-  );
+    );
+  };
 
   // Función para renderizar Medidas Corporales
   const renderBodyMeasurements = () => (
@@ -1950,14 +2383,14 @@ const HealthSections = () => {
 
   return (
     <View style={styles.container}>
-      <SubsectionTabs
+      <ElegantSubsectionTabs
         sections={sections}
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        theme="mountain"
+        theme="forest"
         size="medium"
         showIcons={true}
-        showLabels={true}
+        showLabels={false}
       />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderActiveSection()}
@@ -2120,41 +2553,903 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   // Estilos mejorados para planificador de comidas
-  nutritionSummary: {
+  mealPlannerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  mealPlannerHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  mealPlannerIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  mealPlannerHeaderText: {
+    flex: 1,
+  },
+  mealPlannerHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  mealPlannerHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  mealPlannerHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mealPlannerSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
     gap: 12,
   },
-  nutritionSummaryCard: {
+  mealPlannerSummaryCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#4A6B8A',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  nutritionSummaryIcon: {
+  mealPlannerSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  nutritionSummaryContent: {
+  mealPlannerSummaryContent: {
     alignItems: 'center',
   },
-  nutritionSummaryTitle: {
+  mealPlannerSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  mealPlannerSummaryLabel: {
     fontSize: 12,
     color: '#6B7280',
+    fontWeight: '500',
+  },
+  addMealContainer: {
+    marginBottom: 20,
+  },
+  addMealButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addMealText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
+    marginLeft: 8,
+  },
+  dailyMealPlanContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dailyMealPlanHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  dailyMealPlanTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dailyMealPlanTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginLeft: 8,
+  },
+  dailyMealPlanDate: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  mealsGrid: {
+    gap: 16,
+  },
+  mealCardIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mealCardActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addMealButtonSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  addMealButtonSmallText: {
+    color: '#059669',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  waterTrackingContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  waterTrackingHeader: {
+    marginBottom: 20,
+  },
+  waterTrackingTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  waterTrackingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0EA5E9',
+    marginLeft: 8,
+  },
+  waterTrackingSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  waterGlassesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 8,
+  },
+  quickAccessIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  // Estilos mejorados para recetas
+  recipesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  recipesHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  recipesIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  recipesHeaderText: {
+    flex: 1,
+  },
+  recipesHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  recipesHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  recipesHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recipesSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  recipesSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  recipesSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recipesSummaryContent: {
+    alignItems: 'center',
+  },
+  recipesSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  recipesSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  addRecipeContainer: {
+    marginBottom: 20,
+  },
+  addRecipeButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addRecipeText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  recipesListHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  recipesListTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  filterText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  recipesBody: {
+    maxHeight: 500,
+  },
+  recipeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    margin: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  recipeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  recipeCardIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  recipeEmoji: {
+    fontSize: 24,
+  },
+  recipeCardContent: {
+    flex: 1,
+  },
+  recipeCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  recipeCardCategory: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  recipeCardActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  recipeActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recipeCardBody: {
+    gap: 12,
+  },
+  recipeMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  recipeMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recipeMetaText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  recipeDifficulty: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  difficultyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  difficultyText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  recipeRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#F59E0B',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  recipeDescription: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+  },
+  recipeTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  recipeTag: {
+    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  recipeTagText: {
+    fontSize: 11,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  recipeActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  recipeActionButtonLarge: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#059669',
+  },
+  recipeActionText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  
+  // Estilos mejorados para seguimiento de fitness
+  fitnessHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fitnessHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  fitnessIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  fitnessHeaderText: {
+    flex: 1,
+  },
+  fitnessHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  fitnessHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  fitnessHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fitnessSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  fitnessSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  fitnessSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  fitnessSummaryContent: {
+    alignItems: 'center',
+  },
+  fitnessSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  fitnessSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  addActivityContainer: {
+    marginBottom: 20,
+  },
+  addActivityButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addActivityText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  todayProgressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  todayProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  todayProgressTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  todayProgressTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginLeft: 8,
+  },
+  todayProgressDate: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  todayProgressGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  progressCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  progressCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressCardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginLeft: 6,
+  },
+  progressCardValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressCardGoal: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  weeklyProgressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weeklyProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  weeklyProgressTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  viewStatsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewStatsText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  weeklyProgressGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  dayProgressCard: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  dayProgressLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  dayProgressIndicators: {
+    flexDirection: 'row',
+    gap: 4,
+    marginBottom: 8,
+  },
+  dayProgressIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  dayProgressSteps: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  achievementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  achievementsHeader: {
+    marginBottom: 20,
+  },
+  achievementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  achievementsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  achievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  achievementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  achievementCardLocked: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
+  },
+  achievementIcon: {
+    marginBottom: 8,
+  },
+  achievementEmoji: {
+    fontSize: 24,
+  },
+  achievementEmojiLocked: {
+    opacity: 0.5,
+  },
+  achievementContent: {
+    alignItems: 'center',
+  },
+  achievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
     marginBottom: 4,
     textAlign: 'center',
+  },
+  achievementTitleLocked: {
+    color: '#9CA3AF',
+  },
+  achievementDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  achievementDescriptionLocked: {
+    color: '#9CA3AF',
   },
   nutritionSummaryValue: {
     fontSize: 18,

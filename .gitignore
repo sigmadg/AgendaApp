@@ -33,6 +33,11 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+# Archivos de release (sensibles)
+release.keystore
+release.properties
+*.apk
+*.aab
 .kotlin/
 
 # node.js

@@ -5,7 +5,7 @@ import { colors, typography, spacing, borderRadius, shadows } from '../styles/gl
 import { CuteTitle, CuteText, CuteButton, CuteElement, CuteBadge } from './CuteElements';
 // import { DecorativeIcons, AnimatedDecorativeIcons } from './DecorativeIcons';
 
-const Header = ({ onOpenSidebar, selectedCategory, userName = 'Usuario', onLogout }) => {
+const Header = ({ onOpenSidebar, selectedCategory, userName = 'Usuario' }) => {
   const getCurrentGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) {
@@ -67,14 +67,6 @@ const Header = ({ onOpenSidebar, selectedCategory, userName = 'Usuario', onLogou
         </View>
         
         <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            style={styles.logoutButton} 
-            onPress={onLogout}
-            activeOpacity={0.7}
-          >
-            <Icon name="log-out-outline" size={24} color={colors.error} />
-          </TouchableOpacity>
-          
           <TouchableOpacity 
             style={styles.menuButton} 
             onPress={() => {
@@ -150,14 +142,6 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: 'row',
     gap: spacing.sm,
-  },
-  logoutButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: '#FFFFFF', // Blanco profesional
-    borderWidth: 1,
-    borderColor: '#DEE2E6', // Gris claro para borde
-    ...shadows.sm,
   },
   menuButton: {
     padding: spacing.md,

@@ -13,7 +13,6 @@ import TimetableSection from './sections/TimetableSection';
 import TodoSection from './sections/TodoSection';
 import ProjectsSection from './sections/ProjectsSection';
 import ExamsSection from './sections/ExamsSection';
-import MaterialsSection from './sections/MaterialsSection';
 import ClassSection from './sections/ClassSection';
 
 const SchoolSections = ({ 
@@ -54,7 +53,6 @@ const SchoolSections = ({
     { id: 'todo', name: 'Tareas', icon: 'checkmark-circle-outline' },
     { id: 'projects', name: 'Proyectos', icon: 'folder-outline' },
     { id: 'exams', name: 'Exámenes', icon: 'school-outline' },
-    { id: 'materials', name: 'Materiales', icon: 'book-outline' },
     { id: 'class', name: 'Clases', icon: 'people-outline' },
   ];
 
@@ -86,8 +84,6 @@ const SchoolSections = ({
         return <ProjectsSection {...commonProps} />;
       case 'exams':
         return <ExamsSection {...commonProps} />;
-      case 'materials':
-        return <MaterialsSection {...commonProps} />;
       case 'class':
         return <ClassSection {...commonProps} />;
       default:

@@ -130,11 +130,11 @@ const ProfileSection = ({
           <Text style={[profileSectionStyles.profileEmail, { color: themeColors.textSecondary }]}>
             {user?.email || 'usuario@ejemplo.com'}
           </Text>
-          {user?.location && (
+          {(user?.location || user?.phone) && (
             <View style={profileSectionStyles.locationContainer}>
               <Icon name="location-outline" size={16} color={themeColors.textSecondary} />
               <Text style={[profileSectionStyles.profileLocation, { color: themeColors.textSecondary }]}>
-                {user.location}
+                {user?.location || user?.phone || 'Información adicional'}
               </Text>
             </View>
           )}
