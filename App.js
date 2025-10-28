@@ -16,7 +16,6 @@ import LanguageSections from './src/components/LanguageSections';
 import TravelSections from './src/components/TravelSections';
 import PetSections from './src/components/PetSections';
 import SelfCareSections from './src/components/SelfCareSections';
-import HabitTrackerSections from './src/components/HabitTrackerSections';
 import ReadingSections from './src/components/ReadingSections';
 import MoviesSections from './src/components/MoviesSections';
 import FinanceSections from './src/components/FinanceSections';
@@ -73,7 +72,6 @@ export default function App() {
   const [showTravelSections, setShowTravelSections] = useState(false);
   const [showPetSections, setShowPetSections] = useState(false);
   const [showSelfCareSections, setShowSelfCareSections] = useState(false);
-  const [showHabitTrackerSections, setShowHabitTrackerSections] = useState(false);
   const [showReadingSections, setShowReadingSections] = useState(false);
   const [showMoviesSections, setShowMoviesSections] = useState(false);
   const [showFinanceSections, setShowFinanceSections] = useState(false);
@@ -87,7 +85,6 @@ export default function App() {
     school: true,
     health: true,
     finance: true,
-    habits: true,
     languages: true,
     menstrual: true,
     travel: true,
@@ -268,7 +265,6 @@ export default function App() {
     setShowTravelSections(selectedCategory === 'travel');
     setShowPetSections(selectedCategory === 'pets');
     setShowSelfCareSections(selectedCategory === 'selfcare');
-    setShowHabitTrackerSections(selectedCategory === 'habits');
     setShowReadingSections(selectedCategory === 'reading');
     setShowMoviesSections(selectedCategory === 'movies');
     setShowFinanceSections(selectedCategory === 'finance');
@@ -581,8 +577,6 @@ export default function App() {
         <PetSections />
       ) : showSelfCareSections ? (
         <SelfCareSections />
-      ) : showHabitTrackerSections ? (
-        <HabitTrackerSections />
       ) : showReadingSections ? (
         <ReadingSections />
       ) : showMoviesSections ? (

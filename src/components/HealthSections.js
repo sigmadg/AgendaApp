@@ -208,6 +208,127 @@ const HealthSections = () => {
     { id: 'calf', name: 'Pantorrilla', unit: 'cm' }
   ];
   
+  // Función para obtener iconos de medidas
+  const getMeasurementIcon = (measurementId) => {
+    const iconMap = {
+      'weight': 'scale-outline',
+      'neck': 'ellipse-outline',
+      'bicep': 'fitness-outline',
+      'bust': 'woman-outline',
+      'chest': 'body-outline',
+      'waist': 'remove-outline',
+      'hips': 'ellipse-outline',
+      'thigh': 'fitness-outline',
+      'calf': 'fitness-outline'
+    };
+    return iconMap[measurementId] || 'body-outline';
+  };
+
+  // Funciones para manejar medidas corporales
+  const handleMeasurementChange = (measurementId, value) => {
+    // Validar que solo sean números y un punto decimal
+    if (measurementId === 'notes') {
+      setNewMeasurements(prev => ({
+        ...prev,
+        [measurementId]: value
+      }));
+    } else {
+      // Validar entrada numérica
+      const numericValue = value.replace(/[^0-9.]/g, '');
+      // Asegurar que solo haya un punto decimal
+      const parts = numericValue.split('.');
+      const validValue = parts.length > 2 ? 
+        parts[0] + '.' + parts.slice(1).join('') : 
+        numericValue;
+      
+      setNewMeasurements(prev => ({
+        ...prev,
+        [measurementId]: validValue
+      }));
+    }
+  };
+
+  const handleSaveMeasurements = () => {
+    // Validar que al menos una medida esté ingresada
+    const hasMeasurements = Object.keys(newMeasurements).some(key => 
+      key !== 'notes' && newMeasurements[key] && newMeasurements[key].trim() !== ''
+    );
+    
+    if (!hasMeasurements) {
+      Alert.alert('Error', 'Por favor ingresa al menos una medida');
+      return;
+    }
+    
+    const dateKey = selectedMeasurementDate.toISOString().split('T')[0];
+    const measurementsToSave = {
+      ...newMeasurements,
+      date: selectedMeasurementDate,
+      timestamp: new Date().toISOString()
+    };
+    
+    setBodyMeasurements(prev => ({
+      ...prev,
+      [dateKey]: measurementsToSave
+    }));
+    
+    // Limpiar formulario
+    setNewMeasurements({
+      weight: '',
+      neck: '',
+      bicep: '',
+      bust: '',
+      chest: '',
+      waist: '',
+      hips: '',
+      thigh: '',
+      calf: '',
+      notes: ''
+    });
+    
+    Alert.alert('Éxito', 'Medidas guardadas correctamente');
+  };
+
+  const handleShowHistory = () => {
+    // Aquí se podría implementar un modal o navegación al historial
+    Alert.alert('Historial', 'Funcionalidad de historial en desarrollo');
+  };
+
+  // Función para calcular el progreso
+  const calculateProgress = () => {
+    const measurements = Object.values(bodyMeasurements);
+    if (measurements.length < 2) {
+      return {
+        weight: { change: 0, trend: 'neutral' },
+        waist: { change: 0, trend: 'neutral' },
+        bicep: { change: 0, trend: 'neutral' }
+      };
+    }
+
+    // Ordenar por fecha
+    const sortedMeasurements = measurements.sort((a, b) => 
+      new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    const latest = sortedMeasurements[sortedMeasurements.length - 1];
+    const previous = sortedMeasurements[sortedMeasurements.length - 2];
+
+    const calculateChange = (key) => {
+      const latestValue = parseFloat(latest[key]) || 0;
+      const previousValue = parseFloat(previous[key]) || 0;
+      const change = latestValue - previousValue;
+      return {
+        change: Math.abs(change).toFixed(1),
+        trend: change > 0 ? 'up' : change < 0 ? 'down' : 'neutral'
+      };
+    };
+
+    return {
+      weight: calculateChange('weight'),
+      waist: calculateChange('waist'),
+      bicep: calculateChange('bicep')
+    };
+  };
+  
   // Constantes para Seguimiento de Entrenamientos
   const exerciseTypes = [
     'Cardio', 'Fuerza', 'Flexibilidad', 'Equilibrio', 'Resistencia', 'HIIT', 'Yoga', 'Pilates', 'Crossfit', 'Funcional'
@@ -1066,120 +1187,716 @@ const HealthSections = () => {
   };
 
   // Renderizado de secciones de ejercicio
-  const renderGymRoutine = () => (
+  const renderGymRoutine = () => {
+    const sampleGymData = {
+      weeklyStats: {
+        totalWorkouts: 4,
+        totalDuration: 320, // minutos
+        totalExercises: 28,
+        averageIntensity: 7.2
+      },
+      routines: [
+        {
+          id: 1,
+          name: 'Fuerza Superior',
+          difficulty: 'Intermedio',
+          duration: '75 min',
+          exerciseCount: 8,
+          completed: true,
+          lastWorkout: '2024-01-15',
+          nextWorkout: '2024-01-17',
+          schedule: {
+            days: ['Lunes', 'Miércoles', 'Viernes'],
+            time: '18:00',
+            frequency: '3x/semana'
+          },
+          exercises: [
+            { name: 'Press Banca', sets: 4, reps: '8-10', weight: 80, rest: 3 },
+            { name: 'Remo con Barra', sets: 4, reps: '8-10', weight: 70, rest: 3 },
+            { name: 'Press Militar', sets: 3, reps: '10-12', weight: 50, rest: 2 },
+            { name: 'Dominadas', sets: 3, reps: '6-8', weight: 'Peso Corporal', rest: 2 }
+          ]
+        },
+        {
+          id: 2,
+          name: 'Fuerza Inferior',
+          difficulty: 'Avanzado',
+          duration: '90 min',
+          exerciseCount: 6,
+          completed: false,
+          lastWorkout: '2024-01-14',
+          nextWorkout: '2024-01-16',
+          schedule: {
+            days: ['Martes', 'Jueves'],
+            time: '19:00',
+            frequency: '2x/semana'
+          },
+          exercises: [
+            { name: 'Sentadillas', sets: 5, reps: '5-8', weight: 120, rest: 4 },
+            { name: 'Peso Muerto', sets: 4, reps: '6-8', weight: 140, rest: 4 },
+            { name: 'Prensa de Piernas', sets: 4, reps: '12-15', weight: 200, rest: 2 }
+          ]
+        },
+        {
+          id: 3,
+          name: 'Cardio HIIT',
+          difficulty: 'Principiante',
+          duration: '30 min',
+          exerciseCount: 5,
+          completed: true,
+          lastWorkout: '2024-01-15',
+          nextWorkout: '2024-01-18',
+          schedule: {
+            days: ['Miércoles', 'Sábado'],
+            time: '07:00',
+            frequency: '2x/semana'
+          },
+          exercises: [
+            { name: 'Burpees', sets: 4, reps: '30 seg', weight: 'Peso Corporal', rest: 1 },
+            { name: 'Mountain Climbers', sets: 4, reps: '30 seg', weight: 'Peso Corporal', rest: 1 },
+            { name: 'Jumping Jacks', sets: 4, reps: '30 seg', weight: 'Peso Corporal', rest: 1 }
+          ]
+        }
+      ],
+      goals: [
+        { id: 1, title: 'Entrenar 4 días/semana', current: 4, target: 4, unit: 'días', completed: true },
+        { id: 2, title: 'Completar 20 ejercicios', current: 19, target: 20, unit: 'ejercicios', completed: false },
+        { id: 3, title: 'Aumentar peso en Press Banca', current: 80, target: 85, unit: 'kg', completed: false },
+        { id: 4, title: 'Mantener rutina por 1 mes', current: 15, target: 30, unit: 'días', completed: false }
+      ],
+      achievements: [
+        { id: 1, title: 'Primera Rutina', description: 'Completaste tu primera rutina de gimnasio', icon: '🏋️', unlocked: true },
+        { id: 2, title: 'Consistencia', description: '4 entrenamientos en una semana', icon: '💪', unlocked: true },
+        { id: 3, title: 'Fuerza', description: 'Levantaste 100kg+ en peso muerto', icon: '🔥', unlocked: true },
+        { id: 4, title: 'Maratón', description: '30 días consecutivos entrenando', icon: '🏃', unlocked: false }
+      ]
+    };
+
+    const getUnlockedAchievements = () => {
+      return sampleGymData.achievements.filter(achievement => achievement.unlocked).length;
+    };
+
+    const getProgressPercentage = (current, target) => {
+      return Math.min((current / target) * 100, 100);
+    };
+
+    const getDifficultyColor = (difficulty) => {
+      const colors = {
+        'Principiante': '#059669',
+        'Intermedio': '#F59E0B',
+        'Avanzado': '#EF4444'
+      };
+      return colors[difficulty] || '#059669';
+    };
+
+    return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+        {/* Header estilo fitness */}
+        <View style={styles.gymHeader}>
+          <View style={styles.gymHeaderContent}>
+            <View style={styles.gymIconContainer}>
+              <Icon name="barbell-outline" size={24} color="#FFFFFF" />
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Rutina de Gimnasio</Text>
-          <Text style={styles.sectionSubtitle}>
-            Planifica tu entrenamiento
+            <View style={styles.gymHeaderText}>
+              <Text style={styles.gymHeaderTitle}>
+                Rutina de Gimnasio
+              </Text>
+              <Text style={styles.gymHeaderSubtitle}>
+                Planifica y ejecuta tus entrenamientos
           </Text>
         </View>
-        <TouchableOpacity onPress={openAddGymModal} style={styles.addButton}>
-          <Icon name="add" size={16} color="#FFFFFF" />
+          </View>
+          <View style={styles.gymHeaderBadge}>
+            <Icon name="fitness-outline" size={16} color="#059669" />
+          </View>
+        </View>
+
+        {/* Resumen de estadísticas */}
+        <View style={styles.gymSummary}>
+          <View style={styles.gymSummaryCard}>
+            <View style={styles.gymSummaryIconContainer}>
+              <Icon name="barbell-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.gymSummaryContent}>
+              <Text style={styles.gymSummaryValue}>{sampleGymData.weeklyStats.totalWorkouts}</Text>
+              <Text style={styles.gymSummaryLabel}>Rutinas</Text>
+            </View>
+          </View>
+          <View style={styles.gymSummaryCard}>
+            <View style={styles.gymSummaryIconContainer}>
+              <Icon name="time-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.gymSummaryContent}>
+              <Text style={styles.gymSummaryValue}>{sampleGymData.weeklyStats.totalDuration}m</Text>
+              <Text style={styles.gymSummaryLabel}>Duración</Text>
+            </View>
+          </View>
+          <View style={styles.gymSummaryCard}>
+            <View style={styles.gymSummaryIconContainer}>
+              <Icon name="fitness-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.gymSummaryContent}>
+              <Text style={styles.gymSummaryValue}>{sampleGymData.weeklyStats.totalExercises}</Text>
+              <Text style={styles.gymSummaryLabel}>Ejercicios</Text>
+            </View>
+          </View>
+          <View style={styles.gymSummaryCard}>
+            <View style={styles.gymSummaryIconContainer}>
+              <Icon name="pulse-outline" size={20} color="#EC4899" />
+            </View>
+            <View style={styles.gymSummaryContent}>
+              <Text style={styles.gymSummaryValue}>{sampleGymData.weeklyStats.averageIntensity}/10</Text>
+              <Text style={styles.gymSummaryLabel}>Intensidad</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para agregar rutina */}
+        <View style={styles.addRoutineContainer}>
+          <TouchableOpacity 
+            style={styles.addRoutineButton}
+            onPress={openAddGymModal}
+          >
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addRoutineText}>Crear Rutina</Text>
         </TouchableOpacity>
       </View>
       
+        {/* Lista de rutinas */}
       <View style={styles.routinesContainer}>
-        {gymRoutines.map((routine, index) => (
-          <View key={index} style={styles.routineCard}>
-            <View style={styles.routineHeader}>
-              <Text style={styles.routineName}>{routine.name}</Text>
-              <View style={[styles.difficultyBadge, 
-                routine.difficulty === 'Principiante' && styles.difficultyBeginner,
-                routine.difficulty === 'Intermedio' && styles.difficultyIntermediate,
-                routine.difficulty === 'Avanzado' && styles.difficultyAdvanced
+          <View style={styles.routinesHeader}>
+            <Text style={styles.routinesTitle}>Mis Rutinas</Text>
+            <Text style={styles.routinesSubtitle}>
+              {sampleGymData.routines.filter(routine => routine.completed).length}/{sampleGymData.routines.length} completadas esta semana
+            </Text>
+          </View>
+          
+          <View style={styles.routinesList}>
+            {sampleGymData.routines.map((routine) => (
+              <View key={routine.id} style={styles.routineCard}>
+                <View style={styles.routineCardHeader}>
+                  <View style={styles.routineCardInfo}>
+                    <View style={styles.routineCardTitleRow}>
+                      <Text style={styles.routineCardTitle}>{routine.name}</Text>
+                      <View style={[
+                        styles.difficultyBadge,
+                        { backgroundColor: getDifficultyColor(routine.difficulty) }
               ]}>
                 <Text style={styles.difficultyText}>{routine.difficulty}</Text>
               </View>
             </View>
-            
-            <Text style={styles.routineDescription}>{routine.description}</Text>
-            <Text style={styles.routineDuration}>Duración: {routine.duration}</Text>
-            
-            {routine.schedule && (
-              <View style={styles.scheduleContainer}>
-                <Text style={styles.scheduleTitle}>HORARIO:</Text>
-                <Text style={styles.scheduleText}>
-                  {routine.schedule.days.length > 0 ? routine.schedule.days.join(', ') : 'Sin días asignados'}
-                  {routine.schedule.time && ` a las ${routine.schedule.time}`}
+                    <Text style={styles.routineCardDescription}>
+                      {routine.exerciseCount} ejercicios • {routine.duration}
                 </Text>
-                <Text style={styles.scheduleFrequency}>Frecuencia: {routine.schedule.frequency}</Text>
+                    <View style={styles.routineCardSchedule}>
+                      <Icon name="calendar-outline" size={14} color="#6B7280" />
+                      <Text style={styles.routineCardScheduleText}>
+                        {routine.schedule.days.join(', ')} a las {routine.schedule.time}
+                      </Text>
               </View>
-            )}
-            
-            <View style={styles.exercisesContainer}>
-              <Text style={styles.exercisesTitle}>EJERCICIOS:</Text>
-              {routine.exercises.map((exercise, exIndex) => (
+                  </View>
+                  <View style={styles.routineCardStatus}>
+                    <View style={[
+                      styles.routineStatusIcon,
+                      routine.completed && styles.routineStatusIconCompleted
+                    ]}>
+                      <Icon 
+                        name={routine.completed ? "checkmark-circle" : "ellipse-outline"} 
+                        size={24} 
+                        color={routine.completed ? "#059669" : "#E5E7EB"} 
+                      />
+                    </View>
+                    <Text style={[
+                      styles.routineStatusText,
+                      routine.completed && styles.routineStatusTextCompleted
+                    ]}>
+                      {routine.completed ? 'Completada' : 'Pendiente'}
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={styles.routineCardExercises}>
+                  <Text style={styles.routineCardExercisesTitle}>Ejercicios:</Text>
+                  <View style={styles.exercisesList}>
+                    {routine.exercises.slice(0, 3).map((exercise, exIndex) => (
                 <View key={exIndex} style={styles.exerciseItem}>
                   <Text style={styles.exerciseName}>• {exercise.name}</Text>
                   <Text style={styles.exerciseDetails}>
-                    {exercise.sets} series x {exercise.reps} repeticiones
+                          {exercise.sets} series x {exercise.reps}
                     {exercise.weight && ` @ ${exercise.weight}kg`}
-                    {exercise.rest && ` (${exercise.rest} min descanso)`}
                   </Text>
                 </View>
               ))}
+                    {routine.exercises.length > 3 && (
+                      <Text style={styles.moreExercisesText}>
+                        +{routine.exercises.length - 3} ejercicios más
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                
+                <View style={styles.routineCardActions}>
+                  <TouchableOpacity style={styles.startRoutineButton}>
+                    <Icon name="play-outline" size={16} color="#FFFFFF" />
+                    <Text style={styles.startRoutineText}>Comenzar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.editRoutineButton}>
+                    <Icon name="create-outline" size={16} color="#059669" />
+                    <Text style={styles.editRoutineText}>Editar</Text>
+                  </TouchableOpacity>
             </View>
           </View>
         ))}
+          </View>
+        </View>
+
+        {/* Objetivos de gimnasio */}
+        <View style={styles.gymGoalsContainer}>
+          <View style={styles.gymGoalsHeader}>
+            <Text style={styles.gymGoalsTitle}>Objetivos de la Semana</Text>
+            <Text style={styles.gymGoalsSubtitle}>
+              {sampleGymData.goals.filter(goal => goal.completed).length}/{sampleGymData.goals.length} completados
+            </Text>
+          </View>
+          
+          <View style={styles.gymGoalsList}>
+            {sampleGymData.goals.map((goal) => (
+              <View key={goal.id} style={styles.gymGoalCard}>
+                <View style={styles.gymGoalHeader}>
+                  <Text style={styles.gymGoalTitle}>{goal.title}</Text>
+                  <Text style={styles.gymGoalValues}>
+                    {goal.current}/{goal.target} {goal.unit}
+                  </Text>
+                </View>
+                <View style={styles.gymGoalProgress}>
+                  <View style={styles.gymGoalProgressBar}>
+                    <View 
+                      style={[
+                        styles.gymGoalProgressFill,
+                        { 
+                          width: `${getProgressPercentage(goal.current, goal.target)}%`,
+                          backgroundColor: goal.completed ? '#059669' : '#F59E0B'
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.gymGoalPercentage}>
+                    {Math.round(getProgressPercentage(goal.current, goal.target))}%
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Sistema de logros */}
+        <View style={styles.gymAchievementsContainer}>
+          <View style={styles.gymAchievementsHeader}>
+            <Text style={styles.gymAchievementsTitle}>Logros de Gimnasio</Text>
+            <Text style={styles.gymAchievementsSubtitle}>
+              {getUnlockedAchievements()}/{sampleGymData.achievements.length} desbloqueados
+            </Text>
+          </View>
+          
+          <View style={styles.gymAchievementsGrid}>
+            {sampleGymData.achievements.map((achievement) => (
+              <View key={achievement.id} style={[
+                styles.gymAchievementCard,
+                !achievement.unlocked && styles.gymAchievementCardLocked
+              ]}>
+                <View style={styles.gymAchievementIcon}>
+                  <Text style={[
+                    styles.gymAchievementEmoji,
+                    !achievement.unlocked && styles.gymAchievementEmojiLocked
+                  ]}>
+                    {achievement.unlocked ? achievement.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.gymAchievementContent}>
+                  <Text style={[
+                    styles.gymAchievementTitle,
+                    !achievement.unlocked && styles.gymAchievementTitleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.gymAchievementDescription,
+                    !achievement.unlocked && styles.gymAchievementDescriptionLocked
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
       </View>
     </View>
   );
+  };
 
-  const renderSportsGoals = () => (
+  const renderSportsGoals = () => {
+    const sampleSportsData = {
+      weeklyStats: {
+        totalGoals: 8,
+        completedGoals: 5,
+        activeGoals: 3,
+        completionRate: 62.5
+      },
+      goals: [
+        {
+          id: 1,
+          sport: 'Fútbol',
+          category: 'Deportes de Equipo',
+          objective: 'Marcar 3 goles en el próximo partido',
+          targetDate: '2024-01-20',
+          currentProgress: '2 goles marcados',
+          progressPercentage: 67,
+          priority: 'Alta',
+          status: 'En Progreso',
+          completed: false,
+          notes: 'Mejorar precisión en el tiro',
+          icon: '⚽'
+        },
+        {
+          id: 2,
+          sport: 'Natación',
+          category: 'Deportes Acuáticos',
+          objective: 'Nadar 1000m sin parar',
+          targetDate: '2024-01-25',
+          currentProgress: '800m completados',
+          progressPercentage: 80,
+          priority: 'Media',
+          status: 'En Progreso',
+          completed: false,
+          notes: 'Enfocarse en la respiración',
+          icon: '🏊'
+        },
+        {
+          id: 3,
+          sport: 'Running',
+          category: 'Deportes de Resistencia',
+          objective: 'Completar media maratón',
+          targetDate: '2024-02-15',
+          currentProgress: '15km máximo corridos',
+          progressPercentage: 71,
+          priority: 'Alta',
+          status: 'En Progreso',
+          completed: false,
+          notes: 'Incrementar distancia gradualmente',
+          icon: '🏃'
+        },
+        {
+          id: 4,
+          sport: 'Tenis',
+          category: 'Deportes de Raqueta',
+          objective: 'Ganar 5 partidos consecutivos',
+          targetDate: '2024-01-18',
+          currentProgress: '5 partidos ganados',
+          progressPercentage: 100,
+          priority: 'Media',
+          status: 'Completado',
+          completed: true,
+          notes: 'Excelente trabajo en el saque',
+          icon: '🎾'
+        },
+        {
+          id: 5,
+          sport: 'Ciclismo',
+          category: 'Deportes de Resistencia',
+          objective: 'Subir el puerto de montaña',
+          targetDate: '2024-02-01',
+          currentProgress: '80% de la subida',
+          progressPercentage: 80,
+          priority: 'Alta',
+          status: 'En Progreso',
+          completed: false,
+          notes: 'Mejorar resistencia en subidas',
+          icon: '🚴'
+        }
+      ],
+      categories: [
+        { name: 'Deportes de Equipo', count: 1, color: '#EF4444' },
+        { name: 'Deportes Acuáticos', count: 1, color: '#3B82F6' },
+        { name: 'Deportes de Resistencia', count: 2, color: '#10B981' },
+        { name: 'Deportes de Raqueta', count: 1, color: '#F59E0B' }
+      ],
+      achievements: [
+        { id: 1, title: 'Primer Objetivo', description: 'Completaste tu primer objetivo deportivo', icon: '🏆', unlocked: true },
+        { id: 2, title: 'Consistencia', description: '5 objetivos completados en un mes', icon: '💪', unlocked: true },
+        { id: 3, title: 'Multideportista', description: 'Objetivos en 3 deportes diferentes', icon: '🌟', unlocked: true },
+        { id: 4, title: 'Campeón', description: '10 objetivos completados', icon: '👑', unlocked: false }
+      ]
+    };
+
+    const getUnlockedAchievements = () => {
+      return sampleSportsData.achievements.filter(achievement => achievement.unlocked).length;
+    };
+
+    const getProgressPercentage = (current, target) => {
+      return Math.min((current / target) * 100, 100);
+    };
+
+    const getPriorityColor = (priority) => {
+      const colors = {
+        'Alta': '#EF4444',
+        'Media': '#F59E0B',
+        'Baja': '#10B981'
+      };
+      return colors[priority] || '#6B7280';
+    };
+
+    const getStatusColor = (status) => {
+      const colors = {
+        'Completado': '#10B981',
+        'En Progreso': '#3B82F6',
+        'Pendiente': '#6B7280'
+      };
+      return colors[status] || '#6B7280';
+    };
+
+    return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+        {/* Header estilo fitness */}
+        <View style={styles.sportsHeader}>
+          <View style={styles.sportsHeaderContent}>
+            <View style={styles.sportsIconContainer}>
+              <Icon name="trophy-outline" size={24} color="#FFFFFF" />
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Objetivos Deportivos</Text>
-          <Text style={styles.sectionSubtitle}>
-            Establece tus metas deportivas
+            <View style={styles.sportsHeaderText}>
+              <Text style={styles.sportsHeaderTitle}>
+                Objetivos Deportivos
+              </Text>
+              <Text style={styles.sportsHeaderSubtitle}>
+                Establece y alcanza tus metas deportivas
           </Text>
         </View>
-        <TouchableOpacity onPress={openAddSportsModal} style={styles.addButton}>
-          <Icon name="add" size={16} color="#FFFFFF" />
+          </View>
+          <View style={styles.sportsHeaderBadge}>
+            <Icon name="flag-outline" size={16} color="#059669" />
+          </View>
+        </View>
+
+        {/* Resumen de estadísticas */}
+        <View style={styles.sportsSummary}>
+          <View style={styles.sportsSummaryCard}>
+            <View style={styles.sportsSummaryIconContainer}>
+              <Icon name="trophy-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.sportsSummaryContent}>
+              <Text style={styles.sportsSummaryValue}>{sampleSportsData.weeklyStats.totalGoals}</Text>
+              <Text style={styles.sportsSummaryLabel}>Objetivos</Text>
+            </View>
+          </View>
+          <View style={styles.sportsSummaryCard}>
+            <View style={styles.sportsSummaryIconContainer}>
+              <Icon name="checkmark-circle-outline" size={20} color="#10B981" />
+            </View>
+            <View style={styles.sportsSummaryContent}>
+              <Text style={styles.sportsSummaryValue}>{sampleSportsData.weeklyStats.completedGoals}</Text>
+              <Text style={styles.sportsSummaryLabel}>Completados</Text>
+            </View>
+          </View>
+          <View style={styles.sportsSummaryCard}>
+            <View style={styles.sportsSummaryIconContainer}>
+              <Icon name="time-outline" size={20} color="#3B82F6" />
+            </View>
+            <View style={styles.sportsSummaryContent}>
+              <Text style={styles.sportsSummaryValue}>{sampleSportsData.weeklyStats.activeGoals}</Text>
+              <Text style={styles.sportsSummaryLabel}>Activos</Text>
+            </View>
+          </View>
+          <View style={styles.sportsSummaryCard}>
+            <View style={styles.sportsSummaryIconContainer}>
+              <Icon name="analytics-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.sportsSummaryContent}>
+              <Text style={styles.sportsSummaryValue}>{sampleSportsData.weeklyStats.completionRate}%</Text>
+              <Text style={styles.sportsSummaryLabel}>Progreso</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para agregar objetivo */}
+        <View style={styles.addGoalContainer}>
+          <TouchableOpacity 
+            style={styles.addGoalButton}
+            onPress={openAddSportsModal}
+          >
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addGoalText}>Crear Objetivo</Text>
         </TouchableOpacity>
       </View>
       
-      <View style={styles.goalsContainer}>
-        {sportsGoals.map((goal, index) => (
-          <View key={index} style={styles.goalCard}>
-            <View style={styles.goalHeader}>
-              <Text style={styles.goalSport}>{goal.sport}</Text>
-              <Text style={styles.goalDate}>
-                {goal.targetDate.toLocaleDateString('es-ES')}
+        {/* Categorías de deportes */}
+        <View style={styles.sportsCategoriesContainer}>
+          <View style={styles.sportsCategoriesHeader}>
+            <Text style={styles.sportsCategoriesTitle}>Categorías</Text>
+            <Text style={styles.sportsCategoriesSubtitle}>
+              {sampleSportsData.categories.length} categorías activas
               </Text>
             </View>
             
-            <Text style={styles.goalObjective}>{goal.objective}</Text>
-            
-            <View style={styles.progressContainer}>
-              <Text style={styles.progressLabel}>Progreso Actual:</Text>
-              <Text style={styles.progressText}>{goal.currentProgress}</Text>
+          <View style={styles.sportsCategoriesGrid}>
+            {sampleSportsData.categories.map((category, index) => (
+              <View key={index} style={styles.sportsCategoryCard}>
+                <View style={styles.sportsCategoryIcon}>
+                  <View style={[styles.sportsCategoryIconBg, { backgroundColor: category.color }]}>
+                    <Icon name="ellipse" size={12} color="#FFFFFF" />
+                  </View>
+                </View>
+                <View style={styles.sportsCategoryContent}>
+                  <Text style={styles.sportsCategoryName}>{category.name}</Text>
+                  <Text style={styles.sportsCategoryCount}>{category.count} objetivos</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Lista de objetivos */}
+        <View style={styles.sportsGoalsContainer}>
+          <View style={styles.sportsGoalsHeader}>
+            <Text style={styles.sportsGoalsTitle}>Mis Objetivos</Text>
+            <Text style={styles.sportsGoalsSubtitle}>
+              {sampleSportsData.goals.filter(goal => goal.completed).length}/{sampleSportsData.goals.length} completados
+            </Text>
+          </View>
+          
+          <View style={styles.sportsGoalsList}>
+            {sampleSportsData.goals.map((goal) => (
+              <View key={goal.id} style={styles.sportsGoalCard}>
+                <View style={styles.sportsGoalCardHeader}>
+                  <View style={styles.sportsGoalCardInfo}>
+                    <View style={styles.sportsGoalCardTitleRow}>
+                      <Text style={styles.sportsGoalCardIcon}>{goal.icon}</Text>
+                      <View style={styles.sportsGoalCardTitleContent}>
+                        <Text style={styles.sportsGoalCardTitle}>{goal.sport}</Text>
+                        <Text style={styles.sportsGoalCardCategory}>{goal.category}</Text>
+                      </View>
+                      <View style={[
+                        styles.sportsGoalPriorityBadge,
+                        { backgroundColor: getPriorityColor(goal.priority) }
+                      ]}>
+                        <Text style={styles.sportsGoalPriorityText}>{goal.priority}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.sportsGoalCardObjective}>{goal.objective}</Text>
+                    <View style={styles.sportsGoalCardMeta}>
+                      <View style={styles.sportsGoalCardDate}>
+                        <Icon name="calendar-outline" size={14} color="#6B7280" />
+                        <Text style={styles.sportsGoalCardDateText}>
+                          {new Date(goal.targetDate).toLocaleDateString('es-ES')}
+                        </Text>
+                      </View>
+                      <View style={[
+                        styles.sportsGoalStatusBadge,
+                        { backgroundColor: getStatusColor(goal.status) }
+                      ]}>
+                        <Text style={styles.sportsGoalStatusText}>{goal.status}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.sportsGoalCardStatus}>
+                    <View style={[
+                      styles.sportsGoalStatusIcon,
+                      goal.completed && styles.sportsGoalStatusIconCompleted
+                    ]}>
+                      <Icon 
+                        name={goal.completed ? "checkmark-circle" : "ellipse-outline"} 
+                        size={24} 
+                        color={goal.completed ? "#10B981" : "#E5E7EB"} 
+                      />
+                    </View>
+                  </View>
+                </View>
+                
+                <View style={styles.sportsGoalCardProgress}>
+                  <View style={styles.sportsGoalCardProgressHeader}>
+                    <Text style={styles.sportsGoalCardProgressLabel}>Progreso Actual:</Text>
+                    <Text style={styles.sportsGoalCardProgressValue}>{goal.currentProgress}</Text>
+                  </View>
+                  <View style={styles.sportsGoalCardProgressBar}>
+                    <View 
+                      style={[
+                        styles.sportsGoalCardProgressFill,
+                        { 
+                          width: `${goal.progressPercentage}%`,
+                          backgroundColor: goal.completed ? '#10B981' : '#3B82F6'
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.sportsGoalCardProgressPercentage}>
+                    {goal.progressPercentage}%
+                  </Text>
             </View>
             
             {goal.notes && (
-              <Text style={styles.goalNotes}>Notas: {goal.notes}</Text>
-            )}
+                  <View style={styles.sportsGoalCardNotes}>
+                    <Icon name="document-text-outline" size={14} color="#6B7280" />
+                    <Text style={styles.sportsGoalCardNotesText}>{goal.notes}</Text>
+                  </View>
+                )}
+                
+                <View style={styles.sportsGoalCardActions}>
+                  <TouchableOpacity style={styles.updateProgressButton}>
+                    <Icon name="trending-up-outline" size={16} color="#FFFFFF" />
+                    <Text style={styles.updateProgressText}>Actualizar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.editGoalButton}>
+                    <Icon name="create-outline" size={16} color="#059669" />
+                    <Text style={styles.editGoalText}>Editar</Text>
+                  </TouchableOpacity>
+                </View>
           </View>
         ))}
+          </View>
+        </View>
+
+        {/* Sistema de logros */}
+        <View style={styles.sportsAchievementsContainer}>
+          <View style={styles.sportsAchievementsHeader}>
+            <Text style={styles.sportsAchievementsTitle}>Logros Deportivos</Text>
+            <Text style={styles.sportsAchievementsSubtitle}>
+              {getUnlockedAchievements()}/{sampleSportsData.achievements.length} desbloqueados
+            </Text>
+          </View>
+          
+          <View style={styles.sportsAchievementsGrid}>
+            {sampleSportsData.achievements.map((achievement) => (
+              <View key={achievement.id} style={[
+                styles.sportsAchievementCard,
+                !achievement.unlocked && styles.sportsAchievementCardLocked
+              ]}>
+                <View style={styles.sportsAchievementIcon}>
+                  <Text style={[
+                    styles.sportsAchievementEmoji,
+                    !achievement.unlocked && styles.sportsAchievementEmojiLocked
+                  ]}>
+                    {achievement.unlocked ? achievement.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.sportsAchievementContent}>
+                  <Text style={[
+                    styles.sportsAchievementTitle,
+                    !achievement.unlocked && styles.sportsAchievementTitleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.sportsAchievementDescription,
+                    !achievement.unlocked && styles.sportsAchievementDescriptionLocked
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
       </View>
     </View>
   );
+  };
 
   // Modales para alimentación
   const renderAddMealModal = () => (
@@ -2100,261 +2817,1217 @@ const HealthSections = () => {
   };
 
   // Función para renderizar Medidas Corporales
-  const renderBodyMeasurements = () => (
+  const renderBodyMeasurements = () => {
+    const sampleBodyData = {
+      weeklyStats: {
+        totalMeasurements: Object.keys(bodyMeasurements).length,
+        weightChange: -1.2,
+        waistChange: -3.0,
+        muscleGain: 0.8
+      },
+      currentMeasurements: {
+        weight: newMeasurements.weight || '--',
+        waist: newMeasurements.waist || '--',
+        chest: newMeasurements.chest || '--',
+        bicep: newMeasurements.bicep || '--'
+      },
+      goals: {
+        weight: 70,
+        waist: 75,
+        chest: 100,
+        bicep: 35
+      },
+      achievements: [
+        { id: 1, title: 'Primera Medición', description: 'Registraste tu primera medida corporal', icon: '📏', unlocked: Object.keys(bodyMeasurements).length > 0 },
+        { id: 2, title: 'Consistencia', description: '5 mediciones en una semana', icon: '📅', unlocked: Object.keys(bodyMeasurements).length >= 5 },
+        { id: 3, title: 'Meta de Peso', description: 'Alcanzaste tu peso objetivo', icon: '⚖️', unlocked: false },
+        { id: 4, title: 'Progreso Constante', description: 'Mejora en 3 medidas consecutivas', icon: '📈', unlocked: false }
+      ]
+    };
+
+    const getUnlockedAchievements = () => {
+      return sampleBodyData.achievements.filter(achievement => achievement.unlocked).length;
+    };
+
+    const getProgressPercentage = (current, goal) => {
+      if (!current || current === '--') return 0;
+      const currentNum = parseFloat(current);
+      const goalNum = parseFloat(goal);
+      return Math.min((currentNum / goalNum) * 100, 100);
+    };
+
+    return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+        {/* Header estilo fitness */}
+        <View style={styles.bodyMeasurementsHeader}>
+          <View style={styles.bodyMeasurementsHeaderContent}>
+            <View style={styles.bodyMeasurementsIconContainer}>
+              <Icon name="body-outline" size={24} color="#FFFFFF" />
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Medidas Corporales</Text>
-          <Text style={styles.sectionSubtitle}>
-            Registra tu progreso físico
+            <View style={styles.bodyMeasurementsHeaderText}>
+              <Text style={styles.bodyMeasurementsHeaderTitle}>
+                Medidas Corporales
+              </Text>
+              <Text style={styles.bodyMeasurementsHeaderSubtitle}>
+                Monitorea tu progreso físico
           </Text>
         </View>
+          </View>
+          <View style={styles.bodyMeasurementsHeaderBadge}>
+            <Icon name="resize-outline" size={16} color="#059669" />
+          </View>
+        </View>
+
+        {/* Resumen de estadísticas */}
+        <View style={styles.bodyMeasurementsSummary}>
+          <View style={styles.bodyMeasurementsSummaryCard}>
+            <View style={styles.bodyMeasurementsSummaryIconContainer}>
+              <Icon name="analytics-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.bodyMeasurementsSummaryContent}>
+              <Text style={styles.bodyMeasurementsSummaryValue}>{sampleBodyData.weeklyStats.totalMeasurements}</Text>
+              <Text style={styles.bodyMeasurementsSummaryLabel}>Mediciones</Text>
+            </View>
+          </View>
+          <View style={styles.bodyMeasurementsSummaryCard}>
+            <View style={styles.bodyMeasurementsSummaryIconContainer}>
+              <Icon name="trending-down-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.bodyMeasurementsSummaryContent}>
+              <Text style={styles.bodyMeasurementsSummaryValue}>{sampleBodyData.weeklyStats.weightChange}kg</Text>
+              <Text style={styles.bodyMeasurementsSummaryLabel}>Cambio Peso</Text>
+            </View>
+          </View>
+          <View style={styles.bodyMeasurementsSummaryCard}>
+            <View style={styles.bodyMeasurementsSummaryIconContainer}>
+              <Icon name="remove-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.bodyMeasurementsSummaryContent}>
+              <Text style={styles.bodyMeasurementsSummaryValue}>{sampleBodyData.weeklyStats.waistChange}cm</Text>
+              <Text style={styles.bodyMeasurementsSummaryLabel}>Cintura</Text>
+            </View>
+          </View>
+          <View style={styles.bodyMeasurementsSummaryCard}>
+            <View style={styles.bodyMeasurementsSummaryIconContainer}>
+              <Icon name="fitness-outline" size={20} color="#EC4899" />
+            </View>
+            <View style={styles.bodyMeasurementsSummaryContent}>
+              <Text style={styles.bodyMeasurementsSummaryValue}>+{sampleBodyData.weeklyStats.muscleGain}cm</Text>
+              <Text style={styles.bodyMeasurementsSummaryLabel}>Músculo</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Selector de fecha mejorado */}
+        <View style={styles.dateSelectorContainer}>
         <TouchableOpacity 
-          style={styles.addButton}
+            style={styles.dateSelector}
           onPress={() => setShowMeasurementDatePicker(true)}
         >
-          <Icon name="add" size={20} color="#ffffff" />
+            <Icon name="calendar-outline" size={20} color="#059669" />
+            <Text style={styles.dateSelectorText}>
+              {selectedMeasurementDate ? 
+                selectedMeasurementDate.toLocaleDateString('es-ES') : 
+                'Seleccionar fecha'
+              }
+            </Text>
+            <Icon name="chevron-down" size={16} color="#059669" />
         </TouchableOpacity>
       </View>
 
+        {/* Grid de medidas principal */}
       <View style={styles.measurementsContainer}>
         <View style={styles.measurementsGrid}>
-          {measurementTypes.map((measurement) => (
-            <View key={measurement.id} style={styles.measurementItem}>
-              <Text style={styles.measurementLabel}>{measurement.name}</Text>
+            {measurementTypes.slice(0, 4).map((measurement) => (
+              <View key={measurement.id} style={styles.measurementCard}>
+                <View style={styles.measurementCardHeader}>
+                  <Icon 
+                    name={getMeasurementIcon(measurement.id)} 
+                    size={20} 
+                    color="#059669" 
+                  />
+                  <Text style={styles.measurementCardTitle}>{measurement.name}</Text>
+                </View>
+                <View style={styles.measurementInputContainer}>
               <TextInput 
                 style={styles.measurementInput}
-                placeholder={`${measurement.unit}`}
+                    placeholder="0"
                 keyboardType="numeric"
-              />
+                    placeholderTextColor="#A0A0A0"
+                    value={newMeasurements[measurement.id] || ''}
+                    onChangeText={(value) => handleMeasurementChange(measurement.id, value)}
+                  />
+                  <Text style={styles.measurementUnit}>{measurement.unit}</Text>
+                </View>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressBarFill,
+                      { 
+                        width: `${getProgressPercentage(newMeasurements[measurement.id], sampleBodyData.goals[measurement.id] || 100)}%`,
+                        backgroundColor: '#059669'
+                      }
+                    ]}
+                  />
+                </View>
+                <Text style={styles.measurementGoal}>
+                  Meta: {sampleBodyData.goals[measurement.id] || '--'}{measurement.unit}
+                </Text>
             </View>
           ))}
         </View>
 
+          {/* Medidas adicionales */}
+          <View style={styles.additionalMeasurementsContainer}>
+            <Text style={styles.additionalMeasurementsTitle}>Medidas Adicionales</Text>
+            <View style={styles.additionalMeasurementsGrid}>
+              {measurementTypes.slice(4).map((measurement) => (
+                <View key={measurement.id} style={styles.additionalMeasurementCard}>
+                  <View style={styles.additionalMeasurementHeader}>
+                    <Icon 
+                      name={getMeasurementIcon(measurement.id)} 
+                      size={16} 
+                      color="#6B7280" 
+                    />
+                    <Text style={styles.additionalMeasurementTitle}>{measurement.name}</Text>
+                  </View>
+                  <View style={styles.additionalMeasurementInput}>
+                    <TextInput 
+                      style={styles.additionalMeasurementTextInput}
+                      placeholder="0"
+                      keyboardType="numeric"
+                      placeholderTextColor="#A0A0A0"
+                      value={newMeasurements[measurement.id] || ''}
+                      onChangeText={(value) => handleMeasurementChange(measurement.id, value)}
+                    />
+                    <Text style={styles.additionalMeasurementUnit}>{measurement.unit}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Botones de acción mejorados */}
+          <View style={styles.measurementActions}>
+            <TouchableOpacity 
+              style={styles.saveButton}
+              onPress={handleSaveMeasurements}
+            >
+              <Icon name="save-outline" size={20} color="#ffffff" />
+              <Text style={styles.saveButtonText}>Guardar Medidas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.historyButton}
+              onPress={handleShowHistory}
+            >
+              <Icon name="bar-chart-outline" size={20} color="#059669" />
+              <Text style={styles.historyButtonText}>Ver Historial</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Notas mejoradas */}
         <View style={styles.measurementNotes}>
-          <Text style={styles.notesTitle}>NOTAS</Text>
+            <View style={styles.notesHeader}>
+              <Icon name="document-text-outline" size={20} color="#059669" />
+              <Text style={styles.notesTitle}>Notas del Día</Text>
+            </View>
           <TextInput 
             style={styles.notesInput} 
-            placeholder="Notas sobre tus medidas..."
+              placeholder="¿Cómo te sientes hoy? ¿Algún cambio notable?"
             multiline
+              placeholderTextColor="#A0A0A0"
+              value={newMeasurements.notes || ''}
+              onChangeText={(value) => handleMeasurementChange('notes', value)}
           />
         </View>
+
+          {/* Sistema de logros */}
+          <View style={styles.achievementsContainer}>
+            <View style={styles.achievementsHeader}>
+              <Text style={styles.achievementsTitle}>Logros Corporales</Text>
+              <Text style={styles.achievementsSubtitle}>
+                {getUnlockedAchievements()}/{sampleBodyData.achievements.length} desbloqueados
+              </Text>
+            </View>
+            
+            <View style={styles.achievementsGrid}>
+              {sampleBodyData.achievements.map((achievement) => (
+                <View key={achievement.id} style={[
+                  styles.achievementCard,
+                  !achievement.unlocked && styles.achievementCardLocked
+                ]}>
+                  <View style={styles.achievementIcon}>
+                    <Text style={[
+                      styles.achievementEmoji,
+                      !achievement.unlocked && styles.achievementEmojiLocked
+                    ]}>
+                      {achievement.unlocked ? achievement.icon : '🔒'}
+                    </Text>
+                  </View>
+                  <View style={styles.achievementContent}>
+                    <Text style={[
+                      styles.achievementTitle,
+                      !achievement.unlocked && styles.achievementTitleLocked
+                    ]}>
+                      {achievement.title}
+                    </Text>
+                    <Text style={[
+                      styles.achievementDescription,
+                      !achievement.unlocked && styles.achievementDescriptionLocked
+                    ]}>
+                      {achievement.description}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
       </View>
     </View>
   );
+  };
 
   // Función para renderizar Seguimiento de Entrenamientos
-  const renderWorkoutTracker = () => (
+  const renderWorkoutTracker = () => {
+    const sampleWorkoutData = {
+      weeklyStats: {
+        totalWorkouts: 5,
+        totalDuration: 420, // minutos
+        totalCalories: 2840,
+        averageIntensity: 7.5
+      },
+      currentWeek: {
+        monday: { workout: 'Cardio HIIT', duration: 45, calories: 520, completed: true },
+        tuesday: { workout: 'Fuerza Superior', duration: 60, calories: 480, completed: true },
+        wednesday: { workout: 'Descanso', duration: 0, calories: 0, completed: true },
+        thursday: { workout: 'Cardio LISS', duration: 30, calories: 300, completed: true },
+        friday: { workout: 'Fuerza Inferior', duration: 55, calories: 450, completed: true },
+        saturday: { workout: 'Yoga', duration: 40, calories: 200, completed: false },
+        sunday: { workout: 'Caminata', duration: 0, calories: 0, completed: false }
+      },
+      goals: [
+        { id: 1, title: 'Entrenar 5 días por semana', progress: 5, target: 5, completed: true },
+        { id: 2, title: 'Quemar 3000 calorías', progress: 2840, target: 3000, completed: false },
+        { id: 3, title: 'Completar 10 horas de ejercicio', progress: 7, target: 10, completed: false }
+      ],
+      achievements: [
+        { id: 1, title: 'Primera Semana', description: 'Completaste tu primera semana de entrenamiento', icon: '🏋️', unlocked: true },
+        { id: 2, title: 'Consistencia', description: '5 entrenamientos en una semana', icon: '💪', unlocked: true },
+        { id: 3, title: 'Quemador de Calorías', description: 'Quemaste 2500+ calorías en una semana', icon: '🔥', unlocked: true },
+        { id: 4, title: 'Maratón', description: '10 horas de ejercicio en un mes', icon: '🏃', unlocked: false }
+      ]
+    };
+
+    const getUnlockedAchievements = () => {
+      return sampleWorkoutData.achievements.filter(achievement => achievement.unlocked).length;
+    };
+
+    const getProgressPercentage = (current, target) => {
+      return Math.min((current / target) * 100, 100);
+    };
+
+    const getWeekDays = () => {
+      return Object.entries(sampleWorkoutData.currentWeek).map(([day, data]) => ({
+        day: day.charAt(0).toUpperCase() + day.slice(1),
+        ...data
+      }));
+    };
+
+    return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+        {/* Header estilo fitness */}
+        <View style={styles.workoutTrackerHeader}>
+          <View style={styles.workoutTrackerHeaderContent}>
+            <View style={styles.workoutTrackerIconContainer}>
+              <Icon name="barbell-outline" size={24} color="#FFFFFF" />
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Seguimiento de Entrenamientos</Text>
-          <Text style={styles.sectionSubtitle}>
-            Registra tus entrenamientos
+            <View style={styles.workoutTrackerHeaderText}>
+              <Text style={styles.workoutTrackerHeaderTitle}>
+                Seguimiento de Entrenamientos
+              </Text>
+              <Text style={styles.workoutTrackerHeaderSubtitle}>
+                Monitorea tu progreso de fitness
           </Text>
         </View>
+          </View>
+          <View style={styles.workoutTrackerHeaderBadge}>
+            <Icon name="fitness-outline" size={16} color="#059669" />
+          </View>
+        </View>
+
+        {/* Resumen de estadísticas */}
+        <View style={styles.workoutTrackerSummary}>
+          <View style={styles.workoutTrackerSummaryCard}>
+            <View style={styles.workoutTrackerSummaryIconContainer}>
+              <Icon name="barbell-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.workoutTrackerSummaryContent}>
+              <Text style={styles.workoutTrackerSummaryValue}>{sampleWorkoutData.weeklyStats.totalWorkouts}</Text>
+              <Text style={styles.workoutTrackerSummaryLabel}>Entrenamientos</Text>
+            </View>
+          </View>
+          <View style={styles.workoutTrackerSummaryCard}>
+            <View style={styles.workoutTrackerSummaryIconContainer}>
+              <Icon name="time-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.workoutTrackerSummaryContent}>
+              <Text style={styles.workoutTrackerSummaryValue}>{sampleWorkoutData.weeklyStats.totalDuration}m</Text>
+              <Text style={styles.workoutTrackerSummaryLabel}>Duración</Text>
+            </View>
+          </View>
+          <View style={styles.workoutTrackerSummaryCard}>
+            <View style={styles.workoutTrackerSummaryIconContainer}>
+              <Icon name="flame-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.workoutTrackerSummaryContent}>
+              <Text style={styles.workoutTrackerSummaryValue}>{sampleWorkoutData.weeklyStats.totalCalories}</Text>
+              <Text style={styles.workoutTrackerSummaryLabel}>Calorías</Text>
+            </View>
+          </View>
+          <View style={styles.workoutTrackerSummaryCard}>
+            <View style={styles.workoutTrackerSummaryIconContainer}>
+              <Icon name="pulse-outline" size={20} color="#EC4899" />
+            </View>
+            <View style={styles.workoutTrackerSummaryContent}>
+              <Text style={styles.workoutTrackerSummaryValue}>{sampleWorkoutData.weeklyStats.averageIntensity}/10</Text>
+              <Text style={styles.workoutTrackerSummaryLabel}>Intensidad</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para agregar entrenamiento */}
+        <View style={styles.addWorkoutContainer}>
         <TouchableOpacity 
-          style={styles.addButton}
+            style={styles.addWorkoutButton}
           onPress={() => setShowAddWorkoutModal(true)}
         >
-          <Icon name="add" size={20} color="#ffffff" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addWorkoutText}>Registrar Entrenamiento</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.workoutContainer}>
-        <View style={styles.workoutHeader}>
-          <Text style={styles.workoutDate}>Fecha de Inicio:</Text>
-          <Text style={styles.workoutDate}>Fecha de Vencimiento:</Text>
+        {/* Progreso semanal */}
+        <View style={styles.weeklyWorkoutContainer}>
+          <View style={styles.weeklyWorkoutHeader}>
+            <Text style={styles.weeklyWorkoutTitle}>Esta Semana</Text>
+            <TouchableOpacity style={styles.viewStatsButton}>
+              <Icon name="analytics-outline" size={16} color="#059669" />
+              <Text style={styles.viewStatsText}>Ver Estadísticas</Text>
+            </TouchableOpacity>
         </View>
 
-        <View style={styles.workoutGoals}>
-          <Text style={styles.goalsTitle}>OBJETIVOS</Text>
-          <View style={styles.goalsGrid}>
-            {[1, 2, 3].map((goal, index) => (
-              <View key={index} style={styles.workoutGoalCard}>
-                <Text style={styles.goalCardTitle}>OBJETIVO {goal}</Text>
-                <TextInput 
-                  style={styles.goalCardInput} 
-                  placeholder="Describe tu objetivo..."
-                  multiline
-                />
-                <Text style={styles.actionStepsTitle}>PASOS DE ACCIÓN</Text>
-                {[1, 2, 3].map((step, stepIndex) => (
-                  <View key={stepIndex} style={styles.actionStep}>
-                    <View style={styles.actionCheckbox} />
-                    <TextInput 
-                      style={styles.actionInput} 
-                      placeholder="Paso de acción..."
-                    />
-                  </View>
-                ))}
+          <View style={styles.weeklyWorkoutGrid}>
+            {getWeekDays().map((day, index) => (
+              <View key={index} style={styles.dayWorkoutCard}>
+                <Text style={styles.dayWorkoutLabel}>{day.day}</Text>
+                <View style={styles.dayWorkoutContent}>
+                  {day.completed ? (
+                    <>
+                      <Icon name="checkmark-circle" size={20} color="#059669" />
+                      <Text style={styles.dayWorkoutTitle}>{day.workout}</Text>
+                      <Text style={styles.dayWorkoutDuration}>{day.duration}m</Text>
+                      <Text style={styles.dayWorkoutCalories}>{day.calories} cal</Text>
+                    </>
+                  ) : day.workout === 'Descanso' ? (
+                    <>
+                      <Icon name="bed-outline" size={20} color="#6B7280" />
+                      <Text style={styles.dayWorkoutTitle}>Descanso</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="ellipse-outline" size={20} color="#E5E7EB" />
+                      <Text style={styles.dayWorkoutTitle}>{day.workout}</Text>
+                      <Text style={styles.dayWorkoutPending}>Pendiente</Text>
+                    </>
+                  )}
+                </View>
               </View>
             ))}
           </View>
         </View>
 
-        <View style={styles.workoutNotes}>
-          <Text style={styles.notesTitle}>NOTAS</Text>
+        {/* Objetivos de entrenamiento */}
+        <View style={styles.workoutGoalsContainer}>
+          <View style={styles.workoutGoalsHeader}>
+            <Text style={styles.workoutGoalsTitle}>Objetivos de la Semana</Text>
+            <Text style={styles.workoutGoalsSubtitle}>
+              {sampleWorkoutData.goals.filter(goal => goal.completed).length}/{sampleWorkoutData.goals.length} completados
+            </Text>
+          </View>
+          
+          <View style={styles.workoutGoalsList}>
+            {sampleWorkoutData.goals.map((goal) => (
+              <View key={goal.id} style={styles.workoutGoalCard}>
+                <View style={styles.workoutGoalHeader}>
+                  <View style={styles.workoutGoalIcon}>
+                    <Icon 
+                      name={goal.completed ? "checkmark-circle" : "ellipse-outline"} 
+                      size={20} 
+                      color={goal.completed ? "#059669" : "#E5E7EB"} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.workoutGoalTitle,
+                    goal.completed && styles.workoutGoalTitleCompleted
+                  ]}>
+                    {goal.title}
+                  </Text>
+                </View>
+                <View style={styles.workoutGoalProgress}>
+                  <View style={styles.workoutGoalProgressBar}>
+                    <View 
+                      style={[
+                        styles.workoutGoalProgressFill,
+                        { 
+                          width: `${getProgressPercentage(goal.progress, goal.target)}%`,
+                          backgroundColor: goal.completed ? '#059669' : '#F59E0B'
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.workoutGoalProgressText}>
+                    {goal.progress}/{goal.target}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Notas de entrenamiento */}
+        <View style={styles.workoutNotesContainer}>
+          <View style={styles.workoutNotesHeader}>
+            <Icon name="document-text-outline" size={20} color="#059669" />
+            <Text style={styles.workoutNotesTitle}>Notas de Entrenamiento</Text>
+          </View>
           <TextInput 
-            style={styles.notesInput} 
-            placeholder="Notas sobre tu entrenamiento..."
+            style={styles.workoutNotesInput} 
+            placeholder="¿Cómo te sentiste hoy? ¿Algún logro o dificultad?"
             multiline
+            placeholderTextColor="#A0A0A0"
           />
         </View>
+
+        {/* Sistema de logros */}
+        <View style={styles.workoutAchievementsContainer}>
+          <View style={styles.workoutAchievementsHeader}>
+            <Text style={styles.workoutAchievementsTitle}>Logros de Fitness</Text>
+            <Text style={styles.workoutAchievementsSubtitle}>
+              {getUnlockedAchievements()}/{sampleWorkoutData.achievements.length} desbloqueados
+            </Text>
+          </View>
+          
+          <View style={styles.workoutAchievementsGrid}>
+            {sampleWorkoutData.achievements.map((achievement) => (
+              <View key={achievement.id} style={[
+                styles.workoutAchievementCard,
+                !achievement.unlocked && styles.workoutAchievementCardLocked
+              ]}>
+                <View style={styles.workoutAchievementIcon}>
+                  <Text style={[
+                    styles.workoutAchievementEmoji,
+                    !achievement.unlocked && styles.workoutAchievementEmojiLocked
+                  ]}>
+                    {achievement.unlocked ? achievement.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.workoutAchievementContent}>
+                  <Text style={[
+                    styles.workoutAchievementTitle,
+                    !achievement.unlocked && styles.workoutAchievementTitleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.workoutAchievementDescription,
+                    !achievement.unlocked && styles.workoutAchievementDescriptionLocked
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
       </View>
     </View>
   );
+  };
 
   // Función para renderizar Pérdida de Peso
-  const renderWeightLossTracker = () => (
+  const renderWeightLossTracker = () => {
+    const sampleWeightData = {
+      currentWeight: 75.2,
+      startingWeight: 82.5,
+      targetWeight: 70.0,
+      weightLost: 7.3,
+      weightToLose: 5.2,
+      weeklyStats: {
+        thisWeek: -0.8,
+        lastWeek: -1.2,
+        averageWeekly: -0.6,
+        totalWeeks: 12
+      },
+      recentWeights: [
+        { date: '2024-01-15', weight: 75.2, change: -0.3 },
+        { date: '2024-01-08', weight: 75.5, change: -0.5 },
+        { date: '2024-01-01', weight: 76.0, change: -0.8 },
+        { date: '2023-12-25', weight: 76.8, change: -0.4 },
+        { date: '2023-12-18', weight: 77.2, change: -0.6 }
+      ],
+      goals: [
+        { id: 1, title: 'Peso objetivo', target: 70.0, current: 75.2, progress: 75.2, completed: false },
+        { id: 2, title: 'Perder 10kg', target: 10.0, current: 7.3, progress: 7.3, completed: false },
+        { id: 3, title: 'Mantener peso por 1 mes', target: 30, current: 0, progress: 0, completed: false }
+      ],
+      achievements: [
+        { id: 1, title: 'Primer Kilo', description: 'Perdiste tu primer kilogramo', icon: '🎯', unlocked: true },
+        { id: 2, title: 'Consistencia', description: 'Registraste peso por 7 días seguidos', icon: '📅', unlocked: true },
+        { id: 3, title: 'Meta Semanal', description: 'Perdiste 0.5kg en una semana', icon: '⚖️', unlocked: true },
+        { id: 4, title: 'Maratón', description: 'Perdiste 5kg en total', icon: '🏃', unlocked: false }
+      ]
+    };
+
+    const getUnlockedAchievements = () => {
+      return sampleWeightData.achievements.filter(achievement => achievement.unlocked).length;
+    };
+
+    const getProgressPercentage = (current, target) => {
+      return Math.min((current / target) * 100, 100);
+    };
+
+    const getWeightTrend = () => {
+      const recent = sampleWeightData.recentWeights.slice(0, 2);
+      if (recent.length < 2) return 'neutral';
+      return recent[0].weight < recent[1].weight ? 'down' : 'up';
+    };
+
+    return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+        {/* Header estilo fitness */}
+        <View style={styles.weightLossHeader}>
+          <View style={styles.weightLossHeaderContent}>
+            <View style={styles.weightLossIconContainer}>
+              <Icon name="scale-outline" size={24} color="#FFFFFF" />
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Pérdida de Peso</Text>
-          <Text style={styles.sectionSubtitle}>
-            Controla tu peso y objetivos
+            <View style={styles.weightLossHeaderText}>
+              <Text style={styles.weightLossHeaderTitle}>
+                Pérdida de Peso
+              </Text>
+              <Text style={styles.weightLossHeaderSubtitle}>
+                Monitorea tu progreso hacia tu peso ideal
           </Text>
         </View>
+          </View>
+          <View style={styles.weightLossHeaderBadge}>
+            <Icon name="trending-down-outline" size={16} color="#059669" />
+          </View>
+        </View>
+
+        {/* Resumen de estadísticas */}
+        <View style={styles.weightLossSummary}>
+          <View style={styles.weightLossSummaryCard}>
+            <View style={styles.weightLossSummaryIconContainer}>
+              <Icon name="scale-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.weightLossSummaryContent}>
+              <Text style={styles.weightLossSummaryValue}>{sampleWeightData.currentWeight}kg</Text>
+              <Text style={styles.weightLossSummaryLabel}>Peso Actual</Text>
+            </View>
+          </View>
+          <View style={styles.weightLossSummaryCard}>
+            <View style={styles.weightLossSummaryIconContainer}>
+              <Icon name="trending-down-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.weightLossSummaryContent}>
+              <Text style={styles.weightLossSummaryValue}>-{sampleWeightData.weightLost}kg</Text>
+              <Text style={styles.weightLossSummaryLabel}>Perdido</Text>
+            </View>
+          </View>
+          <View style={styles.weightLossSummaryCard}>
+            <View style={styles.weightLossSummaryIconContainer}>
+              <Icon name="flag-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.weightLossSummaryContent}>
+              <Text style={styles.weightLossSummaryValue}>{sampleWeightData.weightToLose}kg</Text>
+              <Text style={styles.weightLossSummaryLabel}>Restante</Text>
+            </View>
+          </View>
+          <View style={styles.weightLossSummaryCard}>
+            <View style={styles.weightLossSummaryIconContainer}>
+              <Icon name="calendar-outline" size={20} color="#EC4899" />
+            </View>
+            <View style={styles.weightLossSummaryContent}>
+              <Text style={styles.weightLossSummaryValue}>{sampleWeightData.weeklyStats.totalWeeks}</Text>
+              <Text style={styles.weightLossSummaryLabel}>Semanas</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Progreso principal */}
+        <View style={styles.weightProgressContainer}>
+          <View style={styles.weightProgressHeader}>
+            <Text style={styles.weightProgressTitle}>Progreso hacia tu Meta</Text>
+            <Text style={styles.weightProgressSubtitle}>
+              {sampleWeightData.currentWeight}kg de {sampleWeightData.targetWeight}kg
+            </Text>
+          </View>
+          
+          <View style={styles.weightProgressBar}>
+            <View 
+              style={[
+                styles.weightProgressFill,
+                { 
+                  width: `${getProgressPercentage(sampleWeightData.weightLost, sampleWeightData.startingWeight - sampleWeightData.targetWeight)}%`,
+                  backgroundColor: '#059669'
+                }
+              ]}
+            />
+          </View>
+          
+          <View style={styles.weightProgressStats}>
+            <View style={styles.weightProgressStat}>
+              <Text style={styles.weightProgressStatValue}>{sampleWeightData.startingWeight}kg</Text>
+              <Text style={styles.weightProgressStatLabel}>Inicio</Text>
+            </View>
+            <View style={styles.weightProgressStat}>
+              <Text style={styles.weightProgressStatValue}>{sampleWeightData.currentWeight}kg</Text>
+              <Text style={styles.weightProgressStatLabel}>Actual</Text>
+            </View>
+            <View style={styles.weightProgressStat}>
+              <Text style={styles.weightProgressStatValue}>{sampleWeightData.targetWeight}kg</Text>
+              <Text style={styles.weightProgressStatLabel}>Meta</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Botón para registrar peso */}
+        <View style={styles.addWeightContainer}>
         <TouchableOpacity 
-          style={styles.addButton}
+            style={styles.addWeightButton}
           onPress={() => setShowAddWeightGoalModal(true)}
         >
-          <Icon name="add" size={20} color="#ffffff" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addWeightText}>Registrar Peso</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.weightLossContainer}>
-        <View style={styles.weightLossGrid}>
-          {Array.from({length: 70}, (_, i) => i + 1).map((number) => (
-            <TouchableOpacity key={number} style={styles.weightLossHeart}>
-              <Text style={styles.weightLossNumber}>{number}</Text>
+        {/* Historial de peso */}
+        <View style={styles.weightHistoryContainer}>
+          <View style={styles.weightHistoryHeader}>
+            <Text style={styles.weightHistoryTitle}>Historial Reciente</Text>
+            <TouchableOpacity style={styles.viewStatsButton}>
+              <Icon name="analytics-outline" size={16} color="#059669" />
+              <Text style={styles.viewStatsText}>Ver Gráfico</Text>
             </TouchableOpacity>
-          ))}
+          </View>
+          
+          <View style={styles.weightHistoryList}>
+            {sampleWeightData.recentWeights.map((entry, index) => (
+              <View key={index} style={styles.weightHistoryItem}>
+                <View style={styles.weightHistoryDate}>
+                  <Text style={styles.weightHistoryDateText}>
+                    {new Date(entry.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                  </Text>
+                </View>
+                <View style={styles.weightHistoryWeight}>
+                  <Text style={styles.weightHistoryWeightValue}>{entry.weight}kg</Text>
+                  <Text style={[
+                    styles.weightHistoryChange,
+                    { color: entry.change < 0 ? '#059669' : entry.change > 0 ? '#EF4444' : '#6B7280' }
+                  ]}>
+                    {entry.change < 0 ? '' : '+'}{entry.change}kg
+                  </Text>
+                </View>
+                <View style={styles.weightHistoryTrend}>
+                  <Icon 
+                    name={entry.change < 0 ? "trending-down" : entry.change > 0 ? "trending-up" : "remove"} 
+                    size={16} 
+                    color={entry.change < 0 ? '#059669' : entry.change > 0 ? '#EF4444' : '#6B7280'} 
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
 
-        <Text style={styles.weightLossLabel}>LIBRAS PERDIDAS/GANADAS</Text>
+        {/* Objetivos de peso */}
+        <View style={styles.weightGoalsContainer}>
+          <View style={styles.weightGoalsHeader}>
+            <Text style={styles.weightGoalsTitle}>Objetivos de Peso</Text>
+            <Text style={styles.weightGoalsSubtitle}>
+              {sampleWeightData.goals.filter(goal => goal.completed).length}/{sampleWeightData.goals.length} completados
+            </Text>
+          </View>
+          
+          <View style={styles.weightGoalsList}>
+            {sampleWeightData.goals.map((goal) => (
+              <View key={goal.id} style={styles.weightGoalCard}>
+                <View style={styles.weightGoalHeader}>
+                  <View style={styles.weightGoalIcon}>
+                    <Icon 
+                      name={goal.completed ? "checkmark-circle" : "ellipse-outline"} 
+                      size={20} 
+                      color={goal.completed ? "#059669" : "#E5E7EB"} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.weightGoalTitle,
+                    goal.completed && styles.weightGoalTitleCompleted
+                  ]}>
+                    {goal.title}
+                  </Text>
+                </View>
+                <View style={styles.weightGoalProgress}>
+                  <View style={styles.weightGoalProgressBar}>
+                    <View 
+                      style={[
+                        styles.weightGoalProgressFill,
+                        { 
+                          width: `${getProgressPercentage(goal.current, goal.target)}%`,
+                          backgroundColor: goal.completed ? '#059669' : '#F59E0B'
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.weightGoalProgressText}>
+                    {goal.current}/{goal.target}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
 
-        <TouchableOpacity style={styles.getNowButton}>
-          <Text style={styles.getNowText}>Obtener ahora</Text>
-          <Icon name="arrow-forward" size={20} color="#000000" />
-        </TouchableOpacity>
+        {/* Notas de peso */}
+        <View style={styles.weightNotesContainer}>
+          <View style={styles.weightNotesHeader}>
+            <Icon name="document-text-outline" size={20} color="#059669" />
+            <Text style={styles.weightNotesTitle}>Notas de Progreso</Text>
+          </View>
+          <TextInput 
+            style={styles.weightNotesInput} 
+            placeholder="¿Cómo te sientes con tu progreso? ¿Algún desafío o logro?"
+            multiline
+            placeholderTextColor="#A0A0A0"
+          />
+        </View>
 
-        <Text style={styles.priceText}>$95.00</Text>
+        {/* Sistema de logros */}
+        <View style={styles.weightAchievementsContainer}>
+          <View style={styles.weightAchievementsHeader}>
+            <Text style={styles.weightAchievementsTitle}>Logros de Pérdida de Peso</Text>
+            <Text style={styles.weightAchievementsSubtitle}>
+              {getUnlockedAchievements()}/{sampleWeightData.achievements.length} desbloqueados
+            </Text>
+          </View>
+          
+          <View style={styles.weightAchievementsGrid}>
+            {sampleWeightData.achievements.map((achievement) => (
+              <View key={achievement.id} style={[
+                styles.weightAchievementCard,
+                !achievement.unlocked && styles.weightAchievementCardLocked
+              ]}>
+                <View style={styles.weightAchievementIcon}>
+                  <Text style={[
+                    styles.weightAchievementEmoji,
+                    !achievement.unlocked && styles.weightAchievementEmojiLocked
+                  ]}>
+                    {achievement.unlocked ? achievement.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.weightAchievementContent}>
+                  <Text style={[
+                    styles.weightAchievementTitle,
+                    !achievement.unlocked && styles.weightAchievementTitleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.weightAchievementDescription,
+                    !achievement.unlocked && styles.weightAchievementDescriptionLocked
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
       </View>
     </View>
   );
+  };
 
   // Función para renderizar Seguimiento Nutricional
-  const renderNutritionTracker = () => (
+  const renderNutritionTracker = () => {
+    const sampleNutritionData = {
+      dailyStats: {
+        totalCalories: 2150,
+        targetCalories: 2200,
+        protein: 120,
+        targetProtein: 130,
+        carbs: 280,
+        targetCarbs: 300,
+        fats: 85,
+        targetFats: 90,
+        water: 2.2,
+        targetWater: 2.5
+      },
+      meals: [
+        { 
+          id: 'breakfast', 
+          name: 'Desayuno', 
+          icon: 'sunny-outline',
+          calories: 450,
+          protein: 25,
+          carbs: 45,
+          fats: 18,
+          completed: true
+        },
+        { 
+          id: 'lunch', 
+          name: 'Almuerzo', 
+          icon: 'restaurant-outline',
+          calories: 650,
+          protein: 35,
+          carbs: 75,
+          fats: 22,
+          completed: true
+        },
+        { 
+          id: 'dinner', 
+          name: 'Cena', 
+          icon: 'moon-outline',
+          calories: 550,
+          protein: 30,
+          carbs: 60,
+          fats: 20,
+          completed: false
+        },
+        { 
+          id: 'snacks', 
+          name: 'Snacks', 
+          icon: 'cafe-outline',
+          calories: 200,
+          protein: 8,
+          carbs: 25,
+          fats: 8,
+          completed: true
+        }
+      ],
+      supplements: [
+        { id: 1, name: 'Multivitamínico', taken: true, time: '08:00' },
+        { id: 2, name: 'Omega-3', taken: true, time: '12:00' },
+        { id: 3, name: 'Proteína', taken: false, time: '15:00' },
+        { id: 4, name: 'Magnesio', taken: false, time: '20:00' }
+      ],
+      goals: [
+        { id: 1, title: 'Calorías diarias', current: 2150, target: 2200, unit: 'kcal' },
+        { id: 2, title: 'Proteína diaria', current: 120, target: 130, unit: 'g' },
+        { id: 3, title: 'Hidratación', current: 2.2, target: 2.5, unit: 'L' },
+        { id: 4, title: 'Comidas completas', current: 3, target: 4, unit: 'comidas' }
+      ],
+      achievements: [
+        { id: 1, title: 'Primer Día', description: 'Completaste tu primer día de seguimiento', icon: '🍎', unlocked: true },
+        { id: 2, title: 'Hidratado', description: 'Bebiste 2L+ de agua en un día', icon: '💧', unlocked: true },
+        { id: 3, title: 'Proteína Power', description: 'Alcanzaste tu meta de proteína', icon: '💪', unlocked: true },
+        { id: 4, title: 'Consistencia', description: '7 días seguidos registrando comidas', icon: '📅', unlocked: false }
+      ]
+    };
+
+    const getUnlockedAchievements = () => {
+      return sampleNutritionData.achievements.filter(achievement => achievement.unlocked).length;
+    };
+
+    const getProgressPercentage = (current, target) => {
+      return Math.min((current / target) * 100, 100);
+    };
+
+    const getMacroColor = (macro) => {
+      const colors = {
+        protein: '#EF4444',
+        carbs: '#F59E0B',
+        fats: '#EC4899',
+        calories: '#059669'
+      };
+      return colors[macro] || '#059669';
+    };
+
+    return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerDecoration}>
-          <Image
-            source={require('../../android/app/src/main/assets/salud.png')}
-            style={styles.mascotImage}
-            resizeMode="contain"
-          />
+        {/* Header estilo fitness */}
+        <View style={styles.nutritionHeader}>
+          <View style={styles.nutritionHeaderContent}>
+            <View style={styles.nutritionIconContainer}>
+              <Icon name="nutrition-outline" size={24} color="#FFFFFF" />
         </View>
-        <View style={styles.headerContent}>
-          <Text style={styles.sectionTitle}>Seguimiento Nutricional</Text>
-          <Text style={styles.sectionSubtitle}>
-            Monitorea tu alimentación
+            <View style={styles.nutritionHeaderText}>
+              <Text style={styles.nutritionHeaderTitle}>
+                Seguimiento Nutricional
+              </Text>
+              <Text style={styles.nutritionHeaderSubtitle}>
+                Monitorea tu alimentación y macronutrientes
           </Text>
         </View>
+          </View>
+          <View style={styles.nutritionHeaderBadge}>
+            <Icon name="restaurant-outline" size={16} color="#059669" />
+          </View>
+        </View>
+
+        {/* Resumen de macronutrientes */}
+        <View style={styles.nutritionSummary}>
+          <View style={styles.nutritionSummaryCard}>
+            <View style={styles.nutritionSummaryIconContainer}>
+              <Icon name="flame-outline" size={20} color="#059669" />
+            </View>
+            <View style={styles.nutritionSummaryContent}>
+              <Text style={styles.nutritionSummaryValue}>{sampleNutritionData.dailyStats.totalCalories}</Text>
+              <Text style={styles.nutritionSummaryLabel}>Calorías</Text>
+              <Text style={styles.nutritionSummaryTarget}>/ {sampleNutritionData.dailyStats.targetCalories}</Text>
+            </View>
+          </View>
+          <View style={styles.nutritionSummaryCard}>
+            <View style={styles.nutritionSummaryIconContainer}>
+              <Icon name="fitness-outline" size={20} color="#EF4444" />
+            </View>
+            <View style={styles.nutritionSummaryContent}>
+              <Text style={styles.nutritionSummaryValue}>{sampleNutritionData.dailyStats.protein}g</Text>
+              <Text style={styles.nutritionSummaryLabel}>Proteína</Text>
+              <Text style={styles.nutritionSummaryTarget}>/ {sampleNutritionData.dailyStats.targetProtein}g</Text>
+            </View>
+          </View>
+          <View style={styles.nutritionSummaryCard}>
+            <View style={styles.nutritionSummaryIconContainer}>
+              <Icon name="leaf-outline" size={20} color="#F59E0B" />
+            </View>
+            <View style={styles.nutritionSummaryContent}>
+              <Text style={styles.nutritionSummaryValue}>{sampleNutritionData.dailyStats.carbs}g</Text>
+              <Text style={styles.nutritionSummaryLabel}>Carbohidratos</Text>
+              <Text style={styles.nutritionSummaryTarget}>/ {sampleNutritionData.dailyStats.targetCarbs}g</Text>
+            </View>
+          </View>
+          <View style={styles.nutritionSummaryCard}>
+            <View style={styles.nutritionSummaryIconContainer}>
+              <Icon name="water-outline" size={20} color="#EC4899" />
+            </View>
+            <View style={styles.nutritionSummaryContent}>
+              <Text style={styles.nutritionSummaryValue}>{sampleNutritionData.dailyStats.fats}g</Text>
+              <Text style={styles.nutritionSummaryLabel}>Grasas</Text>
+              <Text style={styles.nutritionSummaryTarget}>/ {sampleNutritionData.dailyStats.targetFats}g</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Progreso de hidratación */}
+        <View style={styles.waterProgressContainer}>
+          <View style={styles.waterProgressHeader}>
+            <View style={styles.waterProgressIcon}>
+              <Icon name="water-outline" size={24} color="#059669" />
+            </View>
+            <View style={styles.waterProgressContent}>
+              <Text style={styles.waterProgressTitle}>Hidratación</Text>
+              <Text style={styles.waterProgressSubtitle}>
+                {sampleNutritionData.dailyStats.water}L / {sampleNutritionData.dailyStats.targetWater}L
+              </Text>
+            </View>
+            <Text style={styles.waterProgressPercentage}>
+              {Math.round(getProgressPercentage(sampleNutritionData.dailyStats.water, sampleNutritionData.dailyStats.targetWater))}%
+            </Text>
+          </View>
+          <View style={styles.waterProgressBar}>
+            <View 
+              style={[
+                styles.waterProgressFill,
+                { 
+                  width: `${getProgressPercentage(sampleNutritionData.dailyStats.water, sampleNutritionData.dailyStats.targetWater)}%`,
+                  backgroundColor: '#059669'
+                }
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* Botón para agregar comida */}
+        <View style={styles.addMealContainer}>
         <TouchableOpacity 
-          style={styles.addButton}
+            style={styles.addMealButton}
           onPress={() => setShowNutritionDatePicker(true)}
         >
-          <Icon name="add" size={20} color="#ffffff" />
+            <Icon name="add-circle-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.addMealText}>Registrar Comida</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.nutritionContainer}>
-        <View style={styles.nutritionMeals}>
-          <View style={styles.mealSection}>
-            <Text style={styles.mealTitle}>DESAYUNO</Text>
-            <View style={styles.nutritionInputs}>
-              <TextInput style={styles.nutritionInput} placeholder="Calorías" />
-              <TextInput style={styles.nutritionInput} placeholder="Proteína" />
-              <TextInput style={styles.nutritionInput} placeholder="Carbohidratos" />
-              <TextInput style={styles.nutritionInput} placeholder="Grasas" />
-            </View>
+        {/* Seguimiento de comidas */}
+        <View style={styles.mealsContainer}>
+          <View style={styles.mealsHeader}>
+            <Text style={styles.mealsTitle}>Comidas del Día</Text>
+            <Text style={styles.mealsSubtitle}>
+              {sampleNutritionData.meals.filter(meal => meal.completed).length}/{sampleNutritionData.meals.length} completadas
+            </Text>
           </View>
 
-          <View style={styles.mealSection}>
-            <Text style={styles.mealTitle}>ALMUERZO</Text>
-            <View style={styles.nutritionInputs}>
-              <TextInput style={styles.nutritionInput} placeholder="Calorías" />
-              <TextInput style={styles.nutritionInput} placeholder="Proteína" />
-              <TextInput style={styles.nutritionInput} placeholder="Carbohidratos" />
-              <TextInput style={styles.nutritionInput} placeholder="Grasas" />
+          <View style={styles.mealsList}>
+            {sampleNutritionData.meals.map((meal) => (
+              <View key={meal.id} style={styles.mealCard}>
+                <View style={styles.mealCardHeader}>
+                  <View style={styles.mealCardIcon}>
+                    <Icon 
+                      name={meal.completed ? "checkmark-circle" : "ellipse-outline"} 
+                      size={20} 
+                      color={meal.completed ? "#059669" : "#E5E7EB"} 
+                    />
             </View>
+                  <View style={styles.mealCardInfo}>
+                    <Text style={styles.mealCardName}>{meal.name}</Text>
+                    <Text style={styles.mealCardCalories}>{meal.calories} kcal</Text>
           </View>
-
-          <View style={styles.mealSection}>
-            <Text style={styles.mealTitle}>CENA</Text>
-            <View style={styles.nutritionInputs}>
-              <TextInput style={styles.nutritionInput} placeholder="Calorías" />
-              <TextInput style={styles.nutritionInput} placeholder="Proteína" />
-              <TextInput style={styles.nutritionInput} placeholder="Carbohidratos" />
-              <TextInput style={styles.nutritionInput} placeholder="Grasas" />
+                  <View style={styles.mealCardMacros}>
+                    <View style={styles.macroItem}>
+                      <Text style={[styles.macroValue, { color: getMacroColor('protein') }]}>
+                        {meal.protein}g
+                      </Text>
+                      <Text style={styles.macroLabel}>P</Text>
             </View>
+                    <View style={styles.macroItem}>
+                      <Text style={[styles.macroValue, { color: getMacroColor('carbs') }]}>
+                        {meal.carbs}g
+                      </Text>
+                      <Text style={styles.macroLabel}>C</Text>
           </View>
-
-          <View style={styles.mealSection}>
-            <Text style={styles.mealTitle}>SNACKS</Text>
-            <View style={styles.nutritionInputs}>
-              <TextInput style={styles.nutritionInput} placeholder="Calorías" />
-              <TextInput style={styles.nutritionInput} placeholder="Proteína" />
-              <TextInput style={styles.nutritionInput} placeholder="Carbohidratos" />
-              <TextInput style={styles.nutritionInput} placeholder="Grasas" />
+                    <View style={styles.macroItem}>
+                      <Text style={[styles.macroValue, { color: getMacroColor('fats') }]}>
+                        {meal.fats}g
+                      </Text>
+                      <Text style={styles.macroLabel}>G</Text>
             </View>
+                  </View>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 
-        <View style={styles.supplementsSection}>
-          <Text style={styles.supplementsTitle}>SUPLEMENTOS</Text>
+        {/* Suplementos */}
+        <View style={styles.supplementsContainer}>
+          <View style={styles.supplementsHeader}>
+            <Text style={styles.supplementsTitle}>Suplementos</Text>
+            <Text style={styles.supplementsSubtitle}>
+              {sampleNutritionData.supplements.filter(sup => sup.taken).length}/{sampleNutritionData.supplements.length} tomados
+            </Text>
+          </View>
+          
           <View style={styles.supplementsGrid}>
-            {supplements.map((supplement, index) => (
-              <TouchableOpacity key={index} style={styles.supplementButton}>
-                <Text style={styles.supplementText}>{supplement}</Text>
+            {sampleNutritionData.supplements.map((supplement) => (
+              <TouchableOpacity 
+                key={supplement.id} 
+                style={[
+                  styles.supplementCard,
+                  supplement.taken && styles.supplementCardTaken
+                ]}
+              >
+                <View style={styles.supplementCardContent}>
+                  <Icon 
+                    name={supplement.taken ? "checkmark-circle" : "ellipse-outline"} 
+                    size={16} 
+                    color={supplement.taken ? "#059669" : "#E5E7EB"} 
+                  />
+                  <Text style={[
+                    styles.supplementName,
+                    supplement.taken && styles.supplementNameTaken
+                  ]}>
+                    {supplement.name}
+                  </Text>
+                  <Text style={styles.supplementTime}>{supplement.time}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        <View style={styles.waterSection}>
-          <Text style={styles.waterTitle}>AGUA</Text>
-          <TextInput 
-            style={styles.waterInput} 
-            placeholder="Litros consumidos"
-            keyboardType="numeric"
-          />
+        {/* Objetivos nutricionales */}
+        <View style={styles.nutritionGoalsContainer}>
+          <View style={styles.nutritionGoalsHeader}>
+            <Text style={styles.nutritionGoalsTitle}>Objetivos del Día</Text>
+            <Text style={styles.nutritionGoalsSubtitle}>
+              {sampleNutritionData.goals.filter(goal => getProgressPercentage(goal.current, goal.target) >= 100).length}/{sampleNutritionData.goals.length} completados
+            </Text>
+          </View>
+          
+          <View style={styles.nutritionGoalsList}>
+            {sampleNutritionData.goals.map((goal) => (
+              <View key={goal.id} style={styles.nutritionGoalCard}>
+                <View style={styles.nutritionGoalHeader}>
+                  <Text style={styles.nutritionGoalTitle}>{goal.title}</Text>
+                  <Text style={styles.nutritionGoalValues}>
+                    {goal.current}/{goal.target} {goal.unit}
+                  </Text>
+                </View>
+                <View style={styles.nutritionGoalProgress}>
+                  <View style={styles.nutritionGoalProgressBar}>
+                    <View 
+                      style={[
+                        styles.nutritionGoalProgressFill,
+                        { 
+                          width: `${getProgressPercentage(goal.current, goal.target)}%`,
+                          backgroundColor: getProgressPercentage(goal.current, goal.target) >= 100 ? '#059669' : '#F59E0B'
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.nutritionGoalPercentage}>
+                    {Math.round(getProgressPercentage(goal.current, goal.target))}%
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Sistema de logros */}
+        <View style={styles.nutritionAchievementsContainer}>
+          <View style={styles.nutritionAchievementsHeader}>
+            <Text style={styles.nutritionAchievementsTitle}>Logros Nutricionales</Text>
+            <Text style={styles.nutritionAchievementsSubtitle}>
+              {getUnlockedAchievements()}/{sampleNutritionData.achievements.length} desbloqueados
+            </Text>
+          </View>
+          
+          <View style={styles.nutritionAchievementsGrid}>
+            {sampleNutritionData.achievements.map((achievement) => (
+              <View key={achievement.id} style={[
+                styles.nutritionAchievementCard,
+                !achievement.unlocked && styles.nutritionAchievementCardLocked
+              ]}>
+                <View style={styles.nutritionAchievementIcon}>
+                  <Text style={[
+                    styles.nutritionAchievementEmoji,
+                    !achievement.unlocked && styles.nutritionAchievementEmojiLocked
+                  ]}>
+                    {achievement.unlocked ? achievement.icon : '🔒'}
+                  </Text>
+                </View>
+                <View style={styles.nutritionAchievementContent}>
+                  <Text style={[
+                    styles.nutritionAchievementTitle,
+                    !achievement.unlocked && styles.nutritionAchievementTitleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.nutritionAchievementDescription,
+                    !achievement.unlocked && styles.nutritionAchievementDescriptionLocked
+                  ]}>
+                    {achievement.description}
+                  </Text>
+                </View>
+              </View>
+            ))}
         </View>
       </View>
     </View>
   );
+  };
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -2404,6 +4077,38 @@ const HealthSections = () => {
       {/* Modales de ejercicio */}
       {renderAddGymModal()}
       {renderAddSportsModal()}
+      
+      {/* Modal para seleccionar fecha de medidas */}
+      {showMeasurementDatePicker && (
+        <Modal
+          visible={showMeasurementDatePicker}
+          transparent={true}
+          animationType="slide"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Seleccionar Fecha</Text>
+              <DateTimePicker
+                value={selectedMeasurementDate}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowMeasurementDatePicker(false);
+                  if (selectedDate) {
+                    setSelectedMeasurementDate(selectedDate);
+                  }
+                }}
+              />
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowMeasurementDatePicker(false)}
+              >
+                <Text style={styles.modalCloseButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -3805,139 +5510,934 @@ const styles = StyleSheet.create({
     color: '#4A6741',
     fontStyle: 'italic',
   },
-  // Estilos para ejercicio
-  routinesContainer: {
-    gap: 16,
-  },
-  routineCard: {
-    backgroundColor: '#F5F7F0',
-    borderRadius: 8,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4A7C59',
-  },
-  routineHeader: {
+  // Estilos para Rutina de Gimnasio - Rediseño basado en Fitness Tracker
+  gymHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  gymHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  gymIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  gymHeaderText: {
+    flex: 1,
+  },
+  gymHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  gymHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  gymHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gymSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  gymSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  gymSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  routineName: {
+  gymSummaryContent: {
+    alignItems: 'center',
+  },
+  gymSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  gymSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  addRoutineContainer: {
+    marginBottom: 20,
+  },
+  addRoutineButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addRoutineText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  routinesContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  routinesHeader: {
+    marginBottom: 20,
+  },
+  routinesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  routinesSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  routinesList: {
+    gap: 16,
+  },
+  routineCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  routineCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  routineCardInfo: {
     flex: 1,
+  },
+  routineCardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  routineCardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#374151',
+    flex: 1,
+    marginRight: 12,
   },
   difficultyBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  difficultyBeginner: {
-    backgroundColor: '#28a745',
-  },
-  difficultyIntermediate: {
-    backgroundColor: '#ffc107',
-  },
-  difficultyAdvanced: {
-    backgroundColor: '#dc3545',
-  },
   difficultyText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  routineDescription: {
-    fontSize: 14,
-    color: '#4A6741',
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  routineDuration: {
     fontSize: 12,
-    color: '#4A7C59',
     fontWeight: '600',
-    marginBottom: 12,
+    color: '#FFFFFF',
   },
-  exercisesContainer: {
-    gap: 8,
-  },
-  exercisesTitle: {
+  routineCardDescription: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2D5016',
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  routineCardSchedule: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  routineCardScheduleText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  routineCardStatus: {
+    alignItems: 'center',
+  },
+  routineStatusIcon: {
     marginBottom: 4,
   },
+  routineStatusIconCompleted: {
+    // Estilos adicionales si es necesario
+  },
+  routineStatusText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  routineStatusTextCompleted: {
+    color: '#059669',
+  },
+  routineCardExercises: {
+    marginBottom: 16,
+  },
+  routineCardExercisesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  exercisesList: {
+    gap: 8,
+  },
   exerciseItem: {
-    backgroundColor: '#F8FAF6',
-    padding: 8,
-    borderRadius: 4,
-    borderLeftWidth: 2,
-    borderLeftColor: '#4A7C59',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   exerciseName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2D5016',
-    marginBottom: 2,
+    color: '#374151',
+    marginBottom: 4,
   },
   exerciseDetails: {
     fontSize: 12,
-    color: '#4A6741',
+    color: '#6B7280',
   },
-  goalsContainer: {
+  moreExercisesText: {
+    fontSize: 12,
+    color: '#059669',
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  routineCardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  startRoutineButton: {
+    flex: 1,
+    backgroundColor: '#059669',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  startRoutineText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  editRoutineButton: {
+    flex: 1,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#059669',
+  },
+  editRoutineText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  gymGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  gymGoalsHeader: {
+    marginBottom: 20,
+  },
+  gymGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  gymGoalsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  gymGoalsList: {
     gap: 16,
   },
-  goalCard: {
-    backgroundColor: '#F5F7F0',
-    borderRadius: 8,
+  gymGoalCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
     padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF8C42',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  goalHeader: {
+  gymGoalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  gymGoalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    flex: 1,
+  },
+  gymGoalValues: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  gymGoalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  gymGoalProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  gymGoalProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  gymGoalPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  gymAchievementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  gymAchievementsHeader: {
+    marginBottom: 20,
+  },
+  gymAchievementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  gymAchievementsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  gymAchievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  gymAchievementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  gymAchievementCardLocked: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
+  },
+  gymAchievementIcon: {
+    marginBottom: 8,
+  },
+  gymAchievementEmoji: {
+    fontSize: 24,
+  },
+  gymAchievementEmojiLocked: {
+    opacity: 0.5,
+  },
+  gymAchievementContent: {
+    alignItems: 'center',
+  },
+  gymAchievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  gymAchievementTitleLocked: {
+    color: '#9CA3AF',
+  },
+  gymAchievementDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  gymAchievementDescriptionLocked: {
+    color: '#9CA3AF',
+  },
+  // Estilos para Objetivos Deportivos - Rediseño basado en Fitness Tracker
+  sportsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  sportsHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  sportsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  sportsHeaderText: {
+    flex: 1,
+  },
+  sportsHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  sportsHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  sportsHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sportsSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  sportsSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sportsSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sportsSummaryContent: {
+    alignItems: 'center',
+  },
+  sportsSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  sportsSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  addGoalContainer: {
+    marginBottom: 20,
+  },
+  addGoalButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addGoalText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  sportsCategoriesContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sportsCategoriesHeader: {
+    marginBottom: 20,
+  },
+  sportsCategoriesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  sportsCategoriesSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  sportsCategoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  sportsCategoryCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sportsCategoryIcon: {
+    marginRight: 12,
+  },
+  sportsCategoryIconBg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sportsCategoryContent: {
+    flex: 1,
+  },
+  sportsCategoryName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 2,
+  },
+  sportsCategoryCount: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  sportsGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sportsGoalsHeader: {
+    marginBottom: 20,
+  },
+  sportsGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  sportsGoalsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  sportsGoalsList: {
+    gap: 16,
+  },
+  sportsGoalCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  sportsGoalCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  sportsGoalCardInfo: {
+    flex: 1,
+  },
+  sportsGoalCardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sportsGoalCardIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  sportsGoalCardTitleContent: {
+    flex: 1,
+  },
+  sportsGoalCardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 2,
+  },
+  sportsGoalCardCategory: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  sportsGoalPriorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sportsGoalPriorityText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  sportsGoalCardObjective: {
+    fontSize: 14,
+    color: '#374151',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  sportsGoalCardMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sportsGoalCardDate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sportsGoalCardDateText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  sportsGoalStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sportsGoalStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  sportsGoalCardStatus: {
+    alignItems: 'center',
+  },
+  sportsGoalStatusIcon: {
+    marginBottom: 4,
+  },
+  sportsGoalStatusIconCompleted: {
+    // Estilos adicionales si es necesario
+  },
+  sportsGoalCardProgress: {
+    marginBottom: 16,
+  },
+  sportsGoalCardProgressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  goalSport: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
-    flex: 1,
-  },
-  goalDate: {
-    fontSize: 12,
-    color: '#4A6741',
-    backgroundColor: '#e9ecef',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  goalObjective: {
+  sportsGoalCardProgressLabel: {
     fontSize: 14,
-    color: '#2D5016',
-    marginBottom: 12,
-    fontStyle: 'italic',
+    fontWeight: '600',
+    color: '#374151',
   },
-  progressContainer: {
+  sportsGoalCardProgressValue: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  sportsGoalCardProgressBar: {
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
     marginBottom: 8,
   },
-  progressLabel: {
+  sportsGoalCardProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  sportsGoalCardProgressPercentage: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FF8C42',
+    color: '#6B7280',
+    fontWeight: '500',
+    textAlign: 'right',
+  },
+  sportsGoalCardNotes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: '#F3F4F6',
+    padding: 12,
+    borderRadius: 8,
+  },
+  sportsGoalCardNotesText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 8,
+    flex: 1,
+  },
+  sportsGoalCardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  updateProgressButton: {
+    flex: 1,
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  updateProgressText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  editGoalButton: {
+    flex: 1,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#059669',
+  },
+  editGoalText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  sportsAchievementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sportsAchievementsHeader: {
+    marginBottom: 20,
+  },
+  sportsAchievementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
     marginBottom: 4,
   },
-  progressText: {
+  sportsAchievementsSubtitle: {
     fontSize: 14,
-    color: '#2D5016',
+    color: '#6B7280',
+    fontWeight: '500',
   },
-  goalNotes: {
+  sportsAchievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  sportsAchievementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  sportsAchievementCardLocked: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
+  },
+  sportsAchievementIcon: {
+    marginBottom: 8,
+  },
+  sportsAchievementEmoji: {
+    fontSize: 24,
+  },
+  sportsAchievementEmojiLocked: {
+    opacity: 0.5,
+  },
+  sportsAchievementContent: {
+    alignItems: 'center',
+  },
+  sportsAchievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  sportsAchievementTitleLocked: {
+    color: '#9CA3AF',
+  },
+  sportsAchievementDescription: {
     fontSize: 12,
-    color: '#4A6741',
-    fontStyle: 'italic',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  sportsAchievementDescriptionLocked: {
+    color: '#9CA3AF',
   },
   // Estilos para modales
   modalOverlay: {
@@ -4378,7 +6878,123 @@ const styles = StyleSheet.create({
     minHeight: 60,
     textAlignVertical: 'top',
   },
-  // Estilos para Medidas Corporales
+  // Estilos para Medidas Corporales - Rediseño basado en Fitness Tracker
+  bodyMeasurementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  bodyMeasurementsHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  bodyMeasurementsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  bodyMeasurementsHeaderText: {
+    flex: 1,
+  },
+  bodyMeasurementsHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  bodyMeasurementsHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  bodyMeasurementsHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bodyMeasurementsSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  bodyMeasurementsSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bodyMeasurementsSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bodyMeasurementsSummaryContent: {
+    alignItems: 'center',
+  },
+  bodyMeasurementsSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  bodyMeasurementsSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  dateSelectorContainer: {
+    marginBottom: 20,
+  },
+  dateSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#059669',
+  },
+  dateSelectorText: {
+    fontSize: 16,
+    color: '#059669',
+    marginLeft: 10,
+    flex: 1,
+    fontWeight: '600',
+  },
   measurementsContainer: {
     gap: 20,
   },
@@ -4388,144 +7004,267 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 15,
   },
-  measurementItem: {
+  measurementCard: {
     width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  measurementLabel: {
+  measurementCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  measurementCardTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2D5016',
-    marginBottom: 5,
+    color: '#374151',
+    marginLeft: 6,
+    flex: 1,
   },
-  measurementInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingVertical: 8,
-    fontSize: 16,
-    color: '#2D5016',
-    textAlign: 'center',
-  },
-  measurementNotes: {
-    marginTop: 20,
-  },
-  // Estilos para Seguimiento de Entrenamientos
-  workoutContainer: {
-    gap: 20,
-  },
-  workoutHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  workoutDate: {
-    fontSize: 14,
-    color: '#4A6741',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingBottom: 5,
-    minWidth: 120,
-  },
-  workoutGoals: {
-    gap: 15,
-  },
-  goalsGrid: {
-    gap: 15,
-  },
-  workoutGoalCard: {
-    backgroundColor: '#F5F7F0',
-    borderRadius: 12,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  goalCardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
-    marginBottom: 10,
-  },
-  goalCardInput: {
-    backgroundColor: '#F8FAF6',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    color: '#2D5016',
-    minHeight: 60,
-    textAlignVertical: 'top',
-    marginBottom: 15,
-  },
-  actionStepsTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2D5016',
-    marginBottom: 10,
-  },
-  actionStep: {
+  measurementInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     marginBottom: 8,
   },
-  actionCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#4A7C59',
-  },
-  actionInput: {
+  measurementInput: {
     flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingVertical: 5,
-    fontSize: 14,
-    color: '#2D5016',
-  },
-  workoutNotes: {
-    marginTop: 20,
-  },
-  // Estilos para Pérdida de Peso
-  weightLossContainer: {
-    alignItems: 'center',
-    gap: 20,
-  },
-  weightLossGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    maxWidth: 350,
-  },
-  weightLossHeart: {
-    width: 35,
-    height: 35,
-    borderRadius: 17.5,
-    backgroundColor: '#ffb3ba',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#ff9aa2',
-  },
-  weightLossNumber: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  weightLossLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
     textAlign: 'center',
   },
-  getNowButton: {
-    backgroundColor: '#ff6b6b',
-    borderRadius: 25,
-    paddingHorizontal: 30,
-    paddingVertical: 15,
+  measurementUnit: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  measurementGoal: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  additionalMeasurementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  additionalMeasurementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 16,
+  },
+  additionalMeasurementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  additionalMeasurementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  additionalMeasurementHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    shadowColor: '#ff6b6b',
+    marginBottom: 8,
+  },
+  additionalMeasurementTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  additionalMeasurementInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  additionalMeasurementTextInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+    textAlign: 'center',
+  },
+  additionalMeasurementUnit: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  measurementActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  saveButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    gap: 8,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  historyButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#059669',
+    gap: 8,
+  },
+  historyButtonText: {
+    color: '#059669',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  measurementNotes: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  notesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginLeft: 8,
+  },
+  notesInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#374151',
+    minHeight: 80,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  // Estilos para modal de fecha
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2D5016',
+    marginBottom: 20,
+  },
+  modalCloseButton: {
+    backgroundColor: '#4A6741',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 20,
+  },
+  modalCloseButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Estilos para Seguimiento de Entrenamientos - Rediseño basado en Fitness Tracker
+  workoutTrackerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -4534,94 +7273,1295 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  getNowText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  priceText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#28a745',
-    backgroundColor: '#d4edda',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  // Estilos para Seguimiento Nutricional
-  nutritionContainer: {
-    gap: 20,
-  },
-  nutritionMeals: {
-    gap: 15,
-  },
-  mealSection: {
-    backgroundColor: '#F5F7F0',
-    borderRadius: 12,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  mealTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
-    marginBottom: 10,
-  },
-  nutritionInputs: {
+  workoutTrackerHeaderContent: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  nutritionInput: {
+    alignItems: 'center',
     flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingVertical: 8,
+  },
+  workoutTrackerIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  workoutTrackerHeaderText: {
+    flex: 1,
+  },
+  workoutTrackerHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  workoutTrackerHeaderSubtitle: {
     fontSize: 14,
-    color: '#2D5016',
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  workoutTrackerHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  workoutTrackerSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  workoutTrackerSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  workoutTrackerSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  workoutTrackerSummaryContent: {
+    alignItems: 'center',
+  },
+  workoutTrackerSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  workoutTrackerSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  addWorkoutContainer: {
+    marginBottom: 20,
+  },
+  addWorkoutButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addWorkoutText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  weeklyWorkoutContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weeklyWorkoutHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  weeklyWorkoutTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  viewStatsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewStatsText: {
+    color: '#059669',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  weeklyWorkoutGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  dayWorkoutCard: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  dayWorkoutLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  dayWorkoutContent: {
+    alignItems: 'center',
+  },
+  dayWorkoutTitle: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  dayWorkoutDuration: {
+    fontSize: 9,
+    color: '#059669',
+    marginTop: 2,
+  },
+  dayWorkoutCalories: {
+    fontSize: 9,
+    color: '#EF4444',
+    marginTop: 2,
+  },
+  dayWorkoutPending: {
+    fontSize: 9,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  workoutGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  workoutGoalsHeader: {
+    marginBottom: 20,
+  },
+  workoutGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  workoutGoalsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  workoutGoalsList: {
+    gap: 16,
+  },
+  workoutGoalCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  workoutGoalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  workoutGoalIcon: {
+    marginRight: 12,
+  },
+  workoutGoalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    flex: 1,
+  },
+  workoutGoalTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#6B7280',
+  },
+  workoutGoalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  workoutGoalProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  workoutGoalProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  workoutGoalProgressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  workoutNotesContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  workoutNotesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  workoutNotesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginLeft: 8,
+  },
+  workoutNotesInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#374151',
+    minHeight: 80,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  workoutAchievementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  workoutAchievementsHeader: {
+    marginBottom: 20,
+  },
+  workoutAchievementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  workoutAchievementsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  workoutAchievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  workoutAchievementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  workoutAchievementCardLocked: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
+  },
+  workoutAchievementIcon: {
+    marginBottom: 8,
+  },
+  workoutAchievementEmoji: {
+    fontSize: 24,
+  },
+  workoutAchievementEmojiLocked: {
+    opacity: 0.5,
+  },
+  workoutAchievementContent: {
+    alignItems: 'center',
+  },
+  workoutAchievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
     textAlign: 'center',
   },
-  supplementsSection: {
-    gap: 10,
+  workoutAchievementTitleLocked: {
+    color: '#9CA3AF',
+  },
+  workoutAchievementDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  workoutAchievementDescriptionLocked: {
+    color: '#9CA3AF',
+  },
+  // Estilos para Pérdida de Peso - Rediseño basado en Fitness Tracker
+  weightLossHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  weightLossHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  weightLossIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  weightLossHeaderText: {
+    flex: 1,
+  },
+  weightLossHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  weightLossHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  weightLossHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weightLossSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  weightLossSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  weightLossSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  weightLossSummaryContent: {
+    alignItems: 'center',
+  },
+  weightLossSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  weightLossSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  weightProgressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weightProgressHeader: {
+    marginBottom: 20,
+  },
+  weightProgressTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  weightProgressSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  weightProgressBar: {
+    height: 12,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 6,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  weightProgressFill: {
+    height: '100%',
+    borderRadius: 6,
+  },
+  weightProgressStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  weightProgressStat: {
+    alignItems: 'center',
+  },
+  weightProgressStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  weightProgressStatLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  addWeightContainer: {
+    marginBottom: 20,
+  },
+  addWeightButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addWeightText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  weightHistoryContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weightHistoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  weightHistoryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  weightHistoryList: {
+    gap: 12,
+  },
+  weightHistoryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  weightHistoryDate: {
+    flex: 1,
+  },
+  weightHistoryDateText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  weightHistoryWeight: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  weightHistoryWeightValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 2,
+  },
+  weightHistoryChange: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  weightHistoryTrend: {
+    marginLeft: 12,
+  },
+  weightGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weightGoalsHeader: {
+    marginBottom: 20,
+  },
+  weightGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  weightGoalsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  weightGoalsList: {
+    gap: 16,
+  },
+  weightGoalCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  weightGoalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  weightGoalIcon: {
+    marginRight: 12,
+  },
+  weightGoalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    flex: 1,
+  },
+  weightGoalTitleCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#6B7280',
+  },
+  weightGoalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  weightGoalProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  weightGoalProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  weightGoalProgressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  weightNotesContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weightNotesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  weightNotesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginLeft: 8,
+  },
+  weightNotesInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#374151',
+    minHeight: 80,
+    textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  weightAchievementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  weightAchievementsHeader: {
+    marginBottom: 20,
+  },
+  weightAchievementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  weightAchievementsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  weightAchievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  weightAchievementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  weightAchievementCardLocked: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
+  },
+  weightAchievementIcon: {
+    marginBottom: 8,
+  },
+  weightAchievementEmoji: {
+    fontSize: 24,
+  },
+  weightAchievementEmojiLocked: {
+    opacity: 0.5,
+  },
+  weightAchievementContent: {
+    alignItems: 'center',
+  },
+  weightAchievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  weightAchievementTitleLocked: {
+    color: '#9CA3AF',
+  },
+  weightAchievementDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  weightAchievementDescriptionLocked: {
+    color: '#9CA3AF',
+  },
+  // Estilos para Seguimiento Nutricional - Rediseño basado en Fitness Tracker
+  nutritionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  nutritionHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  nutritionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  nutritionHeaderText: {
+    flex: 1,
+  },
+  nutritionHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  nutritionHeaderSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 18,
+  },
+  nutritionHeaderBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nutritionSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 12,
+  },
+  nutritionSummaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  nutritionSummaryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  nutritionSummaryContent: {
+    alignItems: 'center',
+  },
+  nutritionSummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 2,
+  },
+  nutritionSummaryLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  nutritionSummaryTarget: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    fontWeight: '400',
+  },
+  waterProgressContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  waterProgressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  waterProgressIcon: {
+    marginRight: 12,
+  },
+  waterProgressContent: {
+    flex: 1,
+  },
+  waterProgressTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  waterProgressSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  waterProgressPercentage: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  waterProgressBar: {
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  waterProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  addMealContainer: {
+    marginBottom: 20,
+  },
+  addMealButton: {
+    backgroundColor: '#059669',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#059669',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  addMealText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  mealsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  mealsHeader: {
+    marginBottom: 20,
+  },
+  mealsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  mealsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  mealsList: {
+    gap: 16,
+  },
+  mealCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  mealCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  mealCardIcon: {
+    marginRight: 12,
+  },
+  mealCardInfo: {
+    flex: 1,
+  },
+  mealCardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  mealCardCalories: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  mealCardMacros: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  macroItem: {
+    alignItems: 'center',
+  },
+  macroValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  macroLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  supplementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  supplementsHeader: {
+    marginBottom: 20,
   },
   supplementsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  supplementsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   supplementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 12,
   },
-  supplementButton: {
-    backgroundColor: '#e9ecef',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+  supplementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: '#E5E7EB',
   },
-  supplementText: {
+  supplementCardTaken: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+  },
+  supplementCardContent: {
+    alignItems: 'center',
+  },
+  supplementName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 8,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  supplementNameTaken: {
+    color: '#059669',
+  },
+  supplementTime: {
     fontSize: 12,
-    color: '#495057',
+    color: '#6B7280',
     fontWeight: '500',
   },
-  waterSection: {
-    gap: 10,
+  nutritionGoalsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  waterTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2D5016',
+  nutritionGoalsHeader: {
+    marginBottom: 20,
   },
-  waterInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    paddingVertical: 10,
+  nutritionGoalsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  nutritionGoalsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  nutritionGoalsList: {
+    gap: 16,
+  },
+  nutritionGoalCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  nutritionGoalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  nutritionGoalTitle: {
     fontSize: 16,
-    color: '#2D5016',
+    fontWeight: '600',
+    color: '#374151',
+    flex: 1,
+  },
+  nutritionGoalValues: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  nutritionGoalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  nutritionGoalProgressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  nutritionGoalProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  nutritionGoalPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+  },
+  nutritionAchievementsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  nutritionAchievementsHeader: {
+    marginBottom: 20,
+  },
+  nutritionAchievementsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  nutritionAchievementsSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  nutritionAchievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  nutritionAchievementCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  nutritionAchievementCardLocked: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
+  },
+  nutritionAchievementIcon: {
+    marginBottom: 8,
+  },
+  nutritionAchievementEmoji: {
+    fontSize: 24,
+  },
+  nutritionAchievementEmojiLocked: {
+    opacity: 0.5,
+  },
+  nutritionAchievementContent: {
+    alignItems: 'center',
+  },
+  nutritionAchievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 4,
     textAlign: 'center',
+  },
+  nutritionAchievementTitleLocked: {
+    color: '#9CA3AF',
+  },
+  nutritionAchievementDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  nutritionAchievementDescriptionLocked: {
+    color: '#9CA3AF',
   },
 });
 

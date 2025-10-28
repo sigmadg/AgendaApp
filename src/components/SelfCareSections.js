@@ -105,11 +105,94 @@ const SelfCareSections = () => {
     notes: []
   });
 
+  // Estados para Monthly Habit Log
+  const [monthlyHabits, setMonthlyHabits] = useState({
+    week1: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 4, text: '', completed: [false, false, false, false, false, false, false] }
+    ],
+    week2: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 4, text: '', completed: [false, false, false, false, false, false, false] }
+    ],
+    week3: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 4, text: '', completed: [false, false, false, false, false, false, false] }
+    ],
+    week4: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 4, text: '', completed: [false, false, false, false, false, false, false] }
+    ]
+  });
+
+  // Estados para Habit & Goal Tracker
+  const [habitGoals, setHabitGoals] = useState({
+    goals: '',
+    reminder: '',
+    achievements: '',
+    notes: '',
+    monthlyTracking: Array(31).fill(false)
+  });
+
+  // Estados para Mood Tracker
+  const [moodTracker, setMoodTracker] = useState({
+    monthlyMoods: Array(12).fill(Array(31).fill('')),
+    notes: '',
+    yearMantra: ''
+  });
+
+  // Estados para Daily Habit Tracker
+  const [dailyHabits, setDailyHabits] = useState({
+    morning: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] }
+    ],
+    afternoon: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] }
+    ],
+    evening: [
+      { id: 1, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 2, text: '', completed: [false, false, false, false, false, false, false] },
+      { id: 3, text: '', completed: [false, false, false, false, false, false, false] }
+    ]
+  });
+
+  // Estados para Water Tracker
+  const [waterTracker, setWaterTracker] = useState({
+    week1: Array(7).fill(0),
+    week2: Array(7).fill(0),
+    week3: Array(7).fill(0),
+    week4: Array(7).fill(0)
+  });
+
+  // Estados para Habit Monitor
+  const [habitMonitor, setHabitMonitor] = useState({
+    habits: Array(10).fill(''),
+    monthlyTracking: Array(10).fill(Array(31).fill(false))
+  });
+
   const sections = [
     { id: 'self-care-checklist', name: 'Self Care Checklist', icon: 'checkmark-circle-outline' },
     { id: 'wellness-scheduler', name: 'Wellness Scheduler', icon: 'calendar-outline' },
     { id: 'self-care-journal', name: 'Self Care Journal', icon: 'book-outline' },
-    { id: 'self-care-planner', name: 'Self Care Planner', icon: 'clipboard-outline' }
+    { id: 'self-care-planner', name: 'Self Care Planner', icon: 'clipboard-outline' },
+    { id: 'monthly-habit-log', name: 'Registro Mensual de Hábitos', icon: 'calendar-outline' },
+    { id: 'habit-goal-tracker', name: 'Seguimiento de Hábitos y Objetivos', icon: 'trophy-outline' },
+    { id: 'mood-tracker', name: 'Seguimiento del Estado de Ánimo', icon: 'happy-outline' },
+    { id: 'daily-habit-tracker', name: 'Seguimiento Diario de Hábitos', icon: 'checkmark-circle-outline' },
+    { id: 'water-tracker', name: 'Seguimiento de Agua', icon: 'water-outline' },
+    { id: 'habit-monitor', name: 'Monitor de Hábitos', icon: 'analytics-outline' }
   ];
 
   const renderSectionTabs = () => (
@@ -226,6 +309,91 @@ const SelfCareSections = () => {
 
     setSelfCarePlans([...selfCarePlans, plan]);
     setShowAddSelfCareModal(false);
+  };
+
+  // Funciones para Monthly Habit Log
+  const toggleHabitCompletion = (week, habitId, dayIndex) => {
+    setMonthlyHabits(prev => ({
+      ...prev,
+      [week]: prev[week].map(habit =>
+        habit.id === habitId
+          ? {
+              ...habit,
+              completed: habit.completed.map((completed, index) =>
+                index === dayIndex ? !completed : completed
+              )
+            }
+          : habit
+      )
+    }));
+  };
+
+  const updateHabitText = (week, habitId, text) => {
+    setMonthlyHabits(prev => ({
+      ...prev,
+      [week]: prev[week].map(habit =>
+        habit.id === habitId ? { ...habit, text } : habit
+      )
+    }));
+  };
+
+  // Funciones para Daily Habit Tracker
+  const toggleDailyHabitCompletion = (timeOfDay, habitId, dayIndex) => {
+    setDailyHabits(prev => ({
+      ...prev,
+      [timeOfDay]: prev[timeOfDay].map(habit =>
+        habit.id === habitId
+          ? {
+              ...habit,
+              completed: habit.completed.map((completed, index) =>
+                index === dayIndex ? !completed : completed
+              )
+            }
+          : habit
+      )
+    }));
+  };
+
+  const updateDailyHabitText = (timeOfDay, habitId, text) => {
+    setDailyHabits(prev => ({
+      ...prev,
+      [timeOfDay]: prev[timeOfDay].map(habit =>
+        habit.id === habitId ? { ...habit, text } : habit
+      )
+    }));
+  };
+
+  // Funciones para Water Tracker
+  const updateWaterIntake = (week, dayIndex, amount) => {
+    setWaterTracker(prev => ({
+      ...prev,
+      [week]: prev[week].map((intake, index) =>
+        index === dayIndex ? Math.min(8, Math.max(0, amount)) : intake
+      )
+    }));
+  };
+
+  // Funciones para Habit Monitor
+  const toggleHabitMonitorCompletion = (habitIndex, dayIndex) => {
+    setHabitMonitor(prev => ({
+      ...prev,
+      monthlyTracking: prev.monthlyTracking.map((habitTracking, index) =>
+        index === habitIndex
+          ? habitTracking.map((completed, dayIdx) =>
+              dayIdx === dayIndex ? !completed : completed
+            )
+          : habitTracking
+      )
+    }));
+  };
+
+  const updateHabitMonitorText = (habitIndex, text) => {
+    setHabitMonitor(prev => ({
+      ...prev,
+      habits: prev.habits.map((habit, index) =>
+        index === habitIndex ? text : habit
+      )
+    }));
   };
 
   const renderSelfCareChecklist = () => (
@@ -552,6 +720,398 @@ const SelfCareSections = () => {
     </View>
   );
 
+  // Funciones de renderizado para las subsecciones del habit tracker
+  const renderMonthlyHabitLog = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>REGISTRO MENSUAL DE HÁBITOS</Text>
+        <View style={styles.crownIcon}>
+          <Icon name="star" size={20} color="#FF6B9D" />
+        </View>
+      </View>
+
+      {['week1', 'week2', 'week3', 'week4'].map((week, weekIndex) => (
+        <View key={week} style={styles.weekSection}>
+          <Text style={styles.weekTitle}>SEMANA {weekIndex + 1}</Text>
+          <View style={styles.weekHeader}>
+            <Text style={styles.habitLabel}>HÁBITO</Text>
+            <View style={styles.daysHeader}>
+              <Text style={styles.dayLabel}>L</Text>
+              <Text style={styles.dayLabel}>M</Text>
+              <Text style={styles.dayLabel}>X</Text>
+              <Text style={styles.dayLabel}>J</Text>
+              <Text style={styles.dayLabel}>V</Text>
+              <Text style={styles.dayLabel}>S</Text>
+              <Text style={styles.dayLabel}>D</Text>
+            </View>
+          </View>
+          
+          {monthlyHabits[week].map((habit) => (
+            <View key={habit.id} style={styles.habitRow}>
+              <TextInput
+                style={styles.habitInput}
+                value={habit.text}
+                onChangeText={(text) => updateHabitText(week, habit.id, text)}
+                placeholder="Escribir hábito..."
+                placeholderTextColor="#adb5bd"
+              />
+              <View style={styles.checkboxesContainer}>
+                {habit.completed.map((completed, dayIndex) => (
+                  <TouchableOpacity
+                    key={dayIndex}
+                    style={styles.checkbox}
+                    onPress={() => toggleHabitCompletion(week, habit.id, dayIndex)}
+                  >
+                    <Icon
+                      name={completed ? 'checkbox' : 'square-outline'}
+                      size={16}
+                      color={completed ? '#4CAF50' : '#6c757d'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderHabitGoalTracker = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>SEGUIMIENTO DE HÁBITOS Y OBJETIVOS</Text>
+        <View style={styles.crownIcon}>
+          <Icon name="star" size={20} color="#FF6B9D" />
+        </View>
+      </View>
+
+      <View style={styles.goalTrackerContent}>
+        <View style={styles.goalInputsColumn}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>OBJETIVOS</Text>
+            <TextInput
+              style={styles.textInput}
+              value={habitGoals.goals}
+              onChangeText={(text) => setHabitGoals({...habitGoals, goals: text})}
+              placeholder="Mis objetivos..."
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>RECORDATORIO</Text>
+            <TextInput
+              style={styles.textInput}
+              value={habitGoals.reminder}
+              onChangeText={(text) => setHabitGoals({...habitGoals, reminder: text})}
+              placeholder="Recordatorios importantes..."
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>LOGROS</Text>
+            <TextInput
+              style={styles.textInput}
+              value={habitGoals.achievements}
+              onChangeText={(text) => setHabitGoals({...habitGoals, achievements: text})}
+              placeholder="Mis logros..."
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>NOTAS</Text>
+            <TextInput
+              style={styles.textInput}
+              value={habitGoals.notes}
+              onChangeText={(text) => setHabitGoals({...habitGoals, notes: text})}
+              placeholder="Notas adicionales..."
+              multiline
+              numberOfLines={2}
+            />
+          </View>
+        </View>
+
+        <View style={styles.monthlyGridColumn}>
+          <View style={styles.monthlyGridHeader}>
+            {Array.from({ length: 31 }, (_, i) => (
+              <Text key={i} style={styles.dayNumber}>{i + 1}</Text>
+            ))}
+          </View>
+          
+          <View style={styles.monthlyGrid}>
+            {Array.from({ length: 5 }, (_, rowIndex) => (
+              <View key={rowIndex} style={styles.gridRow}>
+                <TextInput
+                  style={styles.habitNameInput}
+                  placeholder="Hábito"
+                  placeholderTextColor="#adb5bd"
+                />
+                {Array.from({ length: 31 }, (_, dayIndex) => (
+                  <TouchableOpacity
+                    key={dayIndex}
+                    style={styles.gridCheckbox}
+                    onPress={() => {
+                      const newTracking = [...habitGoals.monthlyTracking];
+                      newTracking[dayIndex] = !newTracking[dayIndex];
+                      setHabitGoals({...habitGoals, monthlyTracking: newTracking});
+                    }}
+                  >
+                    <Icon
+                      name={habitGoals.monthlyTracking[dayIndex] ? 'checkbox' : 'square-outline'}
+                      size={12}
+                      color={habitGoals.monthlyTracking[dayIndex] ? '#4CAF50' : '#6c757d'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderMoodTracker = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>SEGUIMIENTO DEL ESTADO DE ÁNIMO</Text>
+        <View style={styles.crownIcon}>
+          <Icon name="star" size={20} color="#FF6B9D" />
+        </View>
+      </View>
+
+      <View style={styles.moodTrackerContent}>
+        <View style={styles.moodGridHeader}>
+          <Text style={styles.monthLabel}>ENE</Text>
+          <Text style={styles.monthLabel}>FEB</Text>
+          <Text style={styles.monthLabel}>MAR</Text>
+          <Text style={styles.monthLabel}>ABR</Text>
+          <Text style={styles.monthLabel}>MAY</Text>
+          <Text style={styles.monthLabel}>JUN</Text>
+          <Text style={styles.monthLabel}>JUL</Text>
+          <Text style={styles.monthLabel}>AGO</Text>
+          <Text style={styles.monthLabel}>SEP</Text>
+          <Text style={styles.monthLabel}>OCT</Text>
+          <Text style={styles.monthLabel}>NOV</Text>
+          <Text style={styles.monthLabel}>DIC</Text>
+        </View>
+        
+        <View style={styles.moodGrid}>
+          {Array.from({ length: 31 }, (_, dayIndex) => (
+            <View key={dayIndex} style={styles.moodRow}>
+              <Text style={styles.dayNumber}>{dayIndex + 1}</Text>
+              {Array.from({ length: 12 }, (_, monthIndex) => (
+                <TouchableOpacity
+                  key={monthIndex}
+                  style={styles.moodCell}
+                  onPress={() => {
+                    const newMoods = [...moodTracker.monthlyMoods];
+                    newMoods[monthIndex] = [...newMoods[monthIndex]];
+                    newMoods[monthIndex][dayIndex] = newMoods[monthIndex][dayIndex] ? '' : '😊';
+                    setMoodTracker({...moodTracker, monthlyMoods: newMoods});
+                  }}
+                >
+                  <Text style={styles.moodEmoji}>
+                    {moodTracker.monthlyMoods[monthIndex][dayIndex]}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </View>
+        
+        <View style={styles.moodNotesSection}>
+          <View style={styles.notesColumn}>
+            <Text style={styles.inputLabel}>NOTAS</Text>
+            <TextInput
+              style={styles.textInput}
+              value={moodTracker.notes}
+              onChangeText={(text) => setMoodTracker({...moodTracker, notes: text})}
+              placeholder="Notas sobre el estado de ánimo..."
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+          
+          <View style={styles.mantraColumn}>
+            <Text style={styles.inputLabel}>MANTRA DEL AÑO</Text>
+            <TextInput
+              style={styles.textInput}
+              value={moodTracker.yearMantra}
+              onChangeText={(text) => setMoodTracker({...moodTracker, yearMantra: text})}
+              placeholder="Mi mantra del año..."
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderDailyHabitTracker = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>SEGUIMIENTO DIARIO DE HÁBITOS</Text>
+        <View style={styles.crownIcon}>
+          <Icon name="star" size={20} color="#FF6B9D" />
+        </View>
+      </View>
+
+      {[
+        { key: 'morning', title: 'Hábitos Matutinos' },
+        { key: 'afternoon', title: 'Hábitos Vespertinos' },
+        { key: 'evening', title: 'Hábitos Nocturnos' }
+      ].map(({ key, title }) => (
+        <View key={key} style={styles.dailyHabitSection}>
+          <Text style={styles.dailyHabitTitle}>{title}</Text>
+          <View style={styles.dailyHabitHeader}>
+            <Text style={styles.habitLabel}>HÁBITO</Text>
+            <View style={styles.daysHeader}>
+              <Text style={styles.dayLabel}>L</Text>
+              <Text style={styles.dayLabel}>M</Text>
+              <Text style={styles.dayLabel}>X</Text>
+              <Text style={styles.dayLabel}>J</Text>
+              <Text style={styles.dayLabel}>V</Text>
+              <Text style={styles.dayLabel}>S</Text>
+              <Text style={styles.dayLabel}>D</Text>
+            </View>
+          </View>
+          
+          {dailyHabits[key].map((habit) => (
+            <View key={habit.id} style={styles.habitRow}>
+              <TextInput
+                style={styles.habitInput}
+                value={habit.text}
+                onChangeText={(text) => updateDailyHabitText(key, habit.id, text)}
+                placeholder="Escribir hábito..."
+                placeholderTextColor="#adb5bd"
+              />
+              <View style={styles.checkboxesContainer}>
+                {habit.completed.map((completed, dayIndex) => (
+                  <TouchableOpacity
+                    key={dayIndex}
+                    style={styles.checkbox}
+                    onPress={() => toggleDailyHabitCompletion(key, habit.id, dayIndex)}
+                  >
+                    <Icon
+                      name={completed ? 'checkbox' : 'square-outline'}
+                      size={16}
+                      color={completed ? '#4CAF50' : '#6c757d'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderWaterTracker = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>SEGUIMIENTO DE AGUA</Text>
+        <View style={styles.crownIcon}>
+          <Icon name="star" size={20} color="#FF6B9D" />
+        </View>
+      </View>
+
+      <View style={styles.waterTrackerContent}>
+        <View style={styles.waterGridHeader}>
+          <Text style={styles.dayLabel}>Lun</Text>
+          <Text style={styles.dayLabel}>Mar</Text>
+          <Text style={styles.dayLabel}>Mié</Text>
+          <Text style={styles.dayLabel}>Jue</Text>
+          <Text style={styles.dayLabel}>Vie</Text>
+          <Text style={styles.dayLabel}>Sáb</Text>
+          <Text style={styles.dayLabel}>Dom</Text>
+        </View>
+        
+        {['week1', 'week2', 'week3', 'week4'].map((week, weekIndex) => (
+          <View key={week} style={styles.waterWeekSection}>
+            <Text style={styles.weekTitle}>Semana {weekIndex + 1}</Text>
+            <View style={styles.waterWeekRow}>
+              {waterTracker[week].map((intake, dayIndex) => (
+                <View key={dayIndex} style={styles.waterDayColumn}>
+                  <View style={styles.waterIconsContainer}>
+                    {Array.from({ length: 8 }, (_, iconIndex) => (
+                      <TouchableOpacity
+                        key={iconIndex}
+                        style={styles.waterIcon}
+                        onPress={() => updateWaterIntake(week, dayIndex, iconIndex + 1)}
+                      >
+                        <Icon
+                          name={iconIndex < intake ? 'water' : 'water-outline'}
+                          size={16}
+                          color={iconIndex < intake ? '#4FC3F7' : '#6c757d'}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <Text style={styles.waterAmount}>{intake}/8</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderHabitMonitor = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>MONITOR DE HÁBITOS</Text>
+        <View style={styles.crownIcon}>
+          <Icon name="star" size={20} color="#FF6B9D" />
+        </View>
+      </View>
+
+      <View style={styles.habitMonitorContent}>
+        <View style={styles.monitorGridHeader}>
+          {Array.from({ length: 31 }, (_, i) => (
+            <Text key={i} style={styles.dayNumber}>{i + 1}</Text>
+          ))}
+        </View>
+        
+        <View style={styles.monitorGrid}>
+          {habitMonitor.habits.map((habit, habitIndex) => (
+            <View key={habitIndex} style={styles.monitorRow}>
+              <TextInput
+                style={styles.habitNameInput}
+                value={habit}
+                onChangeText={(text) => updateHabitMonitorText(habitIndex, text)}
+                placeholder="Nombre del hábito"
+                placeholderTextColor="#adb5bd"
+              />
+              {habitMonitor.monthlyTracking[habitIndex].map((completed, dayIndex) => (
+                <TouchableOpacity
+                  key={dayIndex}
+                  style={styles.monitorCheckbox}
+                  onPress={() => toggleHabitMonitorCompletion(habitIndex, dayIndex)}
+                >
+                  <Icon
+                    name={completed ? 'checkbox' : 'square-outline'}
+                    size={12}
+                    color={completed ? '#4CAF50' : '#6c757d'}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'self-care-checklist':
@@ -562,6 +1122,18 @@ const SelfCareSections = () => {
         return renderSelfCareJournal();
       case 'self-care-planner':
         return renderSelfCarePlanner();
+      case 'monthly-habit-log':
+        return renderMonthlyHabitLog();
+      case 'habit-goal-tracker':
+        return renderHabitGoalTracker();
+      case 'mood-tracker':
+        return renderMoodTracker();
+      case 'daily-habit-tracker':
+        return renderDailyHabitTracker();
+      case 'water-tracker':
+        return renderWaterTracker();
+      case 'habit-monitor':
+        return renderHabitMonitor();
       default:
         return renderSelfCareChecklist();
     }
@@ -1191,6 +1763,234 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  // Estilos para las subsecciones del habit tracker
+  weekSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FF6B9D',
+  },
+  weekTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF6B9D',
+    marginBottom: 12,
+  },
+  weekHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  habitLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#495057',
+    flex: 1,
+  },
+  daysHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 120,
+  },
+  dayLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#495057',
+    textAlign: 'center',
+    width: 16,
+  },
+  habitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  habitInput: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: '#dee2e6',
+    paddingVertical: 4,
+    fontSize: 14,
+    color: '#495057',
+  },
+  checkboxesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 120,
+    marginLeft: 8,
+  },
+  checkbox: {
+    padding: 2,
+  },
+  goalTrackerContent: {
+    flexDirection: 'row',
+  },
+  goalInputsColumn: {
+    flex: 1,
+    marginRight: 16,
+  },
+  monthlyGridColumn: {
+    flex: 1,
+  },
+  monthlyGridHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  dayNumber: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#495057',
+    textAlign: 'center',
+    width: 12,
+  },
+  monthlyGrid: {
+    maxHeight: 200,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  habitNameInput: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: '#dee2e6',
+    paddingVertical: 2,
+    fontSize: 10,
+    color: '#495057',
+    marginRight: 4,
+  },
+  gridCheckbox: {
+    padding: 1,
+    width: 12,
+    alignItems: 'center',
+  },
+  moodTrackerContent: {
+    flex: 1,
+  },
+  moodGridHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    backgroundColor: '#FF6B9D',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+  },
+  monthLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    flex: 1,
+  },
+  moodGrid: {
+    maxHeight: 300,
+  },
+  moodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  moodCell: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    marginHorizontal: 1,
+  },
+  moodEmoji: {
+    fontSize: 12,
+  },
+  moodNotesSection: {
+    flexDirection: 'row',
+    marginTop: 16,
+  },
+  notesColumn: {
+    flex: 1,
+    marginRight: 8,
+  },
+  mantraColumn: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  dailyHabitSection: {
+    marginBottom: 20,
+  },
+  dailyHabitTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FF6B9D',
+    marginBottom: 8,
+  },
+  dailyHabitHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  waterTrackerContent: {
+    flex: 1,
+  },
+  waterGridHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    backgroundColor: '#FF6B9D',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+  },
+  waterWeekSection: {
+    marginBottom: 16,
+  },
+  waterWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  waterDayColumn: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  waterIconsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    width: 40,
+    marginBottom: 4,
+  },
+  waterIcon: {
+    padding: 1,
+  },
+  waterAmount: {
+    fontSize: 10,
+    color: '#495057',
+    fontWeight: '500',
+  },
+  habitMonitorContent: {
+    flex: 1,
+  },
+  monitorGridHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  monitorGrid: {
+    maxHeight: 300,
+  },
+  monitorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  monitorCheckbox: {
+    padding: 1,
+    width: 12,
+    alignItems: 'center',
   },
 });
 

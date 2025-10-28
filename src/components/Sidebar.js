@@ -47,14 +47,6 @@ const CATEGORIES = [
     cuteIcon: 'rainbow'
   },
   {
-    id: 'habits',
-    name: 'Habit Tracker',
-    icon: 'checkmark-circle-outline',
-    color: colors.pink,
-    description: 'Seguimiento de hábitos y rutinas',
-    cuteIcon: 'butterfly'
-  },
-  {
     id: 'events',
     name: 'Eventos',
     icon: 'calendar-outline',
