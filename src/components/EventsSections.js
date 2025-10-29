@@ -1243,7 +1243,7 @@ const EventsSections = () => {
                         <Text style={styles.remindersQuickActionText}>Compartir</Text>
                       </TouchableOpacity>
                     </View>
-                  </View>
+      </View>
     </View>
   );
             })

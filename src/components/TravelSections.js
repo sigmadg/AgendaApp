@@ -299,15 +299,15 @@ const TravelSections = () => {
             onPress={openAddTravelModal}
           >
             <Icon name="add" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
+      </View>
 
         {/* Estadísticas de viajes */}
         <View style={styles.travelPlannerStats}>
           <View style={styles.travelPlannerStatCard}>
             <View style={styles.travelPlannerStatIcon}>
               <Icon name="airplane-outline" size={20} color="#FF6B35" />
-            </View>
+        </View>
             <View style={styles.travelPlannerStatContent}>
               <Text style={styles.travelPlannerStatNumber}>{travelStats.totalPlans}</Text>
               <Text style={styles.travelPlannerStatLabel}>Planes Totales</Text>
@@ -331,8 +331,8 @@ const TravelSections = () => {
               <Text style={styles.travelPlannerStatLabel}>Días Totales</Text>
             </View>
           </View>
-        </View>
-
+              </View>
+              
         {/* Lista de planes de viaje */}
         <View style={styles.travelPlannerPlans}>
           {sampleTravelPlans.map((plan) => (
@@ -400,8 +400,8 @@ const TravelSections = () => {
                         <View key={index} style={styles.travelPlannerItem}>
                           <Icon name="checkmark-circle-outline" size={14} color="#4CAF50" />
                           <Text style={styles.travelPlannerItemText}>{item}</Text>
-                        </View>
-                      ))}
+                    </View>
+                  ))}
                       {category.items.length > 3 && (
                         <Text style={styles.travelPlannerMoreItems}>
                           +{category.items.length - 3} más...
@@ -425,8 +425,8 @@ const TravelSections = () => {
                         <Icon name="ellipse" size={6} color="#FF6B35" />
                         <Text style={styles.travelPlannerReminderText}>{reminder}</Text>
                       </View>
-                    ))}
-                  </View>
+                  ))}
+                </View>
                 </View>
               )}
 
@@ -445,8 +445,8 @@ const TravelSections = () => {
                   <Text style={styles.travelPlannerActionText}>Exportar</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          ))}
+                    </View>
+                  ))}
         </View>
 
         {/* Estado vacío si no hay planes */}
@@ -722,7 +722,7 @@ const TravelSections = () => {
                     </View>
                   ))}
                 </View>
-              </View>
+                </View>
 
               {/* Lugares de comida */}
               <View style={styles.tourPlannerMeals}>
@@ -780,8 +780,8 @@ const TravelSections = () => {
                   <Text style={styles.tourPlannerActionText}>Exportar</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          ))}
+                    </View>
+                  ))}
         </View>
 
         {/* Estado vacío si no hay tours */}
@@ -1105,15 +1105,15 @@ const TravelSections = () => {
                       <View style={styles.journeySchedulerItineraryContent}>
                         <Text style={styles.journeySchedulerItineraryCity}>{day.city}</Text>
                         <Text style={styles.journeySchedulerItineraryActivity}>{day.activity}</Text>
-                      </View>
-                    </View>
-                  ))}
+              </View>
+            </View>
+          ))}
                   {journey.itinerary.length > 5 && (
                     <Text style={styles.journeySchedulerItineraryMore}>
                       +{journey.itinerary.length - 5} días más...
                     </Text>
-                  )}
-                </View>
+      )}
+    </View>
               </View>
 
               {/* Notas importantes */}
@@ -1348,15 +1348,15 @@ const TravelSections = () => {
             onPress={() => {}}
           >
             <Icon name="add" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
+      </View>
 
         {/* Estadísticas de vacaciones */}
         <View style={styles.vacationSchedulerStats}>
           <View style={styles.vacationSchedulerStatCard}>
             <View style={styles.vacationSchedulerStatIcon}>
               <Icon name="sunny-outline" size={20} color="#FF6B35" />
-            </View>
+        </View>
             <View style={styles.vacationSchedulerStatContent}>
               <Text style={styles.vacationSchedulerStatNumber}>{vacationStats.totalVacations}</Text>
               <Text style={styles.vacationSchedulerStatLabel}>Vacaciones Totales</Text>
@@ -1380,8 +1380,8 @@ const TravelSections = () => {
               <Text style={styles.vacationSchedulerStatLabel}>Presupuesto Total</Text>
             </View>
           </View>
-        </View>
-
+              </View>
+              
         {/* Lista de vacaciones */}
         <View style={styles.vacationSchedulerVacations}>
           {sampleVacationPlans.map((vacation) => (
@@ -1403,8 +1403,8 @@ const TravelSections = () => {
                     </Text>
                   </View>
                 </View>
-              </View>
-
+                </View>
+                
               {/* Tipo de vacación y clima */}
               <View style={styles.vacationSchedulerVacationType}>
                 <View style={styles.vacationSchedulerTypeInfo}>
@@ -1478,8 +1478,8 @@ const TravelSections = () => {
                     </View>
                   ))}
                 </View>
-              </View>
-
+                  </View>
+                  
               {/* Lista de equipaje */}
               <View style={styles.vacationSchedulerPacking}>
                 <View style={styles.vacationSchedulerPackingHeader}>
@@ -1491,7 +1491,7 @@ const TravelSections = () => {
                     <View key={index} style={styles.vacationSchedulerPackingItem}>
                       <Icon name="square-outline" size={14} color="#795548" />
                       <Text style={styles.vacationSchedulerPackingText}>{item}</Text>
-                    </View>
+              </View>
                   ))}
                 </View>
               </View>
@@ -1509,8 +1509,8 @@ const TravelSections = () => {
                         <Text style={styles.vacationSchedulerItineraryDayText}>Día {index + 1}</Text>
                       </View>
                       <Text style={styles.vacationSchedulerItineraryActivity}>{day.activity}</Text>
-                    </View>
-                  ))}
+            </View>
+          ))}
                 </View>
               </View>
 
@@ -1539,7 +1539,7 @@ const TravelSections = () => {
                   <Icon name="download-outline" size={16} color="#FF9800" />
                   <Text style={styles.vacationSchedulerActionText}>Exportar</Text>
                 </TouchableOpacity>
-              </View>
+    </View>
             </View>
           ))}
         </View>
@@ -1753,28 +1753,28 @@ const TravelSections = () => {
             onPress={() => {}}
           >
             <Icon name="add" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
+      </View>
 
         {/* Estadísticas de viajes */}
         <View style={styles.tripOrganizerStats}>
           <View style={styles.tripOrganizerStatCard}>
             <View style={styles.tripOrganizerStatIcon}>
               <Icon name="bag-outline" size={20} color="#4CAF50" />
-            </View>
+        </View>
             <View style={styles.tripOrganizerStatContent}>
               <Text style={styles.tripOrganizerStatNumber}>{tripStats.totalTrips}</Text>
               <Text style={styles.tripOrganizerStatLabel}>Viajes Totales</Text>
-            </View>
-          </View>
+                </View>
+                </View>
           <View style={styles.tripOrganizerStatCard}>
             <View style={styles.tripOrganizerStatIcon}>
               <Icon name="checkmark-circle" size={20} color="#4CAF50" />
-            </View>
+                </View>
             <View style={styles.tripOrganizerStatContent}>
               <Text style={styles.tripOrganizerStatNumber}>{tripStats.confirmedTrips}</Text>
               <Text style={styles.tripOrganizerStatLabel}>Confirmados</Text>
-            </View>
+              </View>
           </View>
           <View style={styles.tripOrganizerStatCard}>
             <View style={styles.tripOrganizerStatIcon}>
@@ -1872,9 +1872,9 @@ const TravelSections = () => {
                     <View key={index} style={styles.tripOrganizerActivityItem}>
                       <Icon name="checkmark-circle-outline" size={14} color="#4CAF50" />
                       <Text style={styles.tripOrganizerActivityText}>{activity}</Text>
-                    </View>
-                  ))}
-                </View>
+            </View>
+          ))}
+    </View>
               </View>
 
               {/* Documentos necesarios */}
@@ -1891,20 +1891,20 @@ const TravelSections = () => {
                     </View>
                   ))}
                 </View>
-              </View>
-
+      </View>
+      
               {/* Lista de equipaje */}
               <View style={styles.tripOrganizerPacking}>
                 <View style={styles.tripOrganizerPackingHeader}>
                   <Icon name="bag-outline" size={16} color="#795548" />
                   <Text style={styles.tripOrganizerPackingTitle}>Lista de Equipaje</Text>
-                </View>
+      </View>
                 <View style={styles.tripOrganizerPackingList}>
                   {trip.packingList.map((item, index) => (
                     <View key={index} style={styles.tripOrganizerPackingItem}>
                       <Icon name="square-outline" size={14} color="#795548" />
                       <Text style={styles.tripOrganizerPackingText}>{item}</Text>
-                    </View>
+    </View>
                   ))}
                 </View>
               </View>
@@ -1968,18 +1968,18 @@ const TravelSections = () => {
                 <TouchableOpacity style={styles.tripOrganizerActionButton}>
                   <Icon name="download-outline" size={16} color="#FF9800" />
                   <Text style={styles.tripOrganizerActionText}>Exportar</Text>
-                </TouchableOpacity>
+        </TouchableOpacity>
               </View>
             </View>
           ))}
-        </View>
-
+      </View>
+      
         {/* Estado vacío si no hay viajes */}
         {sampleTripOrganizations.length === 0 && (
           <View style={styles.tripOrganizerEmptyState}>
             <View style={styles.tripOrganizerEmptyIcon}>
               <Icon name="bag-outline" size={64} color="#E0E0E0" />
-            </View>
+      </View>
             <Text style={styles.tripOrganizerEmptyTitle}>No hay viajes organizados</Text>
             <Text style={styles.tripOrganizerEmptySubtitle}>
               Organiza tu próximo viaje y comienza a explorar
@@ -1991,10 +1991,10 @@ const TravelSections = () => {
               <Icon name="add" size={20} color="#FFFFFF" />
               <Text style={styles.tripOrganizerEmptyButtonText}>Organizar Viaje</Text>
             </TouchableOpacity>
-          </View>
+    </View>
         )}
       </ScrollView>
-    );
+  );
   };
 
   const renderActiveSection = () => {

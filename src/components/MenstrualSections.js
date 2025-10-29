@@ -269,9 +269,9 @@ const MenstrualSections = () => {
             onPress={openPeriodModal}
           >
             <Icon name="add" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-
+        </TouchableOpacity>
+      </View>
+      
         {/* Estadísticas */}
         <View style={styles.periodLogStats}>
           <View style={styles.periodLogStatCard}>
@@ -437,15 +437,15 @@ const MenstrualSections = () => {
                            symptom === 'stress' ? 'Estrés' : 'Otro'}
                         </Text>
                       </View>
-                    ))}
-                  </View>
+                ))}
+              </View>
                 )}
                 
                 {entry.notes && (
                   <Text style={styles.periodLogEntryNotes}>{entry.notes}</Text>
                 )}
-              </View>
-            ))}
+            </View>
+          ))}
           </View>
         </View>
 
@@ -538,13 +538,13 @@ const MenstrualSections = () => {
           <View style={styles.cycleDurationHeaderContent}>
             <View style={styles.cycleDurationHeaderIcon}>
               <Icon name="time" size={24} color="#FFFFFF" />
-            </View>
+      </View>
             <View style={styles.cycleDurationHeaderText}>
               <Text style={styles.cycleDurationHeaderTitle}>Duración del Ciclo</Text>
               <Text style={styles.cycleDurationHeaderSubtitle}>
                 Análisis de la regularidad menstrual
               </Text>
-            </View>
+    </View>
           </View>
           <TouchableOpacity 
             style={styles.cycleDurationSettingsButton}
@@ -583,8 +583,8 @@ const MenstrualSections = () => {
               <Text style={styles.cycleDurationStatLabel}>Irregulares</Text>
             </View>
           </View>
-        </View>
-
+      </View>
+      
         {/* Gráfico de duración del ciclo */}
         <View style={styles.cycleDurationChart}>
           <View style={styles.cycleDurationChartHeader}>
@@ -593,7 +593,7 @@ const MenstrualSections = () => {
               <View style={styles.cycleDurationLegendItem}>
                 <View style={[styles.cycleDurationLegendDot, { backgroundColor: '#4CAF50' }]} />
                 <Text style={styles.cycleDurationLegendText}>Regular (26-30)</Text>
-              </View>
+          </View>
               <View style={styles.cycleDurationLegendItem}>
                 <View style={[styles.cycleDurationLegendDot, { backgroundColor: '#FF9800' }]} />
                 <Text style={styles.cycleDurationLegendText}>Corto (&lt;26)</Text>
@@ -723,22 +723,22 @@ const MenstrualSections = () => {
                 <Icon name="checkmark-circle" size={16} color="#4CAF50" />
                 <Text style={styles.cycleDurationRecommendationText}>
                   ¡Excelente! Tu ciclo es muy regular. Mantén tus hábitos actuales.
-                </Text>
-              </View>
+              </Text>
+            </View>
             ) : stats.consistency >= 60 ? (
               <View style={styles.cycleDurationRecommendationItem}>
                 <Icon name="warning" size={16} color="#FF9800" />
                 <Text style={styles.cycleDurationRecommendationText}>
                   Tu ciclo es moderadamente regular. Considera reducir el estrés.
-                </Text>
-              </View>
+              </Text>
+            </View>
             ) : (
               <View style={styles.cycleDurationRecommendationItem}>
                 <Icon name="alert-circle" size={16} color="#F44336" />
                 <Text style={styles.cycleDurationRecommendationText}>
                   Tu ciclo es irregular. Consulta con un profesional de la salud.
-                </Text>
-              </View>
+              </Text>
+            </View>
             )}
             
             <View style={styles.cycleDurationRecommendationItem}>
@@ -753,16 +753,16 @@ const MenstrualSections = () => {
               <Text style={styles.cycleDurationRecommendationText}>
                 Mantén un horario de sueño consistente para regular tu ciclo
               </Text>
-            </View>
+          </View>
             
             <View style={styles.cycleDurationRecommendationItem}>
               <Icon name="restaurant" size={16} color="#FF9800" />
               <Text style={styles.cycleDurationRecommendationText}>
                 Una dieta balanceada puede influir en la regularidad del ciclo
               </Text>
-            </View>
-          </View>
         </View>
+      </View>
+    </View>
 
         {/* Historial detallado */}
         <View style={styles.cycleDurationHistory}>
@@ -931,7 +931,7 @@ const MenstrualSections = () => {
             <Icon name="settings" size={20} color="#E91E63" />
           </TouchableOpacity>
         </View>
-
+        
         {/* Estadísticas del mes */}
         <View style={styles.periodTrackerStats}>
           <View style={styles.periodTrackerStatCard}>
@@ -999,23 +999,23 @@ const MenstrualSections = () => {
                 const dayData = samplePeriodData[dateKey];
                 
                 return (
-                  <TouchableOpacity
+                    <TouchableOpacity
                     key={day}
-                    style={[
+                      style={[
                       styles.periodTrackerDay,
                       dayData && styles.periodTrackerDayMarked,
                       dayData && { backgroundColor: getFlowColor(dayData.flow) }
-                    ]}
-                    onPress={() => {
+                      ]}
+                      onPress={() => {
                       console.log('Editar día:', day);
-                    }}
-                  >
-                    <Text style={[
+                      }}
+                    >
+                      <Text style={[
                       styles.periodTrackerDayText,
                       dayData && styles.periodTrackerDayTextMarked
-                    ]}>
-                      {day}
-                    </Text>
+                      ]}>
+                        {day}
+                      </Text>
                     {dayData && (
                       <View style={styles.periodTrackerDayIndicator}>
                         <Icon 
@@ -1131,17 +1131,17 @@ const MenstrualSections = () => {
                     ]} />
                   </View>
                 </View>
-              </View>
-            ))}
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
 
         {/* Recomendaciones */}
         <View style={styles.periodTrackerRecommendations}>
           <View style={styles.periodTrackerRecommendationsHeader}>
             <Text style={styles.periodTrackerRecommendationsTitle}>Recomendaciones</Text>
             <Icon name="bulb" size={20} color="#E91E63" />
-          </View>
+        </View>
           
           <View style={styles.periodTrackerRecommendationsList}>
             <View style={styles.periodTrackerRecommendationItem}>
@@ -1149,7 +1149,7 @@ const MenstrualSections = () => {
               <Text style={styles.periodTrackerRecommendationText}>
                 Mantén una hidratación adecuada durante tu período
               </Text>
-            </View>
+      </View>
             <View style={styles.periodTrackerRecommendationItem}>
               <Icon name="fitness" size={16} color="#4CAF50" />
               <Text style={styles.periodTrackerRecommendationText}>
@@ -1291,14 +1291,14 @@ const MenstrualSections = () => {
           >
             <Icon name="add" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>
-
+      </View>
+      
         {/* Estadísticas de recordatorios */}
         <View style={styles.cycleReminderStats}>
           <View style={styles.cycleReminderStatCard}>
             <View style={styles.cycleReminderStatIcon}>
               <Icon name="alarm" size={20} color="#E91E63" />
-            </View>
+          </View>
             <View style={styles.cycleReminderStatContent}>
               <Text style={styles.cycleReminderStatNumber}>{sampleReminders.length}</Text>
               <Text style={styles.cycleReminderStatLabel}>Total</Text>
@@ -1418,8 +1418,8 @@ const MenstrualSections = () => {
                   </TouchableOpacity>
                 </View>
               </View>
-            ))}
-          </View>
+              ))}
+            </View>
         </View>
 
         {/* Tipos de recordatorios */}
@@ -1456,24 +1456,24 @@ const MenstrualSections = () => {
           <View style={styles.cycleReminderSettingsHeader}>
             <Text style={styles.cycleReminderSettingsTitle}>Configuración</Text>
             <Icon name="settings" size={20} color="#E91E63" />
-          </View>
-          
+        </View>
+
           <View style={styles.cycleReminderSettingsList}>
             <View style={styles.cycleReminderSettingsItem}>
               <View style={styles.cycleReminderSettingsItemInfo}>
                 <Icon name="notifications" size={20} color="#E91E63" />
                 <Text style={styles.cycleReminderSettingsItemLabel}>Notificaciones Push</Text>
-              </View>
+        </View>
               <TouchableOpacity style={styles.cycleReminderSettingsToggle}>
                 <View style={[styles.cycleReminderSettingsToggleDot, { backgroundColor: '#4CAF50' }]} />
               </TouchableOpacity>
-            </View>
+      </View>
             
             <View style={styles.cycleReminderSettingsItem}>
               <View style={styles.cycleReminderSettingsItemInfo}>
                 <Icon name="volume-high" size={20} color="#E91E63" />
                 <Text style={styles.cycleReminderSettingsItemLabel}>Sonido de Alerta</Text>
-              </View>
+    </View>
               <TouchableOpacity style={styles.cycleReminderSettingsToggle}>
                 <View style={[styles.cycleReminderSettingsToggleDot, { backgroundColor: '#4CAF50' }]} />
               </TouchableOpacity>
@@ -1487,8 +1487,8 @@ const MenstrualSections = () => {
               <TouchableOpacity style={styles.cycleReminderSettingsToggle}>
                 <View style={[styles.cycleReminderSettingsToggleDot, { backgroundColor: '#4CAF50' }]} />
               </TouchableOpacity>
-            </View>
-            
+      </View>
+      
             <View style={styles.cycleReminderSettingsItem}>
               <View style={styles.cycleReminderSettingsItemInfo}>
                 <Icon name="moon" size={20} color="#E91E63" />
@@ -1506,8 +1506,8 @@ const MenstrualSections = () => {
           <View style={styles.cycleReminderTipsHeader}>
             <Text style={styles.cycleReminderTipsTitle}>Consejos</Text>
             <Icon name="bulb" size={20} color="#E91E63" />
-          </View>
-          
+            </View>
+
           <View style={styles.cycleReminderTipsList}>
             <View style={styles.cycleReminderTipItem}>
               <Icon name="checkmark-circle" size={16} color="#4CAF50" />
@@ -1636,7 +1636,7 @@ const MenstrualSections = () => {
           >
             <Icon name="settings" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>
+            </View>
 
         {/* Estadísticas del flujo */}
         <View style={styles.flowMonitorStats}>
@@ -1666,22 +1666,22 @@ const MenstrualSections = () => {
               <Text style={styles.flowMonitorStatNumber}>{flowStats.mostCommonSymptom}</Text>
               <Text style={styles.flowMonitorStatLabel}>Síntoma Común</Text>
             </View>
+            </View>
           </View>
-        </View>
 
         {/* Análisis de intensidad */}
         <View style={styles.flowMonitorAnalysis}>
           <View style={styles.flowMonitorAnalysisHeader}>
             <Text style={styles.flowMonitorAnalysisTitle}>Análisis de Intensidad</Text>
             <Icon name="bar-chart" size={20} color="#E91E63" />
-          </View>
+                </View>
           
           <View style={styles.flowMonitorAnalysisContent}>
             <View style={styles.flowMonitorAnalysisItem}>
               <View style={styles.flowMonitorAnalysisItemHeader}>
                 <View style={[styles.flowMonitorAnalysisDot, { backgroundColor: '#FFB6C1' }]} />
                 <Text style={styles.flowMonitorAnalysisLabel}>Pesado</Text>
-              </View>
+                </View>
               <View style={styles.flowMonitorAnalysisBar}>
                 <View style={[
                   styles.flowMonitorAnalysisBarFill,
@@ -1690,9 +1690,9 @@ const MenstrualSections = () => {
                     backgroundColor: '#FFB6C1'
                   }
                 ]} />
-              </View>
+                </View>
               <Text style={styles.flowMonitorAnalysisValue}>{flowStats.heavyDays} días</Text>
-            </View>
+              </View>
             
             <View style={styles.flowMonitorAnalysisItem}>
               <View style={styles.flowMonitorAnalysisItemHeader}>
@@ -1710,12 +1710,12 @@ const MenstrualSections = () => {
               </View>
               <Text style={styles.flowMonitorAnalysisValue}>{flowStats.regularDays} días</Text>
             </View>
-            
+
             <View style={styles.flowMonitorAnalysisItem}>
               <View style={styles.flowMonitorAnalysisItemHeader}>
                 <View style={[styles.flowMonitorAnalysisDot, { backgroundColor: '#FFE4E1' }]} />
                 <Text style={styles.flowMonitorAnalysisLabel}>Ligero</Text>
-              </View>
+                </View>
               <View style={styles.flowMonitorAnalysisBar}>
                 <View style={[
                   styles.flowMonitorAnalysisBarFill,
@@ -1762,9 +1762,9 @@ const MenstrualSections = () => {
                 
                 <View style={styles.flowMonitorDaysGrid}>
                   {Object.entries(days).map(([day, data]) => (
-                    <TouchableOpacity
-                      key={`${month}-${day}`}
-                      style={[
+                      <TouchableOpacity
+                        key={`${month}-${day}`}
+                        style={[
                         styles.flowMonitorDayCard,
                         { backgroundColor: getIntensityColor(data.intensity) }
                       ]}
@@ -1782,14 +1782,14 @@ const MenstrualSections = () => {
                               name={getSymptomIcon(symptom)}
                               size={12}
                               color={getSymptomColor(symptom)}
-                            />
-                          ))}
-                        </View>
+                      />
+                    ))}
+                  </View>
                       )}
                     </TouchableOpacity>
-                  ))}
-                </View>
+                ))}
               </View>
+            </View>
             ))}
           </View>
         </View>
@@ -1799,7 +1799,7 @@ const MenstrualSections = () => {
           <View style={styles.flowMonitorSymptomsHeader}>
             <Text style={styles.flowMonitorSymptomsTitle}>Síntomas Registrados</Text>
             <Icon name="medical" size={20} color="#E91E63" />
-          </View>
+      </View>
           
           <View style={styles.flowMonitorSymptomsList}>
             {[
@@ -1816,7 +1816,7 @@ const MenstrualSections = () => {
                     { backgroundColor: getSymptomColor(item.symptom) }
                   ]}>
                     <Icon name={getSymptomIcon(item.symptom)} size={16} color="#FFFFFF" />
-                  </View>
+    </View>
                   <Text style={styles.flowMonitorSymptomLabel}>{item.label}</Text>
                 </View>
                 <View style={styles.flowMonitorSymptomStats}>

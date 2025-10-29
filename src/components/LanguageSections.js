@@ -434,7 +434,7 @@ const LanguageSections = () => {
     const languageStats = getLanguageStats(selectedLanguage);
 
     return (
-      <View style={styles.section}>
+    <View style={styles.section}>
         {/* Header mejorado */}
         <View style={styles.vocabularyHeader}>
           <View style={styles.vocabularyHeaderContent}>
@@ -486,11 +486,11 @@ const LanguageSections = () => {
                       {stats.mastered}/{stats.total}
                     </Text>
                   </View>
-                </TouchableOpacity>
+        </TouchableOpacity>
               );
             })}
           </ScrollView>
-        </View>
+      </View>
 
         {/* Barra de búsqueda y filtros */}
         <View style={styles.vocabularyFilters}>
@@ -511,8 +511,8 @@ const LanguageSections = () => {
                 <Icon name="close-circle" size={20} color="#6B7280" />
               </TouchableOpacity>
             )}
-          </View>
-          
+        </View>
+        
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
             {categories[selectedLanguage]?.map((category) => (
               <TouchableOpacity
@@ -610,8 +610,8 @@ const LanguageSections = () => {
                   : `Agrega tu primera palabra en ${currentLanguage?.name} para comenzar a estudiar`
                 }
               </Text>
-            </View>
-          ) : (
+          </View>
+        ) : (
             filteredVocabulary.map((item) => (
               <View key={item.id} style={styles.vocabularyCard}>
                 <View style={styles.vocabularyCardHeader}>
@@ -731,10 +731,10 @@ const LanguageSections = () => {
                     <Text style={styles.vocabularyQuickActionText}>Compartir</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
-            ))
-          )}
-        </View>
+            </View>
+          ))
+        )}
+      </View>
       </View>
     );
   };
@@ -877,14 +877,14 @@ const LanguageSections = () => {
                 <Icon name="checkmark" size={20} color="#4CAF50" />
               </TouchableOpacity>
             </View>
-          </View>
+            </View>
           
           <View style={styles.canvasArea}>
             <View style={styles.characterGuide}>
               <Text style={styles.characterGuideText}>
                 {template.characters.join(' ')}
               </Text>
-            </View>
+          </View>
             
             <View 
               style={styles.canvas}
@@ -921,13 +921,13 @@ const LanguageSections = () => {
                 />
               ))}
             </View>
-          </View>
-        </View>
-      );
+      </View>
+    </View>
+  );
     };
 
     return (
-      <View style={styles.section}>
+    <View style={styles.section}>
         {/* Header mejorado */}
         <View style={styles.writingHeader}>
           <View style={styles.writingHeaderContent}>
@@ -980,11 +980,11 @@ const LanguageSections = () => {
                       {stats.completed}/{stats.total}
                     </Text>
                   </View>
-                </TouchableOpacity>
+        </TouchableOpacity>
               );
             })}
           </ScrollView>
-        </View>
+      </View>
 
         {/* Canvas de escritura */}
         {showCanvas && selectedTemplate && (
@@ -1014,7 +1014,7 @@ const LanguageSections = () => {
             <Text style={styles.writingTemplatesSubtitle}>
               Selecciona una plantilla para comenzar a practicar
             </Text>
-          </View>
+              </View>
           
           <View style={styles.writingTemplatesGrid}>
             {practiceTemplates[selectedWritingSystem]?.map((template) => (
@@ -1033,7 +1033,7 @@ const LanguageSections = () => {
                     { backgroundColor: getDifficultyColor(template.difficulty) }
                   ]}>
                     <Text style={styles.writingTemplateDifficultyText}>{template.difficulty}</Text>
-                  </View>
+            </View>
                 </View>
                 <View style={styles.writingTemplateCharacters}>
                   {template.characters.map((char, index) => (
@@ -1118,10 +1118,10 @@ const LanguageSections = () => {
                   <Text style={styles.writingHistoryDate}>
                     {new Date(session.date).toLocaleDateString('es-ES')}
                   </Text>
-                </View>
-              ))}
+            </View>
+          ))}
             </ScrollView>
-          </View>
+        </View>
         )}
       </View>
     );
@@ -1297,7 +1297,7 @@ const LanguageSections = () => {
           <View style={styles.grammarHeaderContent}>
             <View style={styles.grammarHeaderIcon}>
               <Icon name="document-text" size={24} color="#FFFFFF" />
-            </View>
+    </View>
             <View style={styles.grammarHeaderText}>
               <Text style={styles.grammarHeaderTitle}>Notas de Gramática</Text>
               <Text style={styles.grammarHeaderSubtitle}>
@@ -1366,10 +1366,10 @@ const LanguageSections = () => {
                 onPress={() => setGrammarSearchQuery('')}
               >
                 <Icon name="close-circle" size={20} color="#6B7280" />
-              </TouchableOpacity>
+        </TouchableOpacity>
             )}
-          </View>
-          
+      </View>
+      
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.grammarCategoriesScroll}>
             {grammarCategories[selectedGrammarLanguage]?.map((category) => (
               <TouchableOpacity
@@ -1389,14 +1389,14 @@ const LanguageSections = () => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+      </View>
 
         {/* Estadísticas */}
         <View style={styles.grammarStats}>
           <View style={styles.grammarStatCard}>
             <View style={styles.grammarStatIcon}>
               <Icon name="trophy" size={20} color="#4CAF50" />
-            </View>
+    </View>
             <View style={styles.grammarStatContent}>
               <Text style={styles.grammarStatNumber}>{stats.mastered}</Text>
               <Text style={styles.grammarStatLabel}>Dominadas</Text>
@@ -1861,12 +1861,12 @@ const LanguageSections = () => {
                       {languageStats.mastered}/{languageStats.total}
                     </Text>
                   </View>
-                </TouchableOpacity>
+        </TouchableOpacity>
               );
             })}
           </ScrollView>
-        </View>
-
+      </View>
+      
         {/* Barra de búsqueda y filtros */}
         <View style={styles.pronunciationFilters}>
           <View style={styles.pronunciationSearchContainer}>
@@ -1886,7 +1886,7 @@ const LanguageSections = () => {
                 <Icon name="close-circle" size={20} color="#6B7280" />
               </TouchableOpacity>
             )}
-          </View>
+      </View>
           
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pronunciationCategoriesScroll}>
             {pronunciationCategories[selectedPronunciationLanguage]?.map((category) => (
@@ -1907,7 +1907,7 @@ const LanguageSections = () => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+    </View>
 
         {/* Estadísticas */}
         <View style={styles.pronunciationStats}>
@@ -2378,9 +2378,9 @@ const LanguageSections = () => {
             </View>
             <TouchableOpacity style={styles.conversationPlayButton}>
               <Icon name="play" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-
+        </TouchableOpacity>
+      </View>
+      
           {/* Descripción */}
           <View style={styles.conversationDescription}>
             <Text style={styles.conversationDescriptionText}>{selectedConversation.description}</Text>
@@ -2423,9 +2423,9 @@ const LanguageSections = () => {
               <Icon name="bookmark" size={20} color="#6B7280" />
               <Text style={styles.conversationControlText}>Guardar</Text>
             </TouchableOpacity>
-          </View>
-        </View>
-      );
+      </View>
+    </View>
+  );
     }
 
     return (
