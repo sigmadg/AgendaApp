@@ -1,0 +1,201 @@
+/* Nutrition Component Styles */
+
+.nutrition-segment {
+  --background: #f8f9fa;
+  --background-checked: #4CAF50;
+  --color-checked: #ffffff;
+  margin-bottom: 16px;
+}
+
+.stats-card {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.stats-card h3 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d4150;
+  margin: 8px 0;
+}
+
+.stats-card p {
+  color: #6c757d;
+  margin: 0;
+}
+
+.category-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2d4150;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-icon {
+  color: #4CAF50;
+}
+
+.category-count {
+  margin-left: auto;
+}
+
+.purchased-item {
+  --background: #f8f9fa;
+  opacity: 0.7;
+}
+
+.completed-text {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.recipe-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2d4150;
+}
+
+.recipe-text {
+  color: #6c757d;
+  line-height: 1.5;
+  margin-top: 8px;
+  white-space: pre-line;
+}
+
+h4 {
+  color: #2d4150;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .nutrition-segment {
+    --background: #1e1e1e;
+  }
+
+  .stats-card,
+  .category-card,
+  .recipe-card {
+    --background: #2d2d2d;
+  }
+
+  .category-title,
+  .recipe-title,
+  .stats-card h3 {
+    color: #ffffff;
+  }
+
+  .stats-card p,
+  .recipe-text {
+    color: #cccccc;
+  }
+
+  .purchased-item {
+    --background: #2d2d2d;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .nutrition-segment {
+    font-size: 14px;
+  }
+
+  .category-title,
+  .recipe-title {
+    font-size: 16px;
+  }
+
+  .stats-card h3 {
+    font-size: 20px;
+  }
+}
+
+/* Custom scrollbar for modal content */
+ion-modal ion-content {
+  --overflow: scroll;
+}
+
+/* Meal planning styles */
+.meal-plan-item {
+  margin-bottom: 12px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+}
+
+.meal-plan-item h4 {
+  margin: 0 0 4px 0;
+  color: #2d4150;
+  font-size: 16px;
+}
+
+.meal-plan-item p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Market list styles */
+.market-item {
+  margin-bottom: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.market-item:last-child {
+  border-bottom: none;
+}
+
+.market-item.completed {
+  opacity: 0.6;
+}
+
+.market-item.completed h3 {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+/* Recipe styles */
+.recipe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recipe-content {
+  margin-top: 12px;
+}
+
+.recipe-section {
+  margin-bottom: 16px;
+}
+
+.recipe-section h4 {
+  color: #2d4150;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.recipe-section p {
+  color: #6c757d;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+}

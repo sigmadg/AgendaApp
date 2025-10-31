@@ -1,0 +1,273 @@
+/* ============================================
+   EXERCISE COMPONENT - MODERN & ELEGANT STYLES
+   ============================================ */
+
+/* Modern Exercise Segment */
+.exercise-segment {
+  --background: rgba(255, 255, 255, 0.9);
+  --background-checked: linear-gradient(135deg, #10b981 0%, #f59e0b 100%);
+  --color-checked: #ffffff;
+  --border-radius: 16px;
+  margin: 20px 16px 0 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.exercise-segment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.exercise-segment ion-segment-button {
+  --background: transparent;
+  --background-checked: linear-gradient(135deg, #10b981 0%, #f59e0b 100%);
+  --color: #64748b;
+  --color-checked: #ffffff;
+  --border-radius: 12px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.025em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.exercise-segment ion-segment-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+  z-index: -1;
+}
+
+.exercise-segment ion-segment-button:hover::before {
+  left: 100%;
+}
+
+/* Elegant Routine Cards */
+.routine-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+  margin: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.routine-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444, #8b5cf6);
+  border-radius: 20px 20px 0 0;
+}
+
+.routine-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
+}
+
+.routine-title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+/* Modern Difficulty Chip */
+.difficulty-chip {
+  --background: linear-gradient(135deg, #10b981 0%, #f59e0b 100%);
+  --color: #ffffff;
+  --border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  margin-left: auto;
+}
+
+/* Elegant Routine Description */
+.routine-description {
+  margin: 12px 0;
+  color: #64748b;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.5;
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.8) 0%, rgba(148, 163, 184, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.duration-item {
+  --background: transparent;
+  margin-bottom: 12px;
+}
+
+.exercises-section h4 {
+  color: #2d4150;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.exercise-card {
+  margin-bottom: 8px;
+  border-left: 4px solid #45B7D1;
+}
+
+.exercise-card h5 {
+  color: #2d4150;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.exercise-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.goal-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.goal-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2d4150;
+}
+
+.date-chip {
+  margin-left: auto;
+}
+
+.goal-objective {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #2d4150;
+}
+
+.progress-item {
+  --background: transparent;
+  margin-bottom: 12px;
+}
+
+.goal-notes {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.exercise-input-card {
+  margin-bottom: 12px;
+  border-left: 4px solid #45B7D1;
+}
+
+.exercise-number {
+  font-weight: bold;
+  color: #45B7D1;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.add-exercise-card {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: #45B7D1;
+  background-color: #f8f9fa;
+}
+
+.add-exercise-card h5 {
+  color: #45B7D1;
+  margin-bottom: 12px;
+}
+
+.remove-exercise-btn {
+  margin-top: 8px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .exercise-segment {
+    --background: #1e1e1e;
+  }
+
+  .routine-card,
+  .goal-card,
+  .exercise-input-card {
+    --background: #2d2d2d;
+  }
+
+  .routine-title,
+  .goal-title,
+  .exercises-section h4,
+  .exercise-card h5,
+  .goal-objective {
+    color: #ffffff;
+  }
+
+  .routine-description,
+  .exercise-detail,
+  .goal-notes {
+    color: #cccccc;
+  }
+
+  .add-exercise-card {
+    background-color: #2d2d2d;
+    border-color: #66d9ef;
+  }
+
+  .add-exercise-card h5 {
+    color: #66d9ef;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .exercise-segment {
+    font-size: 14px;
+  }
+
+  .routine-title,
+  .goal-title {
+    font-size: 16px;
+  }
+
+  .exercise-detail {
+    font-size: 12px;
+  }
+}

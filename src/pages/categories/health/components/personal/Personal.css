@@ -1,0 +1,274 @@
+/* Personal Component Styles */
+
+.personal-segment {
+  --background: #f8f9fa;
+  --background-checked: #6366f1;
+  --color-checked: #ffffff;
+  margin-bottom: 16px;
+}
+
+.stats-card {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.stats-card h3 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d4150;
+  margin: 8px 0;
+}
+
+.stats-card p {
+  color: #6c757d;
+  margin: 0;
+}
+
+.day-stat {
+  text-align: center;
+  padding: 12px;
+}
+
+.day-stat ion-badge {
+  margin-bottom: 8px;
+}
+
+.task-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.task-card.completed {
+  opacity: 0.7;
+  background-color: #f8f9fa;
+}
+
+.task-checkbox {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-checkbox:hover {
+  transform: scale(1.1);
+}
+
+.completed-task {
+  opacity: 0.7;
+}
+
+.completed-text {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.priority-chip {
+  margin-left: 8px;
+}
+
+.event-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2d4150;
+}
+
+.event-type-chip {
+  margin-left: auto;
+}
+
+.event-description {
+  margin-top: 12px;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 16px auto;
+  border: 4px solid #6366f1;
+}
+
+.edit-profile-btn {
+  margin-top: 16px;
+}
+
+.logout-btn {
+  margin-top: 24px;
+}
+
+.save-settings-btn {
+  margin-top: 24px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .personal-segment {
+    --background: #1e1e1e;
+  }
+
+  .stats-card,
+  .task-card,
+  .event-card {
+    --background: #2d2d2d;
+  }
+
+  .stats-card h3,
+  .event-title {
+    color: #ffffff;
+  }
+
+  .stats-card p,
+  .event-description {
+    color: #cccccc;
+  }
+
+  .task-card.completed {
+    background-color: #2d2d2d;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .personal-segment {
+    font-size: 14px;
+  }
+
+  .stats-card h3 {
+    font-size: 20px;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .event-title {
+    font-size: 16px;
+  }
+
+  .task-card {
+    margin-bottom: 8px;
+  }
+
+  .event-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* Custom scrollbar for modal content */
+ion-modal ion-content {
+  --overflow: scroll;
+}
+
+/* Task completion animation */
+.task-card {
+  transition: all 0.3s ease;
+}
+
+.task-card.completed {
+  transform: scale(0.98);
+}
+
+/* Event type colors */
+.event-type-work {
+  --background: #1976d2;
+}
+
+.event-type-personal {
+  --background: #9c27b0;
+}
+
+.event-type-health {
+  --background: #4caf50;
+}
+
+.event-type-finance {
+  --background: #ff9800;
+}
+
+.event-type-education {
+  --background: #3f51b5;
+}
+
+.event-type-social {
+  --background: #e91e63;
+}
+
+.event-type-travel {
+  --background: #607d8b;
+}
+
+/* Priority colors */
+.priority-high {
+  --background: #f44336;
+}
+
+.priority-medium {
+  --background: #ff9800;
+}
+
+.priority-low {
+  --background: #4caf50;
+}
+
+/* Calendar styles */
+.calendar-day {
+  text-align: center;
+  padding: 8px;
+  margin: 4px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.calendar-day.today {
+  background-color: #e3f2fd;
+  border: 2px solid #2196f3;
+}
+
+.calendar-day.has-events {
+  background-color: #fff3e0;
+}
+
+.calendar-day-number {
+  font-weight: bold;
+  color: #2d4150;
+}
+
+.calendar-events-count {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
+/* Settings toggles */
+.settings-toggle {
+  --background-checked: #6366f1;
+}
+
+/* Profile info styles */
+.profile-info-item {
+  margin-bottom: 16px;
+}
+
+.profile-info-item h3 {
+  margin: 0 0 4px 0;
+  color: #2d4150;
+  font-weight: 600;
+}
+
+.profile-info-item p {
+  margin: 0;
+  color: #6c757d;
+}

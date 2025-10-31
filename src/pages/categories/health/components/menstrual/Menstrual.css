@@ -1,0 +1,200 @@
+/* Menstrual Component Styles */
+
+.menstrual-segment {
+  --background: #f8f9fa;
+  --background-checked: #e91e63;
+  --color-checked: #ffffff;
+  margin-bottom: 16px;
+}
+
+.period-entry-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.entry-date {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2d4150;
+}
+
+.flow-chip {
+  margin-left: auto;
+}
+
+.symptoms-section h4 {
+  color: #2d4150;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.symptoms-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.symptom-chip {
+  margin: 0;
+}
+
+.entry-notes {
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.stats-card {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.stats-card h3 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d4150;
+  margin: 8px 0;
+}
+
+.stats-card p {
+  color: #6c757d;
+  margin: 0;
+}
+
+.reminder-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flow-monitor-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flow-monitor-card h4 {
+  color: #2d4150;
+  margin: 8px 0;
+}
+
+.flow-monitor-card p {
+  color: #6c757d;
+  margin: 4px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.success {
+  background-color: #10dc60;
+}
+
+.progress-fill.warning {
+  background-color: #ffed4e;
+}
+
+.progress-fill.danger {
+  background-color: #f04141;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 12px;
+}
+
+.stat-item ion-badge {
+  margin-bottom: 8px;
+}
+
+.symptom-selection-chip {
+  width: 100%;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .menstrual-segment {
+    --background: #1e1e1e;
+  }
+
+  .period-entry-card,
+  .stats-card,
+  .reminder-card,
+  .flow-monitor-card {
+    --background: #2d2d2d;
+  }
+
+  .entry-date,
+  .stats-card h3,
+  .flow-monitor-card h4,
+  .symptoms-section h4 {
+    color: #ffffff;
+  }
+
+  .entry-notes,
+  .stats-card p,
+  .flow-monitor-card p {
+    color: #cccccc;
+  }
+
+  .progress-bar {
+    background-color: #495057;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .menstrual-segment {
+    font-size: 14px;
+  }
+
+  .entry-date {
+    font-size: 14px;
+  }
+
+  .stats-card h3 {
+    font-size: 20px;
+  }
+
+  .symptoms-chips {
+    gap: 6px;
+  }
+
+  .symptom-chip {
+    font-size: 12px;
+  }
+}
+
+/* Custom scrollbar for modal content */
+ion-modal ion-content {
+  --overflow: scroll;
+}
+
+/* Flow level colors */
+.flow-light {
+  --background: #10dc60;
+}
+
+.flow-regular {
+  --background: #ffed4e;
+}
+
+.flow-heavy {
+  --background: #f04141;
+}
