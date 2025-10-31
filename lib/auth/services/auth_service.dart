@@ -21,6 +21,7 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
   static const String _rememberMeKey = 'remember_me';
+  static const String _passwordKey = 'remembered_password';
 
   final SupabaseClient _supabase = Supabase.instance.client;
 
@@ -65,6 +66,7 @@ class AuthService {
             'user': user.toJson(),
           },
           rememberMe,
+          password: rememberMe ? password : null,
         );
 
         print('AuthService: Login successful');
@@ -351,6 +353,7 @@ class AuthService {
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
       await prefs.remove(_rememberMeKey);
+      await prefs.remove(_passwordKey);
 
       print('AuthService: Logout successful');
       return {'success': true};
@@ -525,7 +528,7 @@ class AuthService {
     }
   }
 
-  Future<void> _storeAuthData(Map<String, dynamic> data, bool rememberMe) async {
+  Future<void> _storeAuthData(Map<String, dynamic> data, bool rememberMe, {String? password}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = data['token'] as String;
@@ -534,6 +537,16 @@ class AuthService {
       await prefs.setString(_tokenKey, token);
       await prefs.setString(_userKey, jsonEncode(user));
       await prefs.setBool(_rememberMeKey, rememberMe);
+      
+      // Guardar contraseña solo si rememberMe es true
+      if (rememberMe && password != null) {
+        await prefs.setString(_passwordKey, password);
+        print('AuthService: Password stored for remember me');
+      } else {
+        // Limpiar contraseña guardada si rememberMe es false
+        await prefs.remove(_passwordKey);
+        print('AuthService: Password cleared (remember me disabled)');
+      }
 
       print('AuthService: Auth data stored successfully');
     } catch (error) {

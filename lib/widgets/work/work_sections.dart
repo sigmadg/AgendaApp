@@ -77,7 +77,7 @@ class _WorkSectionsState extends State<WorkSections> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       drawer: _buildNavigationDrawer(context),
       appBar: NavigationHeader(currentSection: 'work'),
       body: Column(

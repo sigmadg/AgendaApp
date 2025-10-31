@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/social_auth_buttons.dart';
@@ -121,6 +123,42 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         _formAnimationController.forward();
       }
     });
+    
+    // Cargar email guardado si rememberMe está activo
+    _loadRememberedEmail();
+  }
+
+  Future<void> _loadRememberedEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool('remember_me') ?? false;
+      final userData = prefs.getString('user_data');
+      final savedPassword = prefs.getString('remembered_password');
+      
+      if (rememberMe && userData != null) {
+        final userJson = jsonDecode(userData);
+        final email = userJson['email'] as String?;
+        
+        if (email != null && mounted) {
+          setState(() {
+            _emailController.text = email;
+            if (savedPassword != null && savedPassword.isNotEmpty) {
+              _passwordController.text = savedPassword;
+              _hasPasswordText = true;
+              _passwordValid = _validatePassword(savedPassword);
+            }
+            _rememberMe = true;
+            _hasEmailText = email.isNotEmpty;
+            _emailValid = _validateEmail(email);
+          });
+          
+          // NO hacer login automático, solo llenar los campos
+          // El usuario debe presionar el botón de login manualmente
+        }
+      }
+    } catch (e) {
+      print('Error loading remembered email: $e');
+    }
   }
 
   @override

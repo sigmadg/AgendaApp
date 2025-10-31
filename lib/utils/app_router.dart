@@ -17,6 +17,7 @@ import '../widgets/menstrual/menstrual_sections.dart';
 import '../widgets/pet/pet_sections.dart';
 import '../widgets/reading/reading_sections.dart';
 import '../widgets/movie/movies_sections.dart';
+import '../widgets/entrepreneurship/entrepreneurship_sections.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
@@ -92,6 +93,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/movies',
       builder: (context, state) => const MoviesSections(),
+    ),
+    GoRoute(
+      path: '/entrepreneurship',
+      builder: (context, state) => const EntrepreneurshipSections(),
     ),
   ],
 );
