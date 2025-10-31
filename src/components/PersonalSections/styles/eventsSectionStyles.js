@@ -1,0 +1,197 @@
+import { StyleSheet } from 'react-native';
+
+export const eventsSectionStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  summaryContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    marginBottom: 24,
+    gap: 16,
+    paddingHorizontal: 4,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    minHeight: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  cardNumber: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  cardSubtitle: {
+    fontSize: 10,
+    fontWeight: '500',
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  todayCard: {
+    backgroundColor: '#E8F5E8',
+    borderColor: '#4A7C59',
+    borderWidth: 2,
+  },
+  upcomingCard: {
+    backgroundColor: '#E8F0F3',
+    borderColor: '#1E3A8A',
+    borderWidth: 2,
+  },
+  totalCard: {
+    backgroundColor: '#F5E6D3',
+    borderColor: '#8B4513',
+    borderWidth: 2,
+  },
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  eventsList: {
+    gap: 12,
+  },
+  eventCard: {
+    borderLeftWidth: 4,
+    marginBottom: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#212529',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    padding: 20,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#111827',
+    backgroundColor: '#FFFFFF',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  typeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  typeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#D2691E',
+    borderColor: '#D2691E',
+  },
+  typeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  typeButtonTextSelected: {
+    color: '#FFFFFF',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E9ECEF',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+  },
+});

@@ -1,0 +1,213 @@
+version: '3.8'
+
+services:
+  # Base de datos MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: agendaapp-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: agendaapp
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - agendaapp-network
+
+  # Redis para caché
+  redis:
+    image: redis:7-alpine
+    container_name: agendaapp-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - agendaapp-network
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: agendaapp-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - EVENTS_SERVICE_URL=http://events-service:3001
+      - TASKS_SERVICE_URL=http://tasks-service:3002
+      - PROFILE_SERVICE_URL=http://profile-service:3003
+      - SETTINGS_SERVICE_URL=http://settings-service:3004
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - agendaapp-network
+
+  # Events Service
+  events-service:
+    build: ./microservices/events-service
+    container_name: agendaapp-events-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/agendaapp?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-jwt-secret-key
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - agendaapp-network
+
+  # Tasks Service
+  tasks-service:
+    build: ./microservices/tasks-service
+    container_name: agendaapp-tasks-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/agendaapp?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-jwt-secret-key
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - agendaapp-network
+
+  # Profile Service
+  profile-service:
+    build: ./microservices/profile-service
+    container_name: agendaapp-profile-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/agendaapp?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-jwt-secret-key
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - agendaapp-network
+
+  # Settings Service
+  settings-service:
+    build: ./microservices/settings-service
+    container_name: agendaapp-settings-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/agendaapp?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-jwt-secret-key
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - agendaapp-network
+
+  # Events Microfrontend
+  events-microfrontend:
+    build: ./microfrontends/events-microfrontend
+    container_name: agendaapp-events-microfrontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      - REACT_APP_EVENTS_SERVICE_URL=http://api-gateway:8080/api/events
+    depends_on:
+      - api-gateway
+    networks:
+      - agendaapp-network
+
+  # Tasks Microfrontend
+  tasks-microfrontend:
+    build: ./microfrontends/tasks-microfrontend
+    container_name: agendaapp-tasks-microfrontend
+    restart: unless-stopped
+    ports:
+      - "3002:80"
+    environment:
+      - REACT_APP_TASKS_SERVICE_URL=http://api-gateway:8080/api/tasks
+    depends_on:
+      - api-gateway
+    networks:
+      - agendaapp-network
+
+  # Profile Microfrontend
+  profile-microfrontend:
+    build: ./microfrontends/profile-microfrontend
+    container_name: agendaapp-profile-microfrontend
+    restart: unless-stopped
+    ports:
+      - "3003:80"
+    environment:
+      - REACT_APP_PROFILE_SERVICE_URL=http://api-gateway:8080/api/profile
+    depends_on:
+      - api-gateway
+    networks:
+      - agendaapp-network
+
+  # Settings Microfrontend
+  settings-microfrontend:
+    build: ./microfrontends/settings-microfrontend
+    container_name: agendaapp-settings-microfrontend
+    restart: unless-stopped
+    ports:
+      - "3004:80"
+    environment:
+      - REACT_APP_SETTINGS_SERVICE_URL=http://api-gateway:8080/api/settings
+    depends_on:
+      - api-gateway
+    networks:
+      - agendaapp-network
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: agendaapp-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api-gateway
+      - events-microfrontend
+      - tasks-microfrontend
+      - profile-microfrontend
+      - settings-microfrontend
+    networks:
+      - agendaapp-network
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  agendaapp-network:
+    driver: bridge
