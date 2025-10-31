@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
+import '../services/auth_service.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -15,6 +16,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
   final _codeController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
 
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
@@ -151,7 +153,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      final result = await _authService.updatePassword(_newPasswordController.text);
 
       if (!mounted) return;
 
@@ -159,14 +161,23 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Contraseña restablecida exitosamente'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Contraseña restablecida exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-      context.go('/login');
+        context.go('/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['error'] ?? 'Error al restablecer la contraseña'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
 

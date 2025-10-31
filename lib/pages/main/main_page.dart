@@ -7,11 +7,8 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener el parámetro 'section' de la ruta
-    final uri = GoRouterState.of(context).uri;
-    final section = uri.queryParameters['section'];
-    
-    return PersonalSections(initialSection: section);
+    // Siempre mostrar 'events' (Eventos del día) como sección inicial
+    return const PersonalSections(initialSection: 'events');
   }
 }
 

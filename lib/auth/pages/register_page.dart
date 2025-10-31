@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/social_auth_buttons.dart';
+import 'terms_and_conditions_page.dart';
+import 'privacy_policy_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -743,19 +745,45 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                 ),
                                 children: [
                                   const TextSpan(text: 'Acepto los '),
-                                  TextSpan(
-                                    text: 'términos y condiciones',
-                                    style: const TextStyle(
-                                      color: AppTheme.orangeAccent,
-                                      fontWeight: FontWeight.w600,
+                                  WidgetSpan(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const TermsAndConditionsPage(),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text(
+                                        'términos y condiciones',
+                                        style: TextStyle(
+                                          color: AppTheme.orangeAccent,
+                                          fontWeight: FontWeight.w600,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const TextSpan(text: ' y la '),
-                                  TextSpan(
-                                    text: 'política de privacidad',
-                                    style: const TextStyle(
-                                      color: AppTheme.orangeAccent,
-                                      fontWeight: FontWeight.w600,
+                                  WidgetSpan(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const PrivacyPolicyPage(),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text(
+                                        'política de privacidad',
+                                        style: TextStyle(
+                                          color: AppTheme.orangeAccent,
+                                          fontWeight: FontWeight.w600,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],

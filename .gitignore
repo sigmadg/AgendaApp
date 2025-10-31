@@ -10,6 +10,15 @@ dist/
 build/
 *.tsbuildinfo
 
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+*.iml
+*.lock
+
 # Environment variables
 .env
 .env.local

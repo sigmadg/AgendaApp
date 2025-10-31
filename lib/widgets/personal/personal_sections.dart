@@ -8,6 +8,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../calendar/calendar_view.dart';
 import '../event/events_sections.dart';
+import '../common/navigation_header.dart';
 
 class PersonalSections extends StatefulWidget {
   final String? initialSection;
@@ -171,26 +172,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
       key: _scaffoldKey,
       backgroundColor: AppTheme.darkBackground,
       drawer: _buildNavigationDrawer(context, authProvider),
-      appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: AppTheme.white),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-        ),
-        title: Row(
-          children: [
-            Text(
-              'Cortex',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.orangeAccent,
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: NavigationHeader(currentSection: 'personal'),
       body: Column(
         children: [
           _buildSectionTabs(),
@@ -466,33 +448,64 @@ class _PersonalSectionsState extends State<PersonalSections> {
 
   Widget _buildSectionTabs() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: sections.map((section) {
-            final isActive = _activeSection == section['id'];
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () => setState(() => _activeSection = section['id'] as String),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isActive ? AppTheme.orangeAccent : AppTheme.darkSurface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    section['icon'] as IconData,
-                    color: isActive ? AppTheme.white : AppTheme.white60,
-                    size: 20,
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: sections.map((section) {
+          final isActive = _activeSection == section['id'];
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _activeSection = section['id'] as String),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: isActive 
+                      ? AppTheme.orangeAccent.withOpacity(0.2)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isActive 
+                        ? AppTheme.orangeAccent 
+                        : AppTheme.darkSurfaceVariant,
+                    width: isActive ? 2 : 1,
                   ),
                 ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      section['icon'] as IconData,
+                      color: isActive 
+                          ? AppTheme.orangeAccent 
+                          : AppTheme.white60,
+                      size: 20,
+                    ),
+                    const SizedBox(height: 2),
+                    Flexible(
+                      child: Text(
+                        section['name'] as String,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isActive 
+                              ? AppTheme.orangeAccent 
+                              : AppTheme.white60,
+                          fontWeight: isActive 
+                              ? FontWeight.w600 
+                              : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

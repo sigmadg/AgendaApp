@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
+import '../services/auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -12,6 +13,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _emailSent = false;
 
@@ -34,19 +36,33 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() {
-        _emailSent = true;
-        _isLoading = false;
-      });
+      final result = await _authService.resetPassword(_emailController.text.trim());
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Email enviado exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (result['success'] == true) {
+          setState(() {
+            _emailSent = true;
+            _isLoading = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email enviado exitosamente. Revisa tu bandeja de entrada.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['error'] ?? 'Error al enviar el email. Intenta nuevamente.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() {
@@ -69,14 +85,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      final result = await _authService.resetPassword(_emailController.text.trim());
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email reenviado exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (result['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email reenviado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['error'] ?? 'Error al reenviar el email'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

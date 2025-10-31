@@ -8,6 +8,7 @@ import '../../models/exercise/gym_routine.dart';
 import '../../models/exercise/sports_goal.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../common/navigation_header.dart';
 
 class HealthSections extends StatefulWidget {
   const HealthSections({super.key});
@@ -64,26 +65,7 @@ class _HealthSectionsState extends State<HealthSections> {
       key: _scaffoldKey,
       backgroundColor: AppTheme.darkBackground,
       drawer: _buildNavigationDrawer(context),
-      appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: AppTheme.white),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-        ),
-        title: Row(
-          children: [
-            Text(
-              'Cortex',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.orangeAccent,
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: NavigationHeader(currentSection: 'health'),
       body: Column(
         children: [
           _buildSectionTabs(),
@@ -347,7 +329,8 @@ class _HealthSectionsState extends State<HealthSections> {
 
   Widget _buildSectionTabs() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -358,24 +341,47 @@ class _HealthSectionsState extends State<HealthSections> {
               child: GestureDetector(
                 onTap: () => setState(() => _activeSection = section['id'] as String),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  width: 80,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: isActive ? AppTheme.orangeAccent : AppTheme.darkSurface,
-                    borderRadius: BorderRadius.circular(16),
+                    color: isActive 
+                        ? AppTheme.orangeAccent.withOpacity(0.2)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isActive 
+                          ? AppTheme.orangeAccent 
+                          : AppTheme.darkSurfaceVariant,
+                      width: isActive ? 2 : 1,
+                    ),
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         section['icon'] as IconData,
-                        color: isActive ? AppTheme.white : AppTheme.white60,
+                        color: isActive 
+                            ? AppTheme.orangeAccent 
+                            : AppTheme.white60,
                         size: 20,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        section['name'] as String,
-                        style: TextStyle(
-                          color: isActive ? AppTheme.white : AppTheme.white60,
-                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      const SizedBox(height: 2),
+                      Flexible(
+                        child: Text(
+                          section['name'] as String,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isActive 
+                                ? AppTheme.orangeAccent 
+                                : AppTheme.white60,
+                            fontWeight: isActive 
+                                ? FontWeight.w600 
+                                : FontWeight.normal,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
