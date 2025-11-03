@@ -12,6 +12,9 @@ class ResetPasswordPage extends StatefulWidget {
 
 class _ResetPasswordPageState extends State<ResetPasswordPage>
     with TickerProviderStateMixin {
+  // Color rojo más oscuro, menos rosado
+  static const Color _carminePastel = Color(0xFFC62828);
+  
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -234,7 +237,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                   return const Icon(
                                     Icons.lock_reset,
                                     size: 60,
-                                    color: AppTheme.orangeAccent,
+                                    color: _carminePastel,
                                   );
                                 },
                               ),
@@ -317,14 +320,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasCodeText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasCodeText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -352,7 +355,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                               prefixIcon: Icon(
                                 Icons.vpn_key_outlined,
                                 color: _hasCodeText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -398,14 +401,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasNewPasswordText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasNewPasswordText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -433,7 +436,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: _hasNewPasswordText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -443,7 +446,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   color: _hasNewPasswordText
-                                      ? AppTheme.orangeAccent
+                                      ? _carminePastel
                                       : AppTheme.white60,
                                   size: 22,
                                 ),
@@ -495,14 +498,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasConfirmPasswordText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasConfirmPasswordText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -530,7 +533,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: _hasConfirmPasswordText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -540,7 +543,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   color: _hasConfirmPasswordText
-                                      ? AppTheme.orangeAccent
+                                      ? _carminePastel
                                       : AppTheme.white60,
                                   size: 22,
                                 ),
@@ -597,7 +600,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                   ? null
                                   : _handleResetPassword,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.orangeAccent,
+                                backgroundColor: _carminePastel,
                                 foregroundColor: AppTheme.white,
                                 padding: const EdgeInsets.symmetric(vertical: 18),
                                 shape: RoundedRectangleBorder(

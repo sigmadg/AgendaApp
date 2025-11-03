@@ -191,6 +191,7 @@ class ProjectGoal {
   final DateTime? date;
   final String? person;
   final String? position;
+  final bool completed;
 
   ProjectGoal({
     required this.id,
@@ -198,6 +199,7 @@ class ProjectGoal {
     this.date,
     this.person,
     this.position,
+    this.completed = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -207,6 +209,7 @@ class ProjectGoal {
       'date': date?.toIso8601String(),
       'person': person,
       'position': position,
+      'completed': completed,
     };
   }
 
@@ -217,6 +220,7 @@ class ProjectGoal {
       date: json['date'] != null ? DateTime.parse(json['date']) : null,
       person: json['person'],
       position: json['position'],
+      completed: json['completed'] ?? false,
     );
   }
 }

@@ -15,6 +15,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+  // Color rojo más oscuro, menos rosado
+  static const Color _carminePastel = Color(0xFFC62828);
+  
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -273,7 +276,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   return const Icon(
                                     Icons.pets,
                                     size: 60,
-                                    color: AppTheme.orangeAccent,
+                                    color: _carminePastel,
                                   );
                                 },
                               ),
@@ -356,14 +359,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: _hasEmailText
-                              ? AppTheme.orangeAccent
+                              ? _carminePastel
                               : AppTheme.darkSurfaceVariant,
                           width: 1,
                         ),
                         boxShadow: _hasEmailText
                             ? [
                                 BoxShadow(
-                                  color: AppTheme.orangeAccent.withOpacity(0.1),
+                                  color: _carminePastel.withOpacity(0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 0),
                                 ),
@@ -391,7 +394,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           prefixIcon: Icon(
                             Icons.mail_outline,
                             color: _hasEmailText
-                                ? AppTheme.orangeAccent
+                                ? _carminePastel
                                 : AppTheme.white60,
                             size: 22,
                           ),
@@ -437,14 +440,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: _hasPasswordText
-                              ? AppTheme.orangeAccent
+                              ? _carminePastel
                               : AppTheme.darkSurfaceVariant,
                           width: 1,
                         ),
                         boxShadow: _hasPasswordText
                             ? [
                                 BoxShadow(
-                                  color: AppTheme.orangeAccent.withOpacity(0.1),
+                                  color: _carminePastel.withOpacity(0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 0),
                                 ),
@@ -472,7 +475,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           prefixIcon: Icon(
                             Icons.lock_outline,
                             color: _hasPasswordText
-                                ? AppTheme.orangeAccent
+                                ? _carminePastel
                                 : AppTheme.white60,
                             size: 22,
                           ),
@@ -482,7 +485,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
                               color: _hasPasswordText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.white60,
                               size: 22,
                             ),
@@ -546,13 +549,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   decoration: BoxDecoration(
                                     border: Border.all(
                                       color: _rememberMe
-                                          ? AppTheme.orangeAccent
+                                          ? _carminePastel
                                           : AppTheme.white60,
                                       width: 2,
                                     ),
                                     borderRadius: BorderRadius.circular(4),
                                     color: _rememberMe
-                                        ? AppTheme.orangeAccent
+                                        ? _carminePastel
                                         : Colors.transparent,
                                   ),
                                   child: _rememberMe
@@ -585,7 +588,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       child: const Text(
                         '¿Olvidaste tu contraseña?',
                         style: TextStyle(
-                          color: AppTheme.orangeAccent,
+                          color: _carminePastel,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -623,7 +626,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     ? null
                                     : _handleLogin,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.orangeAccent,
+                                backgroundColor: _carminePastel,
                                 foregroundColor: AppTheme.white,
                                 padding: const EdgeInsets.symmetric(vertical: 18),
                                 shape: RoundedRectangleBorder(

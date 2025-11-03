@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 
-/// Widget que envuelve el contenido con la imagen de fondo
+/// Widget que envuelve el contenido con fondo negro
 class AppBackground extends StatelessWidget {
   final Widget child;
   
@@ -11,12 +10,7 @@ class AppBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/fondo.png'),
-          fit: BoxFit.cover,
-          repeat: ImageRepeat.noRepeat,
-        ),
-        color: AppTheme.darkBackground,
+        color: Colors.black,
       ),
       child: child,
     );

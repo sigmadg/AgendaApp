@@ -15,6 +15,9 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMixin {
+  // Color rojo más oscuro, menos rosado
+  static const Color _carminePastel = Color(0xFFC62828);
+  
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -271,7 +274,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                   return const Icon(
                                     Icons.pets,
                                     size: 60,
-                                    color: AppTheme.orangeAccent,
+                                    color: _carminePastel,
                                   );
                                 },
                               ),
@@ -354,14 +357,14 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasNameText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasNameText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -385,7 +388,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                               prefixIcon: Icon(
                                 Icons.person_outline,
                                 color: _hasNameText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -431,14 +434,14 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasEmailText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasEmailText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -466,7 +469,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                               prefixIcon: Icon(
                                 Icons.mail_outline,
                                 color: _hasEmailText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -512,14 +515,14 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasPasswordText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasPasswordText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -547,7 +550,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: _hasPasswordText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -557,7 +560,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   color: _hasPasswordText
-                                      ? AppTheme.orangeAccent
+                                      ? _carminePastel
                                       : AppTheme.white60,
                                   size: 22,
                                 ),
@@ -609,14 +612,14 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: _hasConfirmPasswordText
-                                  ? AppTheme.orangeAccent
+                                  ? _carminePastel
                                   : AppTheme.darkSurfaceVariant,
                               width: 1,
                             ),
                             boxShadow: _hasConfirmPasswordText
                                 ? [
                                     BoxShadow(
-                                      color: AppTheme.orangeAccent.withOpacity(0.1),
+                                      color: _carminePastel.withOpacity(0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 0),
                                     ),
@@ -644,7 +647,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: _hasConfirmPasswordText
-                                    ? AppTheme.orangeAccent
+                                    ? _carminePastel
                                     : AppTheme.white60,
                                 size: 22,
                               ),
@@ -654,7 +657,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   color: _hasConfirmPasswordText
-                                      ? AppTheme.orangeAccent
+                                      ? _carminePastel
                                       : AppTheme.white60,
                                   size: 22,
                                 ),
@@ -715,13 +718,13 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                   decoration: BoxDecoration(
                                     border: Border.all(
                                       color: _acceptTerms
-                                          ? AppTheme.orangeAccent
+                                          ? _carminePastel
                                           : AppTheme.white60,
                                       width: 2,
                                     ),
                                     borderRadius: BorderRadius.circular(4),
                                     color: _acceptTerms
-                                        ? AppTheme.orangeAccent
+                                        ? _carminePastel
                                         : Colors.transparent,
                                   ),
                                   child: _acceptTerms
@@ -758,7 +761,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                       child: const Text(
                                         'términos y condiciones',
                                         style: TextStyle(
-                                          color: AppTheme.orangeAccent,
+                                          color: _carminePastel,
                                           fontWeight: FontWeight.w600,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -779,7 +782,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                       child: const Text(
                                         'política de privacidad',
                                         style: TextStyle(
-                                          color: AppTheme.orangeAccent,
+                                          color: _carminePastel,
                                           fontWeight: FontWeight.w600,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -826,7 +829,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                   ? null
                                   : _handleRegister,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.orangeAccent,
+                                backgroundColor: _carminePastel,
                                 foregroundColor: AppTheme.white,
                                 padding: const EdgeInsets.symmetric(vertical: 18),
                                 shape: RoundedRectangleBorder(

@@ -5,6 +5,7 @@ class DailyTask {
   final DateTime time;
   final bool completed;
   final String? notes;
+  final String priority; // 'high', 'medium', 'low'
 
   DailyTask({
     required this.id,
@@ -13,6 +14,7 @@ class DailyTask {
     required this.time,
     required this.completed,
     this.notes,
+    this.priority = 'medium',
   });
 
   Map<String, dynamic> toJson() {
@@ -23,6 +25,7 @@ class DailyTask {
       'time': time.toIso8601String(),
       'completed': completed,
       'notes': notes,
+      'priority': priority,
     };
   }
 
@@ -34,6 +37,7 @@ class DailyTask {
       time: DateTime.parse(json['time']),
       completed: json['completed'] ?? false,
       notes: json['notes'],
+      priority: json['priority'] ?? 'medium',
     );
   }
 }

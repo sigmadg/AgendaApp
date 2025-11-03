@@ -1,4 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permisos necesarios para la aplicación -->
+    <!-- Internet: Requerido para conexión con Supabase y APIs -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Notificaciones: Para recordatorios y alertas -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Vibrar: Para notificaciones con vibración -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- Acceso a cuenta: Para autenticación -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    
+    <!-- Almacenamiento: Para guardar datos localmente (opcional) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
+    
     <application
         android:label="agenda_flutter"
         android:name="${applicationName}"

@@ -4,6 +4,9 @@ import '../../theme/app_theme.dart';
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
 
+  // Color rojo más oscuro, menos rosado
+  static const Color _carminePastel = Color(0xFFC62828);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,8 +134,8 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: AppTheme.orangeAccent,
+      style: TextStyle(
+        color: PrivacyPolicyPage._carminePastel,
         fontSize: 18,
         fontWeight: FontWeight.w700,
       ),
@@ -173,10 +176,10 @@ class BulletPoint extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '• ',
             style: TextStyle(
-              color: AppTheme.orangeAccent,
+              color: PrivacyPolicyPage._carminePastel,
               fontSize: 14,
             ),
           ),

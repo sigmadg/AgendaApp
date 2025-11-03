@@ -162,7 +162,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.green,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a HealthSections cuando esté creado
+              context.go('/health');
             },
           ),
           _buildDrawerItem(
@@ -172,7 +172,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.amber,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a FinanceSections cuando esté creado
+              context.go('/finance');
             },
           ),
           _buildDrawerItem(
@@ -182,7 +182,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.orange,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a NutritionSections cuando esté creado
+              context.go('/nutrition');
             },
           ),
           _buildDrawerItem(
@@ -192,7 +192,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.red,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a ExerciseSections cuando esté creado
+              context.go('/exercise');
             },
           ),
           _buildDrawerItem(
@@ -202,7 +202,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.teal,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a LanguageSections cuando esté creado
+              context.go('/language');
             },
           ),
           _buildDrawerItem(
@@ -212,7 +212,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.pink,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a MenstrualSections cuando esté creado
+              context.go('/menstrual');
             },
           ),
           _buildDrawerItem(
@@ -222,7 +222,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.brown,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a PetSections cuando esté creado
+              context.go('/pet');
             },
           ),
           _buildDrawerItem(
@@ -232,7 +232,7 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.indigo,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a ReadingSections cuando esté creado
+              context.go('/reading');
             },
           ),
           _buildDrawerItem(
@@ -242,7 +242,17 @@ class _TravelSectionsState extends State<TravelSections> {
             color: Colors.deepPurple,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a MoviesSections cuando esté creado
+              context.go('/movies');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.business,
+            title: 'Emprendimientos',
+            color: Colors.deepPurple,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/entrepreneurship');
             },
           ),
           _buildDrawerItem(

@@ -11,6 +11,9 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  // Color rojo más oscuro, menos rosado
+  static const Color _carminePastel = Color(0xFFC62828);
+  
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _authService = AuthService();
@@ -217,7 +220,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           children: [
                             const Icon(
                               Icons.help_outline,
-                              color: AppTheme.orangeAccent,
+                              color: _carminePastel,
                               size: 24,
                             ),
                             const SizedBox(width: 12),
@@ -259,7 +262,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleSendResetEmail,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.orangeAccent,
+                          backgroundColor: _carminePastel,
                           foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(

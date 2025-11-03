@@ -135,22 +135,22 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
           ),
           _buildDrawerItem(
             context,
-            icon: Icons.business,
-            title: 'Emprendimientos',
-            color: Colors.deepPurple,
-            isActive: true,
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          _buildDrawerItem(
-            context,
             icon: Icons.school,
             title: 'Escuela',
             color: Colors.purple,
             onTap: () {
               Navigator.pop(context);
               context.go('/school');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.health_and_safety_outlined,
+            title: 'Salud',
+            color: Colors.green,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/health');
             },
           ),
           _buildDrawerItem(
@@ -163,7 +163,117 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               context.go('/finance');
             },
           ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.restaurant,
+            title: 'Nutrición',
+            color: Colors.orange,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/nutrition');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.fitness_center,
+            title: 'Ejercicio',
+            color: Colors.red,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/exercise');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.language,
+            title: 'Idiomas',
+            color: Colors.teal,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/language');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.eco_outlined,
+            title: 'Menstrual',
+            color: Colors.pink,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/menstrual');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.pets,
+            title: 'Mascotas',
+            color: Colors.brown,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/pet');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.book,
+            title: 'Lectura',
+            color: Colors.indigo,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/reading');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.movie,
+            title: 'Películas',
+            color: Colors.deepPurple,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/movies');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.favorite_outline,
+            title: 'Cuidado Personal',
+            color: Colors.pinkAccent,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/selfcare');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.flight,
+            title: 'Viajes',
+            color: Colors.cyan,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/travel');
+            },
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.business,
+            title: 'Emprendimientos',
+            color: Colors.deepPurple,
+            isActive: true,
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
           const Divider(color: AppTheme.darkSurfaceVariant, height: 32),
+          _buildDrawerItem(
+            context,
+            icon: Icons.settings_outlined,
+            title: 'Configuración',
+            color: AppTheme.white60,
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/main?section=settings');
+            },
+          ),
           _buildDrawerItem(
             context,
             icon: Icons.logout,

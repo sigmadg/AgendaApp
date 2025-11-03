@@ -117,5 +117,36 @@ class AuthProvider extends ChangeNotifier {
       return {'success': false, 'error': 'Profile update failed'};
     }
   }
+
+  Future<Map<String, dynamic>> updatePassword(String currentPassword, String newPassword) async {
+    try {
+      print('AuthProvider: Updating password');
+      
+      // Primero verificar que la contraseña actual sea correcta intentando hacer login
+      final verifyResult = await _authService.login(
+        _user?.email ?? '',
+        currentPassword,
+        false,
+      );
+      
+      if (!verifyResult.success) {
+        return {'success': false, 'error': 'La contraseña actual es incorrecta'};
+      }
+      
+      // Si la contraseña actual es correcta, actualizar a la nueva
+      final result = await _authService.updatePassword(newPassword);
+      
+      if (result['success'] == true) {
+        print('AuthProvider: Password update successful');
+        return {'success': true};
+      } else {
+        print('AuthProvider: Password update failed: ${result['error']}');
+        return {'success': false, 'error': result['error']};
+      }
+    } catch (error) {
+      print('AuthProvider: Password update error: $error');
+      return {'success': false, 'error': 'Error al actualizar la contraseña'};
+    }
+  }
 }
 

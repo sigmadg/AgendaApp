@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user.dart' as app_models;
@@ -30,10 +32,15 @@ class AuthService {
     try {
       print('AuthService: Attempting login for user: $email');
 
-      // Autenticación con Supabase
+      // Autenticación con Supabase con timeout
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException('La conexión tardó demasiado. Verifica tu conexión a internet.');
+        },
       );
 
       if (response.user != null) {
@@ -81,17 +88,48 @@ class AuthService {
         success: false,
         error: 'Login failed',
       );
-    } on AuthException catch (e) {
-      print('AuthService: Login error: ${e.message}');
+    } on TimeoutException catch (e) {
+      print('AuthService: Login timeout: ${e.message}');
       return AuthResponse(
         success: false,
-        error: e.message ?? 'Invalid credentials',
+        error: e.message ?? 'La conexión tardó demasiado. Verifica tu conexión a internet.',
+      );
+    } on SocketException catch (e) {
+      print('AuthService: Network error: $e');
+      return AuthResponse(
+        success: false,
+        error: 'Error de conexión. Verifica tu conexión a internet y vuelve a intentar.',
+      );
+    } on AuthException catch (e) {
+      print('AuthService: Login error: ${e.message}');
+      String errorMessage = e.message ?? 'Credenciales inválidas';
+      
+      // Traducir mensajes de error comunes
+      if (errorMessage.contains('Invalid login credentials')) {
+        errorMessage = 'Email o contraseña incorrectos';
+      } else if (errorMessage.contains('Email not confirmed')) {
+        errorMessage = 'Por favor, verifica tu email antes de iniciar sesión';
+      } else if (errorMessage.contains('Too many requests')) {
+        errorMessage = 'Demasiados intentos. Por favor espera unos minutos';
+      }
+      
+      return AuthResponse(
+        success: false,
+        error: errorMessage,
       );
     } catch (error) {
       print('AuthService: Login error: $error');
+      String errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
+      
+      if (error.toString().contains('Connection reset')) {
+        errorMessage = 'Conexión interrumpida. Por favor, verifica tu conexión a internet y vuelve a intentar.';
+      } else if (error.toString().contains('Failed host lookup')) {
+        errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión a internet.';
+      }
+      
       return AuthResponse(
         success: false,
-        error: 'Network error or invalid credentials',
+        error: errorMessage,
       );
     }
   }

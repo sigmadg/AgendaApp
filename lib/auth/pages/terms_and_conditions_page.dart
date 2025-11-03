@@ -4,6 +4,9 @@ import '../../theme/app_theme.dart';
 class TermsAndConditionsPage extends StatelessWidget {
   const TermsAndConditionsPage({super.key});
 
+  // Color rojo más oscuro, menos rosado
+  static const Color _carminePastel = Color(0xFFC62828);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,8 +118,8 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: AppTheme.orangeAccent,
+      style: TextStyle(
+        color: TermsAndConditionsPage._carminePastel,
         fontSize: 18,
         fontWeight: FontWeight.w700,
       ),

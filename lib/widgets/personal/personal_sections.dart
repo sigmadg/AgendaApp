@@ -8,6 +8,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/event_service.dart';
 import '../../services/task_service.dart';
+import '../../services/settings_service.dart';
 import '../calendar/calendar_view.dart';
 import '../event/events_sections.dart';
 import '../common/navigation_header.dart';
@@ -25,13 +26,42 @@ class _PersonalSectionsState extends State<PersonalSections> {
   late String _activeSection;
   DateTime _selectedDate = DateTime.now();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late ScrollController _dateScrollController;
   
   List<CalendarTask> _tasks = [];
   List<EventOrganization> _events = [];
   final EventService _eventService = EventService();
   final TaskService _taskService = TaskService();
+  final SettingsService _settingsService = SettingsService();
   bool _isLoadingEvents = false;
   bool _isLoadingTasks = false;
+  
+  // Configuraciones de usuario
+  Map<String, dynamic>? _userSettings;
+  Map<String, bool> _activeSections = {};
+  bool _isLoadingSettings = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeSection = widget.initialSection ?? 'events';
+    _dateScrollController = ScrollController();
+    // Inicializar scroll al día de hoy después de que se construya el widget
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Scroll inicial: 14 días hacia atrás desde hoy (día 14 de 30)
+      // Cada día ocupa aproximadamente 90px de ancho
+      _dateScrollController.jumpTo(14 * 90.0);
+    });
+    _loadEvents();
+    _loadTasks();
+    _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
 
   final sections = [
     {'id': 'events', 'name': 'Eventos del día', 'icon': Icons.calendar_today},
@@ -40,7 +70,40 @@ class _PersonalSectionsState extends State<PersonalSections> {
     {'id': 'settings', 'name': 'Configuración', 'icon': Icons.settings},
   ];
 
+  // Color rojo carmesí pastel rosado
+  static const Color _carminePastel = Color(0xFFFF8FA3);
+  
+  // Colores del arcoíris
+  List<Color> get _rainbowColors => [
+    Colors.red,
+    _carminePastel,
+    Colors.amber,
+    Colors.green,
+    Colors.blue,
+    Colors.indigo,
+    Colors.purple,
+  ];
+
+  // Gradiente arcoíris
+  LinearGradient get _rainbowGradient => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: _rainbowColors,
+  );
+
+  // Obtener color arcoíris por índice (cíclico)
+  Color _getRainbowColor(int index) {
+    return _rainbowColors[index % _rainbowColors.length];
+  }
+
+  // Obtener color arcoíris para sección
+  Color _getRainbowColorForSection(String sectionId) {
+    final index = sections.indexWhere((s) => s['id'] == sectionId);
+    return index >= 0 ? _getRainbowColor(index) : _carminePastel;
+  }
+
   Color _getEventColor(String? type) {
+    // Usar colores arcoíris para eventos
     switch (type) {
       case 'work':
         return Colors.blue;
@@ -49,15 +112,15 @@ class _PersonalSectionsState extends State<PersonalSections> {
       case 'health':
         return Colors.green;
       case 'finance':
-        return Colors.orange;
+        return _carminePastel;
       case 'education':
-        return Colors.teal;
+        return Colors.indigo;
       case 'social':
         return Colors.pink;
       case 'travel':
         return Colors.cyan;
       default:
-        return AppTheme.orangeAccent;
+        return Colors.amber;
     }
   }
 
@@ -108,7 +171,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
       case 'high':
         return Colors.red;
       case 'medium':
-        return Colors.orange;
+        return _carminePastel;
       case 'low':
         return Colors.green;
       default:
@@ -163,12 +226,52 @@ class _PersonalSectionsState extends State<PersonalSections> {
     }).toList();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _activeSection = widget.initialSection ?? 'events';
-    _loadEvents();
-    _loadTasks();
+  // Cargar configuraciones desde Supabase
+  Future<void> _loadSettings() async {
+    setState(() {
+      _isLoadingSettings = true;
+    });
+
+    try {
+      final settings = await _settingsService.getSettings();
+      if (settings != null) {
+        setState(() {
+          _userSettings = settings;
+          _activeSections = Map<String, bool>.from(
+            settings['active_sections'] as Map<String, dynamic>? ?? {},
+          );
+          _isLoadingSettings = false;
+        });
+        print('Settings loaded: ${_activeSections}');
+      } else {
+        // Si no hay configuraciones, usar valores por defecto
+        setState(() {
+          _activeSections = {
+            'personal': true,
+            'work': true,
+            'school': true,
+            'health': true,
+            'finance': true,
+            'nutrition': true,
+            'exercise': true,
+            'language': true,
+            'menstrual': true,
+            'pet': true,
+            'selfcare': true,
+            'travel': true,
+            'reading': true,
+            'movies': true,
+            'entrepreneurship': true,
+          };
+          _isLoadingSettings = false;
+        });
+      }
+    } catch (e) {
+      print('Error al cargar configuraciones: $e');
+      setState(() {
+        _isLoadingSettings = false;
+      });
+    }
   }
 
   // Cargar eventos desde Supabase
@@ -258,40 +361,84 @@ class _PersonalSectionsState extends State<PersonalSections> {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
 
+    // Obtener eventos y tareas para la fecha seleccionada para mostrar/ocultar los botones
+    final eventsForSelectedDate = _getEventsForDate(_selectedDate);
+    final tasksForSelectedDate = _getTasksForDate(_selectedDate);
+    
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.transparent,
       drawer: _buildNavigationDrawer(context, authProvider),
       appBar: NavigationHeader(currentSection: 'personal'),
-      floatingActionButton: _activeSection == 'events'
-          ? FloatingActionButton.extended(
-              onPressed: () => _showAddEventDialog(context),
-              backgroundColor: AppTheme.orangeAccent,
-              icon: const Icon(Icons.event, color: AppTheme.white),
-              label: const Text(
-                'Nuevo Evento',
-                style: TextStyle(
-                  color: AppTheme.white,
-                  fontWeight: FontWeight.w600,
+      floatingActionButton: _activeSection == 'events' && eventsForSelectedDate.isNotEmpty
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.red,
+                    _carminePastel,
+                  ],
                 ),
-              ),
-              tooltip: 'Agregar evento',
-              elevation: 8,
-            )
-          : _activeSection == 'tasks'
-              ? FloatingActionButton.extended(
-                  onPressed: () => _showAddTaskDialog(context),
-                  backgroundColor: Colors.blue,
-                  icon: const Icon(Icons.task, color: AppTheme.white),
-                  label: const Text(
-                    'Nueva Tarea',
-                    style: TextStyle(
-                      color: AppTheme.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  tooltip: 'Agregar tarea',
-                  elevation: 8,
+                ],
+              ),
+              child: FloatingActionButton.extended(
+                onPressed: () => _showAddEventDialog(context),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                icon: const Icon(Icons.event, color: AppTheme.white),
+                label: const Text(
+                  'Nuevo Evento',
+              style: TextStyle(
+                    color: AppTheme.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                tooltip: 'Agregar evento',
+              ),
+            )
+          : _activeSection == 'tasks' && tasksForSelectedDate.isNotEmpty
+              ? Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue,
+                        Colors.indigo,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton.extended(
+                    onPressed: () => _showAddTaskDialog(context),
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    icon: const Icon(Icons.task, color: AppTheme.white),
+                    label: const Text(
+                      '+ Tarea',
+                      style: TextStyle(
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    tooltip: 'Agregar tarea',
+                  ),
                 )
               : null,
       body: Column(
@@ -321,7 +468,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.orangeAccent.withOpacity(0.3),
+                  _carminePastel.withOpacity(0.3),
                   AppTheme.darkBackground,
                 ],
               ),
@@ -334,7 +481,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: AppTheme.orangeAccent,
+                    color: _carminePastel,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: const Icon(
@@ -368,7 +515,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             context,
             icon: Icons.person_outline,
             title: 'Personal',
-            color: AppTheme.orangeAccent,
+            color: _carminePastel,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=profile');
@@ -401,7 +548,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.green,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a HealthSections cuando esté creado
+              context.go('/health');
             },
           ),
           _buildDrawerItem(
@@ -411,17 +558,17 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.amber,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a FinanceSections cuando esté creado
+              context.go('/finance');
             },
           ),
           _buildDrawerItem(
             context,
             icon: Icons.restaurant,
             title: 'Nutrición',
-            color: Colors.orange,
+            color: _carminePastel,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a NutritionSections cuando esté creado
+              context.go('/nutrition');
             },
           ),
           _buildDrawerItem(
@@ -431,7 +578,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.red,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a ExerciseSections cuando esté creado
+              context.go('/exercise');
             },
           ),
           _buildDrawerItem(
@@ -441,7 +588,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.teal,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a LanguageSections cuando esté creado
+              context.go('/language');
             },
           ),
           _buildDrawerItem(
@@ -451,7 +598,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.pink,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a MenstrualSections cuando esté creado
+              context.go('/menstrual');
             },
           ),
           _buildDrawerItem(
@@ -461,7 +608,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.brown,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a PetSections cuando esté creado
+              context.go('/pet');
             },
           ),
           _buildDrawerItem(
@@ -471,7 +618,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.indigo,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a ReadingSections cuando esté creado
+              context.go('/reading');
             },
           ),
           _buildDrawerItem(
@@ -481,7 +628,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: Colors.deepPurple,
             onTap: () {
               Navigator.pop(context);
-              // TODO: Navegar a MoviesSections cuando esté creado
+              context.go('/movies');
             },
           ),
           _buildDrawerItem(
@@ -581,23 +728,34 @@ class _PersonalSectionsState extends State<PersonalSections> {
     return Container(
       height: 50,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
+        child: Row(
         mainAxisSize: MainAxisSize.max,
-        children: sections.map((section) {
-          final isActive = _activeSection == section['id'];
+        children: sections.asMap().entries.map((entry) {
+          final index = entry.key;
+          final section = entry.value;
+            final isActive = _activeSection == section['id'];
+          final rainbowColor = _getRainbowColor(index);
           return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _activeSection = section['id'] as String),
-              child: Container(
+              child: GestureDetector(
+                onTap: () => setState(() => _activeSection = section['id'] as String),
+                child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: isActive 
-                      ? AppTheme.orangeAccent.withOpacity(0.2)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  decoration: BoxDecoration(
+                  gradient: isActive 
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            rainbowColor.withOpacity(0.3),
+                            rainbowColor.withOpacity(0.15),
+                          ],
+                        )
+                      : null,
+                  color: isActive ? null : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isActive 
-                        ? AppTheme.orangeAccent 
+                        ? rainbowColor 
                         : AppTheme.darkSurfaceVariant,
                     width: isActive ? 2 : 1,
                   ),
@@ -607,12 +765,12 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      section['icon'] as IconData,
+                    section['icon'] as IconData,
                       color: isActive 
-                          ? AppTheme.orangeAccent 
+                          ? rainbowColor 
                           : AppTheme.white60,
-                      size: 20,
-                    ),
+                    size: 20,
+                  ),
                     const SizedBox(height: 2),
                     Flexible(
                       child: Text(
@@ -620,7 +778,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         style: TextStyle(
                           fontSize: 10,
                           color: isActive 
-                              ? AppTheme.orangeAccent 
+                              ? rainbowColor 
                               : AppTheme.white60,
                           fontWeight: isActive 
                               ? FontWeight.w600 
@@ -633,10 +791,10 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     ),
                   ],
                 ),
+                ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
       ),
     );
   }
@@ -664,25 +822,27 @@ class _PersonalSectionsState extends State<PersonalSections> {
 
     return Column(
       children: [
-        // Header mejorado con selector de fecha
+        // Header mejorado con selector de fecha y gradiente arcoíris
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.orangeAccent.withOpacity(0.15),
+                Colors.red.withOpacity(0.2),
+                _carminePastel.withOpacity(0.15),
+                Colors.amber.withOpacity(0.1),
                 AppTheme.darkSurface,
               ],
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -691,20 +851,31 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: AppTheme.orangeAccent.withOpacity(0.2),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.red.withOpacity(0.3),
+                                    _carminePastel.withOpacity(0.25),
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: _carminePastel.withOpacity(0.5),
+                                  width: 1,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.calendar_today, size: 16, color: AppTheme.orangeAccent),
+                                  Icon(Icons.calendar_today, size: 16, color: Colors.amber),
                                   const SizedBox(width: 6),
                                   Text(
                                     isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedDate),
-                                    style: TextStyle(
+                style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.orangeAccent,
+                                      color: _carminePastel,
                                     ),
                                   ),
                                 ],
@@ -717,10 +888,10 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           'Eventos - ${DateFormat('EEEE', 'es').format(_selectedDate)}',
                           style: const TextStyle(
                             fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.white,
-                          ),
-                        ),
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.white,
+                ),
+              ),
                         if (todayEvents.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
@@ -737,22 +908,25 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Selector de fecha mejorado
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildDateSelector(DateTime.now(), isToday),
-                    if (!isToday)
-                      _buildDateSelector(
-                        DateTime.now().subtract(const Duration(days: 1)),
-                        false,
-                      ),
-                    if (!isToday)
-                      _buildDateSelector(
-                        DateTime.now().add(const Duration(days: 1)),
-                        false,
-                      ),
-                  ],
+                // Selector de fecha con desplazamiento horizontal
+                SizedBox(
+                  height: 70,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    controller: _dateScrollController,
+                    itemCount: 30, // 15 días antes y 15 días después
+                    itemBuilder: (context, index) {
+                      final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
+                      final dateIsSelected = _selectedDate.year == date.year &&
+                                           _selectedDate.month == date.month &&
+                                           _selectedDate.day == date.day;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: _buildDateSelector(date, dateIsSelected),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -768,7 +942,8 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   'Agrega un nuevo evento usando el botón +',
                   'Agregar Evento',
                   () => _showAddEventDialog(context),
-                  AppTheme.orangeAccent,
+                  Colors.red,
+                  gradientColors: [Colors.red, _carminePastel],
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -801,13 +976,21 @@ class _PersonalSectionsState extends State<PersonalSections> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? AppTheme.orangeAccent.withOpacity(0.2)
-              : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+          gradient: isSelected 
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _carminePastel.withOpacity(0.3),
+                    _carminePastel.withOpacity(0.2),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected 
-                ? AppTheme.orangeAccent 
+                ? _carminePastel 
                 : Colors.transparent,
             width: 2,
           ),
@@ -820,7 +1003,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? AppTheme.orangeAccent : AppTheme.white60,
+                color: isSelected ? _carminePastel : AppTheme.white60,
               ),
             ),
             const SizedBox(height: 4),
@@ -829,7 +1012,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? AppTheme.orangeAccent : AppTheme.white,
+                color: isSelected ? _carminePastel : AppTheme.white,
               ),
             ),
             if (isToday)
@@ -838,7 +1021,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 width: 4,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.orangeAccent,
+                  color: Colors.amber,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -858,25 +1041,27 @@ class _PersonalSectionsState extends State<PersonalSections> {
 
     return Column(
       children: [
-        // Header mejorado con selector de fecha
+        // Header mejorado con selector de fecha y gradiente arcoíris
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.blue.withOpacity(0.15),
+                Colors.blue.withOpacity(0.2),
+                Colors.indigo.withOpacity(0.15),
+                Colors.purple.withOpacity(0.1),
                 AppTheme.darkSurface,
               ],
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -885,20 +1070,20 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.2),
+                                color: _carminePastel.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.check_circle, size: 16, color: Colors.blue),
+                                  Icon(Icons.check_circle, size: 16, color: _carminePastel),
                                   const SizedBox(width: 6),
                                   Text(
                                     isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedDate),
-                                    style: TextStyle(
+                style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.blue,
+                                      color: _carminePastel,
                                     ),
                                   ),
                                 ],
@@ -911,10 +1096,10 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           'Tareas - ${DateFormat('EEEE', 'es').format(_selectedDate)}',
                           style: const TextStyle(
                             fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.white,
-                          ),
-                        ),
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.white,
+                ),
+              ),
                         if (todayTasks.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
@@ -924,14 +1109,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.withOpacity(0.2),
+                                      color: _carminePastel.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       '$pendingTasks pendiente${pendingTasks == 1 ? '' : 's'}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.orange,
+                                        color: _carminePastel,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -962,22 +1147,25 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Selector de fecha mejorado
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildDateSelector(DateTime.now(), isToday),
-                    if (!isToday)
-                      _buildDateSelector(
-                        DateTime.now().subtract(const Duration(days: 1)),
-                        false,
-                      ),
-                    if (!isToday)
-                      _buildDateSelector(
-                        DateTime.now().add(const Duration(days: 1)),
-                        false,
-                      ),
-                  ],
+                // Selector de fecha con desplazamiento horizontal
+                SizedBox(
+                  height: 70,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    controller: _dateScrollController,
+                    itemCount: 30, // 15 días antes y 15 días después
+                    itemBuilder: (context, index) {
+                      final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
+                      final dateIsSelected = _selectedDate.year == date.year &&
+                                           _selectedDate.month == date.month &&
+                                           _selectedDate.day == date.day;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: _buildDateSelector(date, dateIsSelected),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -994,6 +1182,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   'Agregar Tarea',
                   () => _showAddTaskDialog(context),
                   Colors.blue,
+                  gradientColors: [Colors.blue, Colors.indigo],
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -1006,69 +1195,183 @@ class _PersonalSectionsState extends State<PersonalSections> {
   }
 
   Widget _buildProfile(user) {
+    final completedTasks = _tasks.where((t) => t.completed).length;
+    final totalTasks = _tasks.length;
+    final todayEvents = _getEventsForDate(DateTime.now()).length;
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Card(
-            color: AppTheme.darkSurface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          // Header mejorado con gradiente arcoíris
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.red.withOpacity(0.3),
+                  _carminePastel.withOpacity(0.25),
+                  Colors.amber.withOpacity(0.2),
+                  Colors.green.withOpacity(0.15),
+                  Colors.blue.withOpacity(0.1),
+                  Colors.indigo.withOpacity(0.1),
+                  Colors.purple.withOpacity(0.1),
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Colors.red.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Avatar mejorado con decoración
+                  Stack(
                 children: [
                   Container(
-                    width: 72,
-                    height: 72,
+                        width: 100,
+                        height: 100,
                     decoration: BoxDecoration(
-                      color: AppTheme.orangeAccent,
-                      borderRadius: BorderRadius.circular(36),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.red,
+                              _carminePastel,
+                              Colors.amber,
+                              Colors.green,
+                              Colors.blue,
+                              Colors.indigo,
+                              Colors.purple,
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purple.withOpacity(0.6),
+                              blurRadius: 20,
+                              spreadRadius: 4,
+                            ),
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.4),
+                              blurRadius: 15,
+                              spreadRadius: 2,
+                            ),
+                          ],
                     ),
                     child: const Icon(
                       Icons.person,
-                      size: 36,
+                          size: 50,
                       color: AppTheme.white,
                     ),
                   ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.name ?? 'Usuario',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.darkSurface,
+                              width: 3,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 18,
                             color: AppTheme.white,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Nombre del usuario
+                        Text(
+                          user?.name ?? 'Usuario',
+                          style: const TextStyle(
+                      fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Email
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.email_outlined, size: 16, color: AppTheme.white60),
+                      const SizedBox(width: 8),
                         Text(
                           user?.email ?? 'usuario@ejemplo.com',
                           style: const TextStyle(
-                            fontSize: 14,
+                          fontSize: 15,
                             color: AppTheme.white70,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Badge de verificado mejorado con gradiente arcoíris
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.green,
+                          Colors.blue,
+                          Colors.purple,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_circle, size: 14, color: AppTheme.white),
-                              SizedBox(width: 4),
+                        Icon(Icons.verified_user, size: 18, color: AppTheme.white),
+                        SizedBox(width: 6),
                               Text(
-                                'Verificado',
+                          'Cuenta Verificada',
                                 style: TextStyle(
-                                  fontSize: 12,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                                   color: AppTheme.white,
                                 ),
                               ),
@@ -1078,25 +1381,54 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+          // Estadísticas del usuario
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.event,
+                  value: todayEvents.toString(),
+                  label: 'Eventos Hoy',
+                  color: Colors.red,
+                  gradientColors: [Colors.red, _carminePastel],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.task_alt,
+                  value: '$completedTasks/$totalTasks',
+                  label: 'Tareas',
+                  color: Colors.blue,
+                  gradientColors: [Colors.blue, Colors.indigo],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Opciones de perfil mejoradas
           _buildProfileOption(
-            icon: Icons.edit,
+            icon: Icons.edit_outlined,
             title: 'Editar Perfil',
             subtitle: 'Actualiza tu información personal',
             color: Colors.blue,
-            onTap: () {},
+            gradientColors: [Colors.blue, Colors.indigo],
+            onTap: () {
+              _showEditProfileDialog(context, user);
+            },
           ),
           const SizedBox(height: 12),
           _buildProfileOption(
             icon: Icons.lock_outline,
             title: 'Cambiar Contraseña',
             subtitle: 'Actualiza tu contraseña de seguridad',
-            color: Colors.orange,
-            onTap: () {},
+            color: _carminePastel,
+            gradientColors: [_carminePastel, Colors.amber],
+            onTap: () {
+              _showChangePasswordDialog(context);
+            },
           ),
           const SizedBox(height: 12),
           _buildProfileOption(
@@ -1104,7 +1436,15 @@ class _PersonalSectionsState extends State<PersonalSections> {
             title: 'Notificaciones',
             subtitle: 'Configura tus preferencias',
             color: Colors.pink,
-            onTap: () {},
+            gradientColors: [Colors.pink, Colors.purple],
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Funcionalidad de notificaciones próximamente'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 12),
           _buildProfileOption(
@@ -1112,7 +1452,96 @@ class _PersonalSectionsState extends State<PersonalSections> {
             title: 'Privacidad',
             subtitle: 'Controla tu privacidad',
             color: Colors.green,
-            onTap: () {},
+            gradientColors: [Colors.green, Colors.teal],
+            onTap: () {
+              _showPrivacyDialog(context);
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildProfileOption(
+            icon: Icons.info_outline,
+            title: 'Información de la App',
+            subtitle: 'Versión y detalles de la aplicación',
+            color: Colors.purple,
+            gradientColors: [Colors.purple, Colors.indigo],
+            onTap: () {
+              _showAppInfoDialog(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+    List<Color>? gradientColors,
+  }) {
+    final colors = gradientColors ?? [color, color];
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colors[0].withOpacity(0.15),
+            colors.length > 1 ? colors[1].withOpacity(0.1) : colors[0].withOpacity(0.05),
+            AppTheme.darkSurface,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors.map((c) => c.withOpacity(0.3)).toList(),
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.white60,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -1125,27 +1554,71 @@ class _PersonalSectionsState extends State<PersonalSections> {
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
+    List<Color>? gradientColors,
   }) {
-    return Card(
-      color: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(
+    final colors = gradientColors ?? [color, color];
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colors[0].withOpacity(0.1),
+              colors.length > 1 ? colors[1].withOpacity(0.05) : colors[0].withOpacity(0.02),
+              AppTheme.darkSurface,
+            ],
+          ),
         borderRadius: BorderRadius.circular(20),
-      ),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                    width: 52,
+                    height: 52,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: colors.map((c) => c.withOpacity(0.4)).toList(),
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: color.withOpacity(0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -1155,96 +1628,1089 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 16,
+                            fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.white,
+                            letterSpacing: 0.3,
                       ),
                     ),
+                        const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        fontSize: 14,
+                            fontSize: 13,
                         color: AppTheme.white60,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
                 Icons.chevron_right,
-                color: AppTheme.white60,
+                      color: color,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _showEditProfileDialog(BuildContext context, user) {
+    final nameController = TextEditingController(text: user?.name ?? '');
+    final emailController = TextEditingController(text: user?.email ?? '');
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.darkSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text(
+                'Editar Perfil',
+                style: TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Nombre',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: _carminePastel),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: emailController,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: _carminePastel),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: AppTheme.white60),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving ? null : () async {
+                    setDialogState(() {
+                      isSaving = true;
+                    });
+
+                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                    final result = await authProvider.updateProfile({
+                      'name': nameController.text,
+                      'email': emailController.text,
+                    });
+
+                    if (!dialogContext.mounted) return;
+                    
+                    if (result['success'] == true) {
+                      Navigator.of(dialogContext).pop();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Perfil actualizado exitosamente'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } else {
+                      setDialogState(() {
+                        isSaving = false;
+                      });
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(
+                            content: Text(result['error'] ?? 'Error al actualizar el perfil'),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _carminePastel,
+                    foregroundColor: AppTheme.white,
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                          ),
+                        )
+                      : const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool isSaving = false;
+    String? errorMessage;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.darkSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text(
+                'Cambiar Contraseña',
+                style: TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (errorMessage != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red, width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(color: Colors.red, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    TextField(
+                      controller: currentPasswordController,
+                      obscureText: true,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña Actual',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: _carminePastel),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: newPasswordController,
+                      obscureText: true,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Nueva Contraseña',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: _carminePastel),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: true,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Confirmar Nueva Contraseña',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: _carminePastel),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: AppTheme.white60),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving ? null : () async {
+                    setDialogState(() {
+                      errorMessage = null;
+                      isSaving = true;
+                    });
+
+                    if (newPasswordController.text != confirmPasswordController.text) {
+                      setDialogState(() {
+                        errorMessage = 'Las contraseñas no coinciden';
+                        isSaving = false;
+                      });
+                      return;
+                    }
+
+                    if (newPasswordController.text.length < 6) {
+                      setDialogState(() {
+                        errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+                        isSaving = false;
+                      });
+                      return;
+                    }
+
+                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                    final result = await authProvider.updatePassword(
+                      currentPasswordController.text,
+                      newPasswordController.text,
+                    );
+
+                    if (!dialogContext.mounted) return;
+
+                    if (result['success'] == true) {
+                      Navigator.of(dialogContext).pop();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Contraseña actualizada exitosamente'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } else {
+                      setDialogState(() {
+                        errorMessage = result['error'] ?? 'Error al cambiar la contraseña';
+                        isSaving = false;
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _carminePastel,
+                    foregroundColor: AppTheme.white,
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                          ),
+                        )
+                      : const Text('Cambiar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAppInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.darkSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text(
+            'Información de la App',
+            style: TextStyle(
+              color: AppTheme.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow(Icons.apps, 'AgendaApp', 'Versión 1.0.0'),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.calendar_today, 'Eventos', 'Gestión de eventos personalizados'),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.task_alt, 'Tareas', 'Organización de tareas diarias'),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.business, 'Emprendimientos', 'Seguimiento de proyectos'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _carminePastel.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.favorite, color: _carminePastel, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Hecho con ❤️ para organizar tu vida',
+                        style: TextStyle(
+                color: AppTheme.white60,
+                          fontSize: 13,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cerrar',
+                style: TextStyle(color: _carminePastel),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String title, String subtitle) {
+    return Row(
+      children: [
+        Icon(icon, color: _carminePastel, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: AppTheme.white60,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showPrivacyDialog(BuildContext context) {
+    // Cargar valores desde _userSettings o usar valores por defecto
+    bool profileVisible = _userSettings?['profile_visible'] ?? true;
+    bool shareData = _userSettings?['share_data'] ?? false;
+    bool allowAnalytics = _userSettings?['allow_analytics'] ?? true;
+    bool allowNotifications = _userSettings?['allow_notifications'] ?? true;
+    bool showEmail = _userSettings?['show_email'] ?? true;
+    bool showName = _userSettings?['show_name'] ?? true;
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.darkSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.shield_outlined,
+                      color: Colors.green,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Configuración de Privacidad',
+                      style: TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Controla quién puede ver tu información y cómo se utilizan tus datos.',
+                      style: TextStyle(
+                        color: AppTheme.white60,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Visibilidad del Perfil
+                    _buildPrivacySection(
+                      'Visibilidad del Perfil',
+                      'Controla qué información es visible',
+                      Icons.visibility_outlined,
+                      Colors.blue,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPrivacySwitch(
+                      'Mostrar nombre completo',
+                      'Tu nombre será visible para otros usuarios',
+                      Icons.person_outline,
+                      showName,
+                      (value) {
+                        setDialogState(() {
+                          showName = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPrivacySwitch(
+                      'Mostrar email',
+                      'Tu email será visible en tu perfil',
+                      Icons.email_outlined,
+                      showEmail,
+                      (value) {
+                        setDialogState(() {
+                          showEmail = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPrivacySwitch(
+                      'Perfil visible',
+                      'Permite que otros usuarios vean tu perfil',
+                      Icons.visibility,
+                      profileVisible,
+                      (value) {
+                        setDialogState(() {
+                          profileVisible = value;
+                        });
+                      },
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    _buildPrivacySection(
+                      'Privacidad de Datos',
+                      'Controla cómo se utilizan tus datos',
+                      Icons.data_usage_outlined,
+                      Colors.purple,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPrivacySwitch(
+                      'Compartir datos con terceros',
+                      'Permite compartir datos anónimos con servicios de análisis',
+                      Icons.share_outlined,
+                      shareData,
+                      (value) {
+                        setDialogState(() {
+                          shareData = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPrivacySwitch(
+                      'Permitir análisis de uso',
+                      'Ayuda a mejorar la aplicación con datos de uso anónimos',
+                      Icons.analytics_outlined,
+                      allowAnalytics,
+                      (value) {
+                        setDialogState(() {
+                          allowAnalytics = value;
+                        });
+                      },
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    _buildPrivacySection(
+                      'Notificaciones',
+                      'Controla las notificaciones',
+                      Icons.notifications_outlined,
+                      _carminePastel,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPrivacySwitch(
+                      'Permitir notificaciones',
+                      'Recibe notificaciones sobre eventos y recordatorios',
+                      Icons.notifications_active,
+                      allowNotifications,
+                      (value) {
+                        setDialogState(() {
+                          allowNotifications = value;
+                        });
+                      },
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    // Información adicional
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.blue.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Tus datos están protegidos con encriptación. Solo tú tienes acceso completo a tu información.',
+                              style: TextStyle(
+                                color: Colors.blue.shade200,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: AppTheme.white60),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving ? null : () async {
+                    setDialogState(() {
+                      isSaving = true;
+                    });
+
+                    final result = await _settingsService.updatePrivacySettings(
+                      profileVisible: profileVisible,
+                      showName: showName,
+                      showEmail: showEmail,
+                      shareData: shareData,
+                      allowAnalytics: allowAnalytics,
+                      allowNotifications: allowNotifications,
+                    );
+
+                    if (!dialogContext.mounted) return;
+
+                    if (result['success'] == true) {
+                      // Recargar configuraciones
+                      await _loadSettings();
+
+                      Navigator.of(dialogContext).pop();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Configuración de privacidad guardada exitosamente'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } else {
+                      setDialogState(() {
+                        isSaving = false;
+                      });
+                      if (dialogContext.mounted) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(
+                            content: Text(result['error'] ?? 'Error al guardar la configuración'),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: AppTheme.white,
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                          ),
+                        )
+                      : const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPrivacySection(String title, String subtitle, IconData icon, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: AppTheme.white60,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrivacySwitch(
+    String title,
+    String description,
+    IconData icon,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.darkSurfaceVariant,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _carminePastel.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: _carminePastel,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: AppTheme.white60,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: Colors.green,
+            activeTrackColor: Colors.green.withOpacity(0.5),
+            inactiveThumbColor: AppTheme.white60,
+            inactiveTrackColor: AppTheme.darkSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSettings() {
+    final activeCount = _activeSections.values.where((v) => v == true).length;
+    final totalCount = _activeSections.length;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header mejorado con estadísticas
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _carminePastel.withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: _carminePastel.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _carminePastel.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(
+                      Icons.settings,
+                      size: 40,
+                      color: _carminePastel,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
           const Text(
-            'CONFIGURACIÓN',
+                    'Configuración',
             style: TextStyle(
-              fontSize: 18,
+                      fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppTheme.white,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Secciones Disponibles',
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Personaliza tu experiencia',
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.white,
+                      fontSize: 15,
+                      color: AppTheme.white70,
             ),
           ),
           const SizedBox(height: 16),
+                  // Estadísticas
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBackground.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green, size: 20),
+                        const SizedBox(width: 8),
           Text(
-            'Activa solo las secciones que necesitas para tu organización personal',
+                          '$activeCount de $totalCount secciones activas',
             style: const TextStyle(
               fontSize: 14,
-              color: AppTheme.white60,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Card(
-            color: AppTheme.darkSurface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildSettingsSection('Personal', 'Mi Perfil', Icons.person, true),
-                  _buildSettingsSection('Trabajo', 'Trabajo y proyectos', Icons.work, true),
-                  _buildSettingsSection('Escuela', 'Estudios y educación', Icons.school, true),
-                  _buildSettingsSection('Salud', 'Salud y bienestar', Icons.health_and_safety, true),
-                  _buildSettingsSection('Finanzas', 'Finanzas personales', Icons.account_balance_wallet, true),
+                            color: AppTheme.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 24),
-          Card(
+          
+          // Sección de secciones disponibles
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
             color: AppTheme.darkSurface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: _carminePastel.withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+              child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.dashboard_outlined,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Secciones Disponibles',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Activa solo las secciones que necesitas',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.white60,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (_isLoadingSettings)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else
+                  Column(
+                    children: [
+                      _buildSettingsSection('Personal', 'Mi Perfil', Icons.person, 'personal', _carminePastel),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Trabajo', 'Trabajo y proyectos', Icons.work, 'work', Colors.blue),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Escuela', 'Estudios y educación', Icons.school, 'school', Colors.purple),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Salud', 'Salud y bienestar', Icons.health_and_safety, 'health', Colors.green),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Finanzas', 'Finanzas personales', Icons.account_balance_wallet, 'finance', Colors.amber),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Nutrición', 'Nutrición y alimentación', Icons.restaurant, 'nutrition', _carminePastel),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Ejercicio', 'Ejercicio y fitness', Icons.fitness_center, 'exercise', Colors.red),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Idiomas', 'Aprendizaje de idiomas', Icons.language, 'language', Colors.teal),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Menstrual', 'Calendario menstrual', Icons.eco_outlined, 'menstrual', Colors.pink),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Mascotas', 'Cuidado de mascotas', Icons.pets, 'pet', Colors.brown),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Cuidado Personal', 'Autocuidado', Icons.favorite_outline, 'selfcare', Colors.pinkAccent),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Viajes', 'Viajes y aventuras', Icons.flight, 'travel', Colors.cyan),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Lectura', 'Libros y lectura', Icons.book, 'reading', Colors.indigo),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Películas', 'Películas y series', Icons.movie, 'movies', Colors.deepPurple),
+                      const SizedBox(height: 12),
+                      _buildSettingsSection('Emprendimientos', 'Negocios y proyectos', Icons.business, 'entrepreneurship', Colors.deepPurple),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          
+          // Sección de cerrar sesión mejorada
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.red.withOpacity(0.2),
+                    AppTheme.darkSurface,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.red.withOpacity(0.3),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Column(
                 children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.logout,
+                    size: 32,
+                    color: Colors.red,
+                  ),
+                ),
+                const SizedBox(height: 16),
                   const Text(
                     'Cerrar Sesión',
                     style: TextStyle(
-                      fontSize: 18,
+                    fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.white,
                     ),
@@ -1255,30 +2721,270 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.white60,
-                    ),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                      authProvider.signOut();
-                      context.go('/login');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: AppTheme.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text(
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (!context.mounted) return;
+                    
+                    try {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        barrierDismissible: false,
+                        barrierColor: Colors.black.withOpacity(0.7),
+                        builder: (BuildContext dialogContext) {
+                          return PopScope(
+                            canPop: false,
+                            child: AlertDialog(
+                              backgroundColor: AppTheme.darkSurface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              insetPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 24),
+                              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                              title: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: _carminePastel.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: _carminePastel,
+                                      size: 32,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  const Expanded(
+                                    child: Text(
+                                      'Confirmar Cierre de Sesión',
+                                      style: TextStyle(
+                                        color: AppTheme.white,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              content: SizedBox(
+                                width: double.maxFinite,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      '¿Estás seguro de que quieres cerrar sesión?',
+                                      style: TextStyle(
+                                        color: AppTheme.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: _carminePastel.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: _carminePastel.withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.info_outline,
+                                            color: _carminePastel,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Expanded(
+                                            child: Text(
+                                              'Tendrás que iniciar sesión nuevamente para acceder a tu cuenta.',
+                                              style: TextStyle(
+                                                color: AppTheme.white70,
+                                                fontSize: 14,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              actions: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppTheme.white60,
+                                      side: BorderSide(
+                                        color: AppTheme.white60.withOpacity(0.3),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Cancelar',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                                    icon: const Icon(Icons.logout, size: 20),
+                                    label: const Text(
+                                      'Cerrar Sesión',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: AppTheme.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      elevation: 4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+
+                      if (confirmed == true && context.mounted) {
+                        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                        
+                        // Mostrar indicador de carga
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          barrierColor: Colors.black.withOpacity(0.8),
+                          builder: (BuildContext loadingContext) {
+                            return PopScope(
+                              canPop: false,
+                              child: const Center(
+                                child: Card(
+                                  color: AppTheme.darkSurface,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(24),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'Cerrando sesión...',
+                                          style: TextStyle(color: AppTheme.white),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+
+                        try {
+                          final result = await authProvider.signOut();
+                          
+                          // Cerrar el indicador de carga
+                          if (context.mounted && Navigator.canPop(context)) {
+                            Navigator.of(context, rootNavigator: true).pop();
+                          }
+                          
+                          if (result['success'] == true) {
+                            // Esperar un momento para que el estado se actualice
+                            await Future.delayed(const Duration(milliseconds: 300));
+                            
+                            // Navegar al login - go reemplazará toda la pila de navegación
+                            if (context.mounted) {
+                              context.go('/login');
+                            }
+                          } else {
+                            // Error al cerrar sesión
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error al cerrar sesión: ${result['error'] ?? 'Error desconocido'}'),
+                                  backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          }
+                        } catch (error) {
+                          // Cerrar el indicador de carga si hay error
+                          if (context.mounted && Navigator.canPop(context)) {
+                            Navigator.of(context, rootNavigator: true).pop();
+                          }
+                          
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al cerrar sesión: $error'),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.logout, size: 20),
+                  label: const Text(
                       'Cerrar Sesión',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: AppTheme.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 8,
+                  ),
                   ),
                 ],
               ),
@@ -1289,65 +2995,191 @@ class _PersonalSectionsState extends State<PersonalSections> {
     );
   }
 
-  Widget _buildSettingsSection(String name, String description, IconData icon, bool isActive) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+  Widget _buildSettingsSection(String name, String description, IconData icon, String sectionId, Color sectionColor) {
+    final isActive = _activeSections[sectionId] ?? true;
+    final isSaving = _isLoadingSettings;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive 
+                ? sectionColor.withOpacity(0.4)
+                : AppTheme.darkSurfaceVariant,
+            width: isActive ? 2 : 1,
+          ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: sectionColor.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isSaving ? null : () async {
+              final newStatus = !isActive;
+              setState(() {
+                _activeSections[sectionId] = newStatus;
+              });
+
+              final result = await _settingsService.updateSectionStatus(sectionId, newStatus);
+
+              if (result['success'] != true) {
+                // Revertir el cambio si falló
+                setState(() {
+                  _activeSections[sectionId] = isActive;
+                });
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(result['error'] ?? 'Error al actualizar la sección'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              }
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
       child: Row(
         children: [
+                  // Icono con gradiente
           Container(
-            width: 44,
-            height: 44,
+                    width: 56,
+                    height: 56,
             decoration: BoxDecoration(
-              color: isActive ? AppTheme.orangeAccent : AppTheme.darkSurfaceVariant,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: AppTheme.white, size: 24),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isActive
+                            ? [
+                                sectionColor.withOpacity(0.3),
+                                sectionColor.withOpacity(0.1),
+                              ]
+                            : [
+                                AppTheme.darkSurfaceVariant,
+                                AppTheme.darkBackground,
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isActive 
+                            ? sectionColor.withOpacity(0.5)
+                            : AppTheme.darkSurfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: isActive ? sectionColor : AppTheme.white60,
+                      size: 28,
+                    ),
           ),
           const SizedBox(width: 16),
+                  // Información
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
-                    fontSize: 16,
+                          style: TextStyle(
+                            fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.white,
+                            letterSpacing: 0.3,
                   ),
                 ),
+                        const SizedBox(height: 4),
                 Text(
                   description,
                   style: const TextStyle(
-                    fontSize: 14,
+                            fontSize: 13,
                     color: AppTheme.white60,
                   ),
                 ),
               ],
             ),
           ),
+                  const SizedBox(width: 12),
+                  // Switch mejorado
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: isActive ? Colors.green : AppTheme.darkSurfaceVariant,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              isActive ? 'ON' : 'OFF',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.white,
-              ),
+                      color: isActive 
+                          ? Colors.green.withOpacity(0.1)
+                          : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Switch(
+                      value: isActive,
+                      onChanged: isSaving ? null : (value) async {
+                        setState(() {
+                          _activeSections[sectionId] = value;
+                        });
+
+                        final result = await _settingsService.updateSectionStatus(sectionId, value);
+
+                        if (result['success'] != true) {
+                          // Revertir el cambio si falló
+                          setState(() {
+                            _activeSections[sectionId] = !value;
+                          });
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(result['error'] ?? 'Error al actualizar la sección'),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      activeColor: Colors.green,
+                      activeTrackColor: Colors.green.withOpacity(0.5),
+                      inactiveThumbColor: AppTheme.white60,
+                      inactiveTrackColor: AppTheme.darkSurfaceVariant,
             ),
           ),
         ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildEventCard(EventOrganization event, int index) {
     final eventColor = _getEventColor(event.type);
+    // Obtener colores arcoíris basados en el índice para crear variación
+    final rainbowColor1 = _getRainbowColor(index % _rainbowColors.length);
+    final rainbowColor2 = _getRainbowColor((index + 1) % _rainbowColors.length);
+    final rainbowColor3 = _getRainbowColor((index + 2) % _rainbowColors.length);
     
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -1363,33 +3195,55 @@ class _PersonalSectionsState extends State<PersonalSections> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface,
-          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              rainbowColor1.withOpacity(0.15),
+              rainbowColor2.withOpacity(0.1),
+              rainbowColor3.withOpacity(0.05),
+              AppTheme.darkSurface,
+            ],
+          ),
+        borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: eventColor.withOpacity(0.3),
+            color: rainbowColor1.withOpacity(0.4),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: eventColor.withOpacity(0.1),
+              color: rainbowColor1.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: rainbowColor2.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Stack(
           children: [
-            // Barra lateral de color
+            // Barra lateral con gradiente arcoíris
             Positioned(
               left: 0,
               top: 0,
               bottom: 0,
               child: Container(
-                width: 4,
+                width: 6,
                 decoration: BoxDecoration(
-                  color: eventColor,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      rainbowColor1,
+                      rainbowColor2,
+                      rainbowColor3,
+                    ],
+                  ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     bottomLeft: Radius.circular(20),
@@ -1398,14 +3252,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Icono del evento con fondo mejorado
+              children: [
+                      // Icono del evento con fondo arcoíris
                       Container(
                         width: 56,
                         height: 56,
@@ -1414,15 +3268,23 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              eventColor.withOpacity(0.3),
-                              eventColor.withOpacity(0.1),
+                              rainbowColor1.withOpacity(0.4),
+                              rainbowColor2.withOpacity(0.3),
+                              rainbowColor3.withOpacity(0.2),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: eventColor.withOpacity(0.3),
-                            width: 1,
+                            color: rainbowColor1.withOpacity(0.5),
+                            width: 1.5,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: rainbowColor1.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
                         child: Center(
                           child: Text(
@@ -1437,32 +3299,43 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              event.eventName,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.white,
+                          event.eventName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            // Tipo de evento mejorado
+                            // Tipo de evento con gradiente arcoíris
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: eventColor.withOpacity(0.15),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    rainbowColor1.withOpacity(0.25),
+                                    rainbowColor2.withOpacity(0.15),
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: rainbowColor1.withOpacity(0.3),
+                                  width: 1,
+                                ),
                               ),
                               child: Text(
                                 _getEventTypeLabel(event.type),
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: eventColor,
+                                  color: rainbowColor1,
                                   fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
+                      ),
+                    ],
+                  ),
                       ),
                       // Botón de opciones
                       PopupMenuButton<String>(
@@ -1499,9 +3372,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                       backgroundColor: Colors.red,
                                     ),
                                     child: const Text('Eliminar'),
-                                  ),
-                                ],
-                              ),
+                ),
+              ],
+            ),
                             );
 
                             if (confirmed == true) {
@@ -1532,7 +3405,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Edición de eventos próximamente'),
-                                backgroundColor: AppTheme.orangeAccent,
+                                backgroundColor: _carminePastel,
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -1574,19 +3447,30 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       ),
                       child: Column(
                         children: [
-                          if (event.time != null) ...[
-                            Row(
-                              children: [
+            if (event.time != null) ...[
+              Row(
+                children: [
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: eventColor.withOpacity(0.2),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        rainbowColor2.withOpacity(0.3),
+                                        rainbowColor3.withOpacity(0.2),
+                                      ],
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: rainbowColor2.withOpacity(0.4),
+                                      width: 1,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.access_time,
                                     size: 16,
-                                    color: eventColor,
+                                    color: rainbowColor2,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -1603,34 +3487,45 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         ),
                                       ),
                                       const SizedBox(height: 2),
-                                      Text(
-                                        event.time!,
+                  Text(
+                    event.time!,
                                         style: const TextStyle(
                                           fontSize: 15,
                                           color: AppTheme.white,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                  ),
+                ],
+              ),
                                 ),
                               ],
                             ),
                             if (event.location != null) const SizedBox(height: 12),
-                          ],
-                          if (event.location != null) ...[
-                            Row(
-                              children: [
+            ],
+            if (event.location != null) ...[
+              Row(
+                children: [
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: eventColor.withOpacity(0.2),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        rainbowColor3.withOpacity(0.3),
+                                        rainbowColor1.withOpacity(0.2),
+                                      ],
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: rainbowColor3.withOpacity(0.4),
+                                      width: 1,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.location_on,
                                     size: 16,
-                                    color: eventColor,
+                                    color: rainbowColor3,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -1647,16 +3542,16 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         ),
                                       ),
                                       const SizedBox(height: 2),
-                                      Text(
-                                        event.location!,
+                  Text(
+                    event.location!,
                                         style: const TextStyle(
                                           fontSize: 15,
                                           color: AppTheme.white,
                                           fontWeight: FontWeight.w600,
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                  ),
+                ],
+              ),
                                 ),
                               ],
                             ),
@@ -1677,6 +3572,10 @@ class _PersonalSectionsState extends State<PersonalSections> {
 
   Widget _buildTaskCard(CalendarTask task, int index) {
     final taskColor = _getTaskColor(task.priority);
+    // Obtener colores arcoíris basados en el índice para crear variación
+    final rainbowColor1 = _getRainbowColor(index % _rainbowColors.length);
+    final rainbowColor2 = _getRainbowColor((index + 1) % _rainbowColors.length);
+    final rainbowColor3 = _getRainbowColor((index + 2) % _rainbowColors.length);
     
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -1692,33 +3591,55 @@ class _PersonalSectionsState extends State<PersonalSections> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface,
-          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              rainbowColor1.withOpacity(0.15),
+              rainbowColor2.withOpacity(0.1),
+              rainbowColor3.withOpacity(0.05),
+              AppTheme.darkSurface,
+            ],
+          ),
+        borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: taskColor.withOpacity(0.3),
+            color: rainbowColor1.withOpacity(0.4),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: taskColor.withOpacity(0.1),
+              color: rainbowColor1.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: rainbowColor2.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Stack(
           children: [
-            // Barra lateral de color según prioridad
+            // Barra lateral con gradiente arcoíris
             Positioned(
               left: 0,
               top: 0,
               bottom: 0,
               child: Container(
-                width: 4,
+                width: 6,
                 decoration: BoxDecoration(
-                  color: taskColor,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      rainbowColor1,
+                      rainbowColor2,
+                      rainbowColor3,
+                    ],
+                  ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     bottomLeft: Radius.circular(20),
@@ -1727,15 +3648,15 @@ class _PersonalSectionsState extends State<PersonalSections> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Checkbox mejorado
-                      GestureDetector(
+            GestureDetector(
                         onTap: () async {
                           final updatedTask = CalendarTask(
                             id: task.id,
@@ -1751,14 +3672,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           final result = await _taskService.updateTask(updatedTask);
                           
                           if (result['success'] == true) {
-                            setState(() {
-                              _tasks = _tasks.map((t) {
-                                if (t.id == task.id) {
+                setState(() {
+                  _tasks = _tasks.map((t) {
+                    if (t.id == task.id) {
                                   return updatedTask;
-                                }
-                                return t;
-                              }).toList();
-                            });
+                    }
+                    return t;
+                  }).toList();
+                });
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -1768,43 +3689,59 @@ class _PersonalSectionsState extends State<PersonalSections> {
                               ),
                             );
                           }
-                        },
-                        child: Container(
+              },
+              child: Container(
                           width: 56,
                           height: 56,
-                          decoration: BoxDecoration(
+                decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: task.completed
                                   ? [
-                                      Colors.green.withOpacity(0.3),
-                                      Colors.green.withOpacity(0.1),
+                                      Colors.green.withOpacity(0.4),
+                                      Colors.green.withOpacity(0.2),
                                     ]
                                   : [
-                                      taskColor.withOpacity(0.3),
-                                      taskColor.withOpacity(0.1),
+                                      rainbowColor1.withOpacity(0.4),
+                                      rainbowColor2.withOpacity(0.3),
+                                      rainbowColor3.withOpacity(0.2),
                                     ],
                             ),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
+                  border: Border.all(
                               color: task.completed
-                                  ? Colors.green.withOpacity(0.5)
-                                  : taskColor.withOpacity(0.5),
-                              width: 2,
-                            ),
+                                  ? Colors.green.withOpacity(0.6)
+                                  : rainbowColor1.withOpacity(0.5),
+                    width: 2,
+                  ),
+                            boxShadow: task.completed ? null : [
+                              BoxShadow(
+                                color: rainbowColor1.withOpacity(0.3),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
                           ),
                           child: Center(
-                            child: task.completed
+                child: task.completed
                                 ? const Icon(Icons.check, color: Colors.green, size: 28)
                                 : Container(
                                     width: 20,
                                     height: 20,
                                     decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          rainbowColor1.withOpacity(0.3),
+                                          rainbowColor2.withOpacity(0.2),
+                                        ],
+                                      ),
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: taskColor,
-                                        width: 2,
+                                        color: rainbowColor1,
+                                        width: 2.5,
                                       ),
                                     ),
                                   ),
@@ -1812,27 +3749,38 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task.title,
-                              style: TextStyle(
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: task.completed ? AppTheme.white40 : AppTheme.white,
-                                decoration: task.completed ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            // Prioridad mejorada
+                      color: task.completed ? AppTheme.white40 : AppTheme.white,
+                      decoration: task.completed ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                    const SizedBox(height: 8),
+                            // Prioridad con gradiente arcoíris
                             if (task.priority != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: taskColor.withOpacity(0.15),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      rainbowColor1.withOpacity(0.25),
+                                      rainbowColor2.withOpacity(0.15),
+                                    ],
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: rainbowColor1.withOpacity(0.3),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -1846,16 +3794,16 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                       _getTaskPriorityLabel(task.priority),
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: taskColor,
+                                        color: rainbowColor1,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
+                ],
+              ),
+            ),
                       // Botón de opciones
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
@@ -1901,9 +3849,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                               final success = await _taskService.deleteTask(task.id);
                               
                               if (success) {
-                                setState(() {
-                                  _tasks.removeWhere((t) => t.id == task.id);
-                                });
+                setState(() {
+                  _tasks.removeWhere((t) => t.id == task.id);
+                });
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Tarea eliminada exitosamente'),
@@ -1926,7 +3874,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Edición de tareas próximamente'),
-                                backgroundColor: AppTheme.orangeAccent,
+                                backgroundColor: _carminePastel,
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -1974,13 +3922,24 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: taskColor.withOpacity(0.2),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        rainbowColor2.withOpacity(0.3),
+                                        rainbowColor3.withOpacity(0.2),
+                                      ],
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: rainbowColor2.withOpacity(0.4),
+                                      width: 1,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.access_time,
                                     size: 16,
-                                    color: taskColor,
+                                    color: rainbowColor2,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -2018,13 +3977,24 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                 Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: taskColor.withOpacity(0.2),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        rainbowColor3.withOpacity(0.3),
+                                        rainbowColor1.withOpacity(0.2),
+                                      ],
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: rainbowColor3.withOpacity(0.4),
+                                      width: 1,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.category,
                                     size: 16,
-                                    color: taskColor,
+                                    color: rainbowColor3,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -2075,8 +4045,10 @@ class _PersonalSectionsState extends State<PersonalSections> {
     String subtitle,
     String buttonText,
     VoidCallback onButtonPressed,
-    Color buttonColor,
-  ) {
+    Color buttonColor, {
+    List<Color>? gradientColors,
+  }) {
+    final colors = gradientColors ?? [buttonColor, buttonColor];
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -2084,13 +4056,21 @@ class _PersonalSectionsState extends State<PersonalSections> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: buttonColor.withOpacity(0.1),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors.map((c) => c.withOpacity(0.2)).toList(),
+              ),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: colors[0].withOpacity(0.3),
+                width: 2,
+              ),
             ),
             child: Icon(
               icon,
               size: 64,
-              color: buttonColor.withOpacity(0.6),
+              color: colors[0],
             ),
           ),
           const SizedBox(height: 24),
@@ -2113,19 +4093,37 @@ class _PersonalSectionsState extends State<PersonalSections> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: onButtonPressed,
-            icon: Icon(
-              icon == Icons.check_circle ? Icons.task : Icons.event,
-              size: 20,
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colors[0].withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            label: Text(buttonText),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonColor,
-              foregroundColor: AppTheme.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+            child: ElevatedButton.icon(
+              onPressed: onButtonPressed,
+              icon: Icon(
+                icon == Icons.check_circle ? Icons.task : Icons.event,
+                size: 20,
+              ),
+              label: Text(buttonText),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: AppTheme.white,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
           ),
@@ -2207,7 +4205,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -2223,7 +4221,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -2260,7 +4258,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.orangeAccent),
+                                borderSide: BorderSide(color: _carminePastel),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
@@ -2273,7 +4271,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                   return Theme(
                                     data: ThemeData.dark().copyWith(
                                       colorScheme: ColorScheme.dark(
-                                        primary: AppTheme.orangeAccent,
+                                        primary: _carminePastel,
                                         onPrimary: AppTheme.white,
                                         surface: AppTheme.darkSurface,
                                         onSurface: AppTheme.white,
@@ -2306,7 +4304,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -2392,7 +4390,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.orangeAccent,
+                    backgroundColor: _carminePastel,
                     foregroundColor: AppTheme.white,
                     disabledBackgroundColor: AppTheme.darkSurfaceVariant,
                   ),
@@ -2508,7 +4506,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -2527,7 +4525,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -2578,7 +4576,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -2644,7 +4642,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.orangeAccent),
+                          borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
@@ -2657,7 +4655,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             return Theme(
                               data: ThemeData.dark().copyWith(
                                 colorScheme: ColorScheme.dark(
-                                  primary: AppTheme.orangeAccent,
+                                  primary: _carminePastel,
                                   onPrimary: AppTheme.white,
                                   surface: AppTheme.darkSurface,
                                   onSurface: AppTheme.white,
@@ -2752,7 +4750,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.orangeAccent,
+                    backgroundColor: _carminePastel,
                     foregroundColor: AppTheme.white,
                     disabledBackgroundColor: AppTheme.darkSurfaceVariant,
                   ),
