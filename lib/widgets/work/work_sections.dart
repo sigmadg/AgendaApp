@@ -34,7 +34,10 @@ class _WorkSectionsState extends State<WorkSections> {
   List<WorkProject> _projects = [];
   List<Map<String, dynamic>> _priorities = []; // {id, text, completed}
   List<Map<String, dynamic>> _focus = []; // {id, text, completed}
-  List<Map<String, dynamic>> _goals = []; // {id, text, completed}
+  List<Map<String, dynamic>> _goals = []; // {id, text, completed, milestones: [{id, text, completed}]}
+  
+  // Proyecto seleccionado para estrategia y planificación
+  WorkProject? _selectedStrategyProject;
   
   // Estados para formularios y modales
   final TextEditingController _weeklyTaskController = TextEditingController();
@@ -42,6 +45,7 @@ class _WorkSectionsState extends State<WorkSections> {
   final TextEditingController _priorityController = TextEditingController();
   final TextEditingController _focusController = TextEditingController();
   final TextEditingController _goalController = TextEditingController();
+  final Map<String, TextEditingController> _goalMilestoneControllers = {}; // Para cada objetivo
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _projectDescriptionController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
@@ -59,14 +63,39 @@ class _WorkSectionsState extends State<WorkSections> {
   bool _showAddProjectModal = false;
   List<ProjectGoal> _tempProjectGoals = [];
   final TextEditingController _tempGoalTextController = TextEditingController();
+  final TextEditingController _tempGoalPersonController = TextEditingController();
+  DateTime? _tempGoalDate;
+  
+  // Variables temporales para estrategia del proyecto
+  String _activeProjectModalTab = 'basic'; // 'basic', 'goals', 'strategy'
+  List<ProjectTeammate> _tempProjectTeammates = [];
+  List<ProjectAchievement> _tempProjectAchievements = [];
+  List<ProjectWork> _tempProjectWorks = [];
+  List<ProjectFunding> _tempProjectFunding = [];
+  
+  // Controllers para estrategia
+  final TextEditingController _tempTeammateNameController = TextEditingController();
+  final TextEditingController _tempTeammateRoleController = TextEditingController();
+  final TextEditingController _tempAchievementNameController = TextEditingController();
+  final TextEditingController _tempAchievementDueDateController = TextEditingController();
+  final TextEditingController _tempWorkPositionController = TextEditingController();
+  final TextEditingController _tempWorkAppointController = TextEditingController();
+  final TextEditingController _tempWorkStatusController = TextEditingController();
+  final TextEditingController _tempWorkNotesController = TextEditingController();
+  final TextEditingController _tempFundingElementController = TextEditingController();
+  final TextEditingController _tempFundingNotesController = TextEditingController();
+  
+  DateTime? _tempAchievementDueDate;
+  DateTime? _tempWorkStartDate;
+  DateTime? _tempWorkDeadline;
 
   final sections = [
     {'id': 'weekly', 'name': 'Sesiones', 'icon': Icons.event},
     {'id': 'daily', 'name': 'Tareas', 'icon': Icons.today},
     {'id': 'projects', 'name': 'Proyectos', 'icon': Icons.folder},
     {'id': 'strategy', 'name': 'Estrategia', 'icon': Icons.track_changes},
-    {'id': 'priorities-focus-goals', 'name': 'Prioridades, Enfoque y Objetivos', 'icon': Icons.dashboard},
     {'id': 'planning', 'name': 'Planificación', 'icon': Icons.assignment},
+    {'id': 'priorities-focus-goals', 'name': 'Prioridades, Enfoque y Objetivos', 'icon': Icons.dashboard},
   ];
 
   String _activeSubSection = 'priorities'; // Para la subsección agrupada
@@ -136,6 +165,7 @@ class _WorkSectionsState extends State<WorkSections> {
     _projectDescriptionController.dispose();
     _notesController.dispose();
     _tempGoalTextController.dispose();
+    _tempGoalPersonController.dispose();
     _meetingDateScrollController.dispose();
     super.dispose();
   }
@@ -215,40 +245,42 @@ class _WorkSectionsState extends State<WorkSections> {
         ),
       );
     } else if (_activeSection == 'projects') {
-      floatingActionButton = Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              _professionalPrimary,
-              _professionalSecondary,
+      if (_projects.isNotEmpty) {
+        floatingActionButton = Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _professionalPrimary,
+                _professionalSecondary,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: _professionalSecondary.withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: _professionalSecondary.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+          child: FloatingActionButton.extended(
+            onPressed: () => setState(() => _showAddProjectModal = true),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            icon: const Icon(Icons.add, color: AppTheme.white),
+            label: const Text(
+              'Agregar Proyecto',
+              style: TextStyle(
+                color: AppTheme.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () => setState(() => _showAddProjectModal = true),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.add, color: AppTheme.white),
-          label: const Text(
-            'Nuevo Proyecto',
-            style: TextStyle(
-              color: AppTheme.white,
-              fontWeight: FontWeight.w600,
-            ),
+            tooltip: 'Agregar proyecto',
           ),
-          tooltip: 'Agregar proyecto',
-        ),
-      );
+        );
+      }
     }
 
     return Scaffold(
@@ -256,7 +288,7 @@ class _WorkSectionsState extends State<WorkSections> {
       backgroundColor: Colors.transparent,
       drawer: _buildNavigationDrawer(context),
       appBar: NavigationHeader(currentSection: 'work'),
-      floatingActionButton: floatingActionButton,
+      floatingActionButton: _showAddProjectModal ? null : floatingActionButton,
       body: Column(
         children: [
           _buildSectionTabs(),
@@ -652,7 +684,67 @@ class _WorkSectionsState extends State<WorkSections> {
 
     return Column(
       children: [
-        // Header con selector de fecha
+        // Header mejorado con paleta profesional
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _professionalPrimary,
+                _professionalSecondary,
+                _professionalAccent,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: _professionalSecondary.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Icon(Icons.event, color: AppTheme.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Juntas, Sesiones y Citas',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                    const Text(
+                      'Organiza tus reuniones y citas',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Selector de fecha con fondo
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -702,18 +794,9 @@ class _WorkSectionsState extends State<WorkSections> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Sesiones',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.white,
-                          ),
-                        ),
                         if (todayMeetings.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(top: 4),
+                            padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               '${todayMeetings.length} evento${todayMeetings.length == 1 ? '' : 's'}',
                               style: TextStyle(
@@ -1308,6 +1391,7 @@ class _WorkSectionsState extends State<WorkSections> {
     required String label,
     required Color color,
     List<Color>? gradientColors,
+    String? subtitle,
   }) {
     final colors = gradientColors ?? [color, color];
     return Container(
@@ -1370,6 +1454,16 @@ class _WorkSectionsState extends State<WorkSections> {
               color: AppTheme.white60,
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1973,16 +2067,14 @@ class _WorkSectionsState extends State<WorkSections> {
     final totalGoals = _projects.fold(0, (sum, p) => sum + p.goals.length);
     final completedGoals = _projects.fold(0, (sum, p) => sum + p.goals.where((g) => g.completed == true).length);
     
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header mejorado con gradiente profesional
+    final content = SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+              // Header mejorado con paleta profesional
               Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -1993,7 +2085,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       _professionalAccent,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: _professionalSecondary.withOpacity(0.3),
@@ -2005,26 +2097,15 @@ class _WorkSectionsState extends State<WorkSections> {
                 child: Row(
                   children: [
                     Container(
-                      width: 64,
-                      height: 64,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withOpacity(0.3),
-                            Colors.white.withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                          width: 2,
-                        ),
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Icon(Icons.folder_special, color: AppTheme.white, size: 32),
+                      child: const Icon(Icons.folder_special, color: AppTheme.white, size: 24),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2032,14 +2113,12 @@ class _WorkSectionsState extends State<WorkSections> {
                           const Text(
                             'Proyectos',
                             style: TextStyle(
-                              fontSize: 26,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.white,
-                              letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
+                          const Text(
                             'Gestiona y organiza tus proyectos',
                             style: TextStyle(
                               fontSize: 14,
@@ -2115,11 +2194,14 @@ class _WorkSectionsState extends State<WorkSections> {
                   final project = entry.value;
                   return _buildProjectCard(project, index);
                 }),
-            ],
-          ),
-        ),
-        
-        // Modal para agregar proyecto
+        ],
+      ),
+    );
+    
+    // Envolver en Stack para mostrar el modal
+    return Stack(
+      children: [
+        content,
         if (_showAddProjectModal) _buildAddProjectModal(),
       ],
     );
@@ -2127,223 +2209,1222 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAddProjectModal() {
     return Container(
-      color: Colors.black54,
-      child: Center(
-        child: Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppTheme.darkSurface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          constraints: const BoxConstraints(maxHeight: 600),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Nuevo Proyecto',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: AppTheme.white),
-                      onPressed: () {
-                        setState(() {
-                          _showAddProjectModal = false;
-                          _projectNameController.clear();
-                          _projectDescriptionController.clear();
-                          _tempProjectGoals.clear();
-                          _tempGoalTextController.clear();
-                          _selectedProjectDeadline = null;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                
-                // Nombre del proyecto
-                TextField(
-                  controller: _projectNameController,
-                  style: const TextStyle(color: AppTheme.white),
-                  decoration: InputDecoration(
-                    labelText: 'Nombre del Proyecto *',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
-                    filled: true,
-                    fillColor: AppTheme.darkSurfaceVariant,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Descripción
-                TextField(
-                  controller: _projectDescriptionController,
-                  style: const TextStyle(color: AppTheme.white),
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Descripción',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
-                    filled: true,
-                    fillColor: AppTheme.darkSurfaceVariant,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Fecha límite
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedProjectDeadline ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) {
-                      setState(() => _selectedProjectDeadline = date);
-                    }
-                  },
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(
-                    _selectedProjectDeadline != null
-                        ? 'Fecha límite: ${_selectedProjectDeadline!.day}/${_selectedProjectDeadline!.month}/${_selectedProjectDeadline!.year}'
-                        : 'Seleccionar fecha límite',
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.white60,
-                    side: const BorderSide(color: AppTheme.white60),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                
-                // Metas del proyecto
-                const Text(
-                  'Metas del Proyecto',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _tempGoalTextController,
-                        style: const TextStyle(color: AppTheme.white),
-                        decoration: InputDecoration(
-                          hintText: 'Escribe una meta...',
-                          hintStyle: const TextStyle(color: AppTheme.white60),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_tempGoalTextController.text.trim().isNotEmpty) {
-                          setState(() {
-                            _tempProjectGoals.add(ProjectGoal(
-                              id: DateTime.now().millisecondsSinceEpoch.toString(),
-                              text: _tempGoalTextController.text.trim(),
-                            ));
-                            _tempGoalTextController.clear();
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.orangeAccent,
-                        foregroundColor: AppTheme.white,
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(12),
-                      ),
-                      child: const Icon(Icons.add),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (_tempProjectGoals.isNotEmpty)
-                  ..._tempProjectGoals.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final goal = entry.value;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkSurfaceVariant,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '${index + 1}. ${goal.text}',
-                            style: const TextStyle(color: AppTheme.white),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 18, color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                _tempProjectGoals.removeWhere((g) => g.id == goal.id);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                const SizedBox(height: 20),
-                
-                // Botones de acción
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _showAddProjectModal = false;
-                          _projectNameController.clear();
-                          _projectDescriptionController.clear();
-                          _tempProjectGoals.clear();
-                          _tempGoalTextController.clear();
-                          _selectedProjectDeadline = null;
-                        });
-                      },
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: _addProject,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.orangeAccent,
-                        foregroundColor: AppTheme.white,
-                      ),
-                      child: const Text('Crear Proyecto'),
-                    ),
-                  ],
+      color: Colors.black87,
+      child: SafeArea(
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.9,
+              maxWidth: 500,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: _professionalAccent.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _professionalPrimary.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
                 ),
               ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                // Header mejorado con gradiente
+                Container(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _professionalPrimary,
+                        _professionalSecondary,
+                        _professionalAccent,
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.folder_special,
+                          color: AppTheme.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Agregar Proyecto',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Crea un proyecto para organizar tu trabajo',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.close, color: AppTheme.white),
+                          onPressed: () {
+                            setState(() {
+                              _showAddProjectModal = false;
+                              _projectNameController.clear();
+                              _projectDescriptionController.clear();
+                              _tempProjectGoals.clear();
+                              _tempGoalTextController.clear();
+                              _tempGoalPersonController.clear();
+                              _tempGoalDate = null;
+                              _selectedProjectDeadline = null;
+                              _activeProjectModalTab = 'basic';
+                              _tempProjectTeammates.clear();
+                              _tempProjectAchievements.clear();
+                              _tempProjectWorks.clear();
+                              _tempProjectFunding.clear();
+                              _tempTeammateNameController.clear();
+                              _tempTeammateRoleController.clear();
+                              _tempAchievementNameController.clear();
+                              _tempAchievementDueDateController.clear();
+                              _tempWorkPositionController.clear();
+                              _tempWorkAppointController.clear();
+                              _tempWorkStatusController.clear();
+                              _tempWorkNotesController.clear();
+                              _tempFundingElementController.clear();
+                              _tempFundingNotesController.clear();
+                              _tempAchievementDueDate = null;
+                              _tempWorkStartDate = null;
+                              _tempWorkDeadline = null;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Tabs para navegar entre secciones
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildProjectModalTab('basic', 'Básica', Icons.info_outline),
+                      ),
+                      Expanded(
+                        child: _buildProjectModalTab('goals', 'Metas', Icons.flag),
+                      ),
+                      Expanded(
+                        child: _buildProjectModalTab('strategy', 'Estrategia', Icons.track_changes),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Contenido con scroll
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_activeProjectModalTab == 'basic') ...[
+                        // Sección: Información Básica
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _professionalPrimary.withOpacity(0.15),
+                                _professionalSecondary.withOpacity(0.1),
+                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _professionalPrimary.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [_professionalPrimary, _professionalSecondary],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.info_outline,
+                                      color: AppTheme.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Información Básica',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              
+                              // Nombre del proyecto
+                              TextField(
+                                controller: _projectNameController,
+                                style: const TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 16,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Nombre del Proyecto',
+                                  labelStyle: TextStyle(
+                                    color: AppTheme.white60,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  hintText: 'Ej: Desarrollo Web App',
+                                  hintStyle: TextStyle(
+                                    color: AppTheme.white40,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.title,
+                                    color: _professionalAccent,
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.darkSurface.withOpacity(0.6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalAccent.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalAccent.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalAccent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Descripción
+                              TextField(
+                                controller: _projectDescriptionController,
+                                style: const TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 15,
+                                ),
+                                maxLines: 4,
+                                decoration: InputDecoration(
+                                  labelText: 'Descripción del Proyecto',
+                                  labelStyle: TextStyle(
+                                    color: AppTheme.white60,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  hintText: 'Describe brevemente el objetivo del proyecto...',
+                                  hintStyle: TextStyle(
+                                    color: AppTheme.white40,
+                                  ),
+                                  prefixIcon: Padding(
+                                    padding: const EdgeInsets.only(bottom: 60),
+                                    child: Icon(
+                                      Icons.description,
+                                      color: _professionalAccent,
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.darkSurface.withOpacity(0.6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalAccent.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalAccent.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalAccent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.all(16),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Fecha límite mejorada
+                              GestureDetector(
+                                onTap: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: _selectedProjectDeadline ?? DateTime.now(),
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2030),
+                                  );
+                                  if (date != null) {
+                                    setState(() => _selectedProjectDeadline = date);
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: _selectedProjectDeadline != null
+                                          ? [
+                                              _professionalTeal.withOpacity(0.3),
+                                              _professionalAccent.withOpacity(0.2),
+                                            ]
+                                          : [
+                                              AppTheme.darkSurface.withOpacity(0.6),
+                                              AppTheme.darkSurfaceVariant.withOpacity(0.4),
+                                            ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _selectedProjectDeadline != null
+                                          ? _professionalTeal.withOpacity(0.5)
+                                          : _professionalAccent.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: _selectedProjectDeadline != null
+                                                ? [_professionalTeal, _professionalAccent]
+                                                : [
+                                                    _professionalAccent.withOpacity(0.5),
+                                                    _professionalSecondary.withOpacity(0.5),
+                                                  ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Icon(
+                                          Icons.calendar_today,
+                                          color: AppTheme.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Fecha Límite',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppTheme.white60,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              _selectedProjectDeadline != null
+                                                  ? DateFormat('EEEE, d MMMM yyyy', 'es').format(_selectedProjectDeadline!)
+                                                  : 'Toca para seleccionar fecha',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: _selectedProjectDeadline != null
+                                                    ? AppTheme.white
+                                                    : AppTheme.white60,
+                                                fontWeight: _selectedProjectDeadline != null
+                                                    ? FontWeight.w600
+                                                    : FontWeight.normal,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16,
+                                        color: _professionalAccent,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ] else if (_activeProjectModalTab == 'goals') ...[
+                        // Sección: Metas del Proyecto
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _professionalIndigo.withOpacity(0.15),
+                                _professionalAccent.withOpacity(0.1),
+                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _professionalIndigo.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [_professionalIndigo, _professionalAccent],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.flag,
+                                      color: AppTheme.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Metas del Proyecto',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (_tempProjectGoals.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [_professionalIndigo, _professionalAccent],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '${_tempProjectGoals.length}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.white,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              
+                              // Campo de texto de la meta
+                              TextField(
+                                controller: _tempGoalTextController,
+                                style: const TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 15,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Descripción de la Meta',
+                                  labelStyle: TextStyle(
+                                    color: AppTheme.white60,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  hintText: 'Ej: Completar diseño de interfaz',
+                                  hintStyle: TextStyle(
+                                    color: AppTheme.white40,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.flag,
+                                    color: _professionalIndigo,
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.darkSurface.withOpacity(0.6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalIndigo.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalIndigo.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: _professionalIndigo,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              
+                              // Campos para responsable y fecha
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _tempGoalPersonController,
+                                      style: const TextStyle(
+                                        color: AppTheme.white,
+                                        fontSize: 14,
+                                      ),
+                                      decoration: InputDecoration(
+                                        labelText: 'Responsable',
+                                        labelStyle: TextStyle(
+                                          color: AppTheme.white60,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        hintText: 'Nombre',
+                                        hintStyle: TextStyle(
+                                          color: AppTheme.white40,
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.person,
+                                          color: _professionalTeal,
+                                          size: 20,
+                                        ),
+                                        filled: true,
+                                        fillColor: AppTheme.darkSurface.withOpacity(0.6),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: _professionalTeal.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: _professionalTeal.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: _professionalTeal,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final date = await showDatePicker(
+                                          context: context,
+                                          initialDate: _tempGoalDate ?? DateTime.now(),
+                                          firstDate: DateTime(2020),
+                                          lastDate: DateTime(2030),
+                                        );
+                                        if (date != null) {
+                                          setState(() => _tempGoalDate = date);
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: _tempGoalDate != null
+                                                ? [
+                                                    _professionalTeal.withOpacity(0.3),
+                                                    _professionalAccent.withOpacity(0.2),
+                                                  ]
+                                                : [
+                                                    AppTheme.darkSurface.withOpacity(0.6),
+                                                    AppTheme.darkSurfaceVariant.withOpacity(0.4),
+                                                  ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: _tempGoalDate != null
+                                                ? _professionalTeal.withOpacity(0.5)
+                                                : _professionalTeal.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today,
+                                              color: _tempGoalDate != null
+                                                  ? _professionalTeal
+                                                  : AppTheme.white60,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                _tempGoalDate != null
+                                                    ? DateFormat('dd/MM/yyyy').format(_tempGoalDate!)
+                                                    : 'Fecha',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: _tempGoalDate != null
+                                                      ? AppTheme.white
+                                                      : AppTheme.white60,
+                                                  fontWeight: _tempGoalDate != null
+                                                      ? FontWeight.w600
+                                                      : FontWeight.normal,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Botón para agregar meta mejorado
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      _professionalIndigo,
+                                      _professionalAccent,
+                                      _professionalTeal,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: _professionalIndigo.withOpacity(0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    if (_tempGoalTextController.text.trim().isNotEmpty) {
+                                      setState(() {
+                                        _tempProjectGoals.add(ProjectGoal(
+                                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                          text: _tempGoalTextController.text.trim(),
+                                          person: _tempGoalPersonController.text.trim().isNotEmpty
+                                              ? _tempGoalPersonController.text.trim()
+                                              : null,
+                                          date: _tempGoalDate,
+                                        ));
+                                        _tempGoalTextController.clear();
+                                        _tempGoalPersonController.clear();
+                                        _tempGoalDate = null;
+                                      });
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Por favor ingresa una descripción para la meta')),
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.add_circle_outline, size: 22),
+                                  label: const Text(
+                                    'Agregar Meta',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor: AppTheme.white,
+                                    shadowColor: Colors.transparent,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              
+                              // Lista de metas agregadas mejorada
+                              if (_tempProjectGoals.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        _professionalIndigo.withOpacity(0.2),
+                                        _professionalAccent.withOpacity(0.15),
+                                        AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _professionalIndigo.withOpacity(0.4),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.checklist,
+                                            color: _professionalIndigo,
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Metas Agregadas',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: _professionalIndigo,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [_professionalIndigo, _professionalAccent],
+                                              ),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              '${_tempProjectGoals.length}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ..._tempProjectGoals.asMap().entries.map((entry) {
+                                        final index = entry.key;
+                                        final goal = entry.value;
+                                        return TweenAnimationBuilder<double>(
+                                          tween: Tween(begin: 0.0, end: 1.0),
+                                          duration: Duration(milliseconds: 300 + (index * 50)),
+                                          builder: (context, value, child) {
+                                            return Opacity(
+                                              opacity: value,
+                                              child: Transform.translate(
+                                                offset: Offset(0, 20 * (1 - value)),
+                                                child: child,
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            margin: const EdgeInsets.only(bottom: 10),
+                                            padding: const EdgeInsets.all(14),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  AppTheme.darkSurface.withOpacity(0.8),
+                                                  AppTheme.darkSurfaceVariant.withOpacity(0.6),
+                                                ],
+                                              ),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: _professionalIndigo.withOpacity(0.3),
+                                                width: 1,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: _professionalIndigo.withOpacity(0.1),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      width: 32,
+                                                      height: 32,
+                                                      decoration: BoxDecoration(
+                                                        gradient: LinearGradient(
+                                                          colors: [_professionalIndigo, _professionalAccent],
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: _professionalIndigo.withOpacity(0.4),
+                                                            blurRadius: 4,
+                                                            offset: const Offset(0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Center(
+                                                        child: Text(
+                                                          '${index + 1}',
+                                                          style: const TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: AppTheme.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Text(
+                                                        goal.text,
+                                                        style: const TextStyle(
+                                                          color: AppTheme.white,
+                                                          fontSize: 15,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.red.withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: IconButton(
+                                                        icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            _tempProjectGoals.removeWhere((g) => g.id == goal.id);
+                                                          });
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                if (goal.person != null || goal.date != null) ...[
+                                                  const SizedBox(height: 12),
+                                                  Container(
+                                                    padding: const EdgeInsets.all(10),
+                                                    decoration: BoxDecoration(
+                                                      color: _professionalIndigo.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(
+                                                        color: _professionalIndigo.withOpacity(0.2),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        if (goal.person != null) ...[
+                                                          Container(
+                                                            padding: const EdgeInsets.all(6),
+                                                            decoration: BoxDecoration(
+                                                              gradient: LinearGradient(
+                                                                colors: [_professionalTeal, _professionalAccent],
+                                                              ),
+                                                              borderRadius: BorderRadius.circular(6),
+                                                            ),
+                                                            child: const Icon(
+                                                              Icons.person,
+                                                              size: 14,
+                                                              color: AppTheme.white,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          Expanded(
+                                                            child: Text(
+                                                              goal.person!,
+                                                              style: const TextStyle(
+                                                                fontSize: 13,
+                                                                color: AppTheme.white,
+                                                                fontWeight: FontWeight.w500,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                        if (goal.person != null && goal.date != null)
+                                                          Container(
+                                                            margin: const EdgeInsets.symmetric(horizontal: 12),
+                                                            width: 1,
+                                                            height: 16,
+                                                            color: AppTheme.white40,
+                                                          ),
+                                                        if (goal.date != null) ...[
+                                                          Container(
+                                                            padding: const EdgeInsets.all(6),
+                                                            decoration: BoxDecoration(
+                                                              gradient: LinearGradient(
+                                                                colors: [_professionalTeal, _professionalAccent],
+                                                              ),
+                                                              borderRadius: BorderRadius.circular(6),
+                                                            ),
+                                                            child: const Icon(
+                                                              Icons.calendar_today,
+                                                              size: 14,
+                                                              color: AppTheme.white,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          Expanded(
+                                                            child: Text(
+                                                              DateFormat('dd MMM yyyy', 'es').format(goal.date!),
+                                                              style: const TextStyle(
+                                                                fontSize: 13,
+                                                                color: AppTheme.white,
+                                                                fontWeight: FontWeight.w500,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        ] else if (_activeProjectModalTab == 'strategy') ...[
+                        // Sección: Estrategia del Proyecto
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _professionalIndigo.withOpacity(0.15),
+                                _professionalAccent.withOpacity(0.1),
+                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _professionalIndigo.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [_professionalIndigo, _professionalAccent],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.track_changes,
+                                      color: AppTheme.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Estrategia del Proyecto',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              
+                              // TEAMMATES
+                              _buildStrategySectionHeader('TEAMMATES', Icons.people),
+                              const SizedBox(height: 12),
+                              _buildAddTeammateForm(),
+                              const SizedBox(height: 12),
+                              if (_tempProjectTeammates.isNotEmpty)
+                                ..._tempProjectTeammates.map((teammate) => _buildTeammateCard(teammate)),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // ACHIEVEMENTS
+                              _buildStrategySectionHeader('ACHIEVEMENTS', Icons.star),
+                              const SizedBox(height: 12),
+                              _buildAddAchievementForm(),
+                              const SizedBox(height: 12),
+                              if (_tempProjectAchievements.isNotEmpty)
+                                ..._tempProjectAchievements.map((achievement) => _buildAchievementCard(achievement)),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // WORKS
+                              _buildStrategySectionHeader('WORKS', Icons.work),
+                              const SizedBox(height: 12),
+                              _buildAddWorkForm(),
+                              const SizedBox(height: 12),
+                              if (_tempProjectWorks.isNotEmpty)
+                                ..._tempProjectWorks.map((work) => _buildWorkCard(work)),
+                              
+                              const SizedBox(height: 24),
+                              
+                              // FUNDING
+                              _buildStrategySectionHeader('FUNDING', Icons.attach_money),
+                              const SizedBox(height: 12),
+                              _buildAddFundingForm(),
+                              const SizedBox(height: 12),
+                              if (_tempProjectFunding.isNotEmpty)
+                                ..._tempProjectFunding.map((funding) => _buildFundingCard(funding)),
+                            ],
+                          ),
+                        ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // Footer con botones de acción mejorados
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppTheme.darkSurface.withOpacity(0.8),
+                        AppTheme.darkSurface,
+                      ],
+                    ),
+                    border: Border(
+                      top: BorderSide(
+                        color: _professionalAccent.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showAddProjectModal = false;
+                                _projectNameController.clear();
+                                _projectDescriptionController.clear();
+                                _tempProjectGoals.clear();
+                                _tempGoalTextController.clear();
+                                _tempGoalPersonController.clear();
+                                _tempGoalDate = null;
+                                _selectedProjectDeadline = null;
+                                _activeProjectModalTab = 'basic';
+                                _tempProjectTeammates.clear();
+                                _tempProjectAchievements.clear();
+                                _tempProjectWorks.clear();
+                                _tempProjectFunding.clear();
+                                _tempTeammateNameController.clear();
+                                _tempTeammateRoleController.clear();
+                                _tempAchievementNameController.clear();
+                                _tempAchievementDueDateController.clear();
+                                _tempWorkPositionController.clear();
+                                _tempWorkAppointController.clear();
+                                _tempWorkStatusController.clear();
+                                _tempWorkNotesController.clear();
+                                _tempFundingElementController.clear();
+                                _tempFundingNotesController.clear();
+                                _tempAchievementDueDate = null;
+                                _tempWorkStartDate = null;
+                                _tempWorkDeadline = null;
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.white60,
+                              side: BorderSide(
+                                color: AppTheme.white60.withOpacity(0.3),
+                                width: 1.5,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  _professionalPrimary,
+                                  _professionalSecondary,
+                                  _professionalAccent,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _professionalAccent.withOpacity(0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: _addProject,
+                              icon: const Icon(Icons.add_task, size: 20),
+                              label: const Text(
+                                'Crear Proyecto',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: AppTheme.white,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                ],
+              ),
             ),
           ),
         ),
@@ -2364,20 +3445,884 @@ class _WorkSectionsState extends State<WorkSections> {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _projectNameController.text.trim(),
         aim: _projectDescriptionController.text.trim(),
+        startDate: DateTime.now(),
         deadline: _selectedProjectDeadline,
-        teammates: [],
-        achievements: [],
-        works: [],
-        funding: [],
+        teammates: _tempProjectTeammates,
+        achievements: _tempProjectAchievements,
+        works: _tempProjectWorks,
+        funding: _tempProjectFunding,
         goals: _tempProjectGoals,
+        overview: null,
       ));
       _showAddProjectModal = false;
       _projectNameController.clear();
       _projectDescriptionController.clear();
       _tempProjectGoals.clear();
       _tempGoalTextController.clear();
+      _tempGoalPersonController.clear();
+      _tempGoalDate = null;
       _selectedProjectDeadline = null;
+      _activeProjectModalTab = 'basic';
+      _tempProjectTeammates.clear();
+      _tempProjectAchievements.clear();
+      _tempProjectWorks.clear();
+      _tempProjectFunding.clear();
+      _tempTeammateNameController.clear();
+      _tempTeammateRoleController.clear();
+      _tempAchievementNameController.clear();
+      _tempAchievementDueDateController.clear();
+      _tempWorkPositionController.clear();
+      _tempWorkAppointController.clear();
+      _tempWorkStatusController.clear();
+      _tempWorkNotesController.clear();
+      _tempFundingElementController.clear();
+      _tempFundingNotesController.clear();
+      _tempAchievementDueDate = null;
+      _tempWorkStartDate = null;
+      _tempWorkDeadline = null;
     });
+  }
+
+  Widget _buildProjectModalTab(String tabId, String label, IconData icon) {
+    final isActive = _activeProjectModalTab == tabId;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _activeProjectModalTab = tabId;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          gradient: isActive
+              ? LinearGradient(
+                  colors: [_professionalPrimary, _professionalSecondary],
+                )
+              : null,
+          color: isActive ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isActive ? AppTheme.white : AppTheme.white60,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? AppTheme.white : AppTheme.white60,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildStrategySectionHeader(String title, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [_professionalIndigo.withOpacity(0.3), _professionalAccent.withOpacity(0.2)],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: _professionalIndigo, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: _professionalIndigo,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildAddTeammateForm() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _tempTeammateNameController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Nombre',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _tempTeammateRoleController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Rol/Puesto',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
+                  onPressed: () {
+                    if (_tempTeammateNameController.text.trim().isNotEmpty &&
+                        _tempTeammateRoleController.text.trim().isNotEmpty) {
+                      setState(() {
+                        _tempProjectTeammates.add(ProjectTeammate(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _tempTeammateNameController.text.trim(),
+                          role: _tempTeammateRoleController.text.trim(),
+                        ));
+                        _tempTeammateNameController.clear();
+                        _tempTeammateRoleController.clear();
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildTeammateCard(ProjectTeammate teammate) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  teammate.name,
+                  style: const TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  teammate.role,
+                  style: TextStyle(
+                    color: AppTheme.white60,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 16, color: Colors.red),
+            onPressed: () {
+              setState(() {
+                _tempProjectTeammates.removeWhere((t) => t.id == teammate.id);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildAddAchievementForm() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: _tempAchievementNameController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Nombre del logro',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: GestureDetector(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _tempAchievementDueDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        _tempAchievementDueDate = date;
+                        _tempAchievementDueDateController.text = DateFormat('dd/MM/yyyy').format(date);
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _professionalIndigo.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 14, color: _professionalIndigo),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _tempAchievementDueDate != null
+                                ? DateFormat('dd/MM/yyyy').format(_tempAchievementDueDate!)
+                                : 'Fecha',
+                            style: TextStyle(
+                              color: _tempAchievementDueDate != null
+                                  ? AppTheme.white
+                                  : AppTheme.white60,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
+                  onPressed: () {
+                    if (_tempAchievementNameController.text.trim().isNotEmpty) {
+                      setState(() {
+                        _tempProjectAchievements.add(ProjectAchievement(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          text: _tempAchievementNameController.text.trim(),
+                          date: _tempAchievementDueDate,
+                        ));
+                        _tempAchievementNameController.clear();
+                        _tempAchievementDueDateController.clear();
+                        _tempAchievementDueDate = null;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildAchievementCard(ProjectAchievement achievement) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  achievement.text,
+                  style: const TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (achievement.date != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fecha: ${DateFormat('dd/MM/yyyy').format(achievement.date!)}',
+                    style: TextStyle(
+                      color: AppTheme.white60,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 16, color: Colors.red),
+            onPressed: () {
+              setState(() {
+                _tempProjectAchievements.removeWhere((a) => a.id == achievement.id);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildAddWorkForm() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _tempWorkPositionController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Posición',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _tempWorkAppointController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Asignación',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _tempWorkStatusController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Estado',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _tempWorkStartDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                    );
+                    if (date != null) {
+                      setState(() => _tempWorkStartDate = date);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _professionalIndigo.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 14, color: _professionalIndigo),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _tempWorkStartDate != null
+                                ? DateFormat('dd/MM/yyyy').format(_tempWorkStartDate!)
+                                : 'Inicio',
+                            style: TextStyle(
+                              color: _tempWorkStartDate != null
+                                  ? AppTheme.white
+                                  : AppTheme.white60,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _tempWorkDeadline ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                    );
+                    if (date != null) {
+                      setState(() => _tempWorkDeadline = date);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _professionalIndigo.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.event, size: 14, color: _professionalIndigo),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _tempWorkDeadline != null
+                                ? DateFormat('dd/MM/yyyy').format(_tempWorkDeadline!)
+                                : 'Límite',
+                            style: TextStyle(
+                              color: _tempWorkDeadline != null
+                                  ? AppTheme.white
+                                  : AppTheme.white60,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _tempWorkNotesController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Notas (opcional)',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
+                  onPressed: () {
+                    if (_tempWorkPositionController.text.trim().isNotEmpty &&
+                        _tempWorkAppointController.text.trim().isNotEmpty &&
+                        _tempWorkStatusController.text.trim().isNotEmpty) {
+                      setState(() {
+                        _tempProjectWorks.add(ProjectWork(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          position: _tempWorkPositionController.text.trim(),
+                          appoint: _tempWorkAppointController.text.trim(),
+                          status: _tempWorkStatusController.text.trim(),
+                          startDate: _tempWorkStartDate,
+                          deadline: _tempWorkDeadline,
+                          notes: _tempWorkNotesController.text.trim().isNotEmpty
+                              ? _tempWorkNotesController.text.trim()
+                              : null,
+                        ));
+                        _tempWorkPositionController.clear();
+                        _tempWorkAppointController.clear();
+                        _tempWorkStatusController.clear();
+                        _tempWorkNotesController.clear();
+                        _tempWorkStartDate = null;
+                        _tempWorkDeadline = null;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildWorkCard(ProjectWork work) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      work.position,
+                      style: const TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Asignación: ${work.appoint}',
+                      style: TextStyle(
+                        color: AppTheme.white60,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      'Estado: ${work.status}',
+                      style: TextStyle(
+                        color: AppTheme.white60,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 16, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    _tempProjectWorks.removeWhere((w) => w.id == work.id);
+                  });
+                },
+              ),
+            ],
+          ),
+          if (work.startDate != null || work.deadline != null || work.notes != null) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                if (work.startDate != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today, size: 12, color: _professionalIndigo),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Inicio: ${DateFormat('dd/MM/yyyy').format(work.startDate!)}',
+                        style: TextStyle(
+                          color: AppTheme.white60,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                if (work.deadline != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.event, size: 12, color: _professionalIndigo),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Límite: ${DateFormat('dd/MM/yyyy').format(work.deadline!)}',
+                        style: TextStyle(
+                          color: AppTheme.white60,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            if (work.notes != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Notas: ${work.notes}',
+                style: TextStyle(
+                  color: AppTheme.white60,
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildAddFundingForm() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _tempFundingElementController,
+                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Elemento',
+                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (_tempFundingElementController.text.trim().isNotEmpty) {
+                        setState(() {
+                          _tempProjectFunding.add(ProjectFunding(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            element: _tempFundingElementController.text.trim(),
+                            notes: _tempFundingNotesController.text.trim().isNotEmpty
+                                ? _tempFundingNotesController.text.trim()
+                                : null,
+                          ));
+                          _tempFundingElementController.clear();
+                          _tempFundingNotesController.clear();
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
+                    label: const Text(
+                      'Agregar',
+                      style: TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _tempFundingNotesController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Notas (opcional)',
+              hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildFundingCard(ProjectFunding funding) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalIndigo.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  funding.element,
+                  style: const TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (funding.projectedCost != null || funding.realCost != null) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      if (funding.projectedCost != null)
+                        Text(
+                          'Proyectado: \$${funding.projectedCost!.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: AppTheme.white60,
+                            fontSize: 11,
+                          ),
+                        ),
+                      if (funding.realCost != null)
+                        Text(
+                          'Real: \$${funding.realCost!.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: AppTheme.white60,
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+                if (funding.notes != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Notas: ${funding.notes}',
+                    style: TextStyle(
+                      color: AppTheme.white60,
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 16, color: Colors.red),
+            onPressed: () {
+              setState(() {
+                _tempProjectFunding.removeWhere((f) => f.id == funding.id);
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildStrategy() {
@@ -2411,9 +4356,9 @@ class _WorkSectionsState extends State<WorkSections> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header mejorado con gradiente profesional
+          // Header mejorado con paleta profesional
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -2422,61 +4367,42 @@ class _WorkSectionsState extends State<WorkSections> {
                   _professionalPrimary,
                   _professionalSecondary,
                   _professionalAccent,
-                  _professionalIndigo,
                 ],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
                   color: _professionalSecondary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
-                BoxShadow(
-                  color: _professionalIndigo.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
               ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withOpacity(0.3),
-                        Colors.white.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 2,
-                    ),
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Icon(Icons.track_changes, color: AppTheme.white, size: 32),
+                  child: const Icon(Icons.track_changes, color: AppTheme.white, size: 24),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Estrategia de Proyectos',
+                        'Estrategía',
                         style: TextStyle(
-                          fontSize: 26,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.white,
-                          letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
+                      const Text(
                         'Vista general y supervisión estratégica',
                         style: TextStyle(
                           fontSize: 14,
@@ -2727,7 +4653,7 @@ class _WorkSectionsState extends State<WorkSections> {
           ),
           const SizedBox(height: 16),
           
-          // Lista de proyectos
+          // Selector de proyecto o formulario de estrategia
           if (_projects.isEmpty)
             _buildEmptyState(
               'No hay proyectos creados',
@@ -2742,13 +4668,1127 @@ class _WorkSectionsState extends State<WorkSections> {
               _professionalAccent,
               [_professionalPrimary, _professionalSecondary],
             )
+          else if (_selectedStrategyProject == null)
+            // Mostrar selector de proyectos
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _professionalSecondary.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, color: _professionalAccent, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Selecciona un proyecto para ver su estrategia',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.white70,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ..._projects.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final project = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedStrategyProject = project;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              _professionalPrimary.withOpacity(0.3),
+                              _professionalSecondary.withOpacity(0.2),
+                              AppTheme.darkSurface,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _professionalAccent.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [_professionalAccent, _professionalSecondary],
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.folder_special, color: AppTheme.white, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    project.title,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                  if (project.aim.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      project.aim,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.white60,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios, color: _professionalAccent, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            )
           else
-            ..._projects.asMap().entries.map((entry) {
-              final index = entry.key;
-              final project = entry.value;
-              return _buildProjectCard(project, index);
-            }),
+            // Mostrar formulario completo de PROJECT STRATEGY y PROJECT OVERVIEW
+            _buildProjectStrategyForm(_selectedStrategyProject!),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProjectStrategyForm(WorkProject project) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Botón para volver
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedStrategyProject = null;
+                  });
+                },
+                icon: Icon(Icons.arrow_back, color: _professionalAccent),
+                label: Text(
+                  'Volver',
+                  style: TextStyle(color: _professionalAccent),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                project.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // PROJECT STRATEGY Section
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _professionalPrimary.withOpacity(0.2),
+                  _professionalSecondary.withOpacity(0.15),
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _professionalPrimary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [_professionalPrimary, _professionalSecondary],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.track_changes, color: AppTheme.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'PROJECT STRATEGY',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // PROJECT TITLE
+                _buildFormField('PROJECT TITLE:', project.title),
+                const SizedBox(height: 16),
+                
+                // PROJECT AIM
+                _buildFormField('PROJECT AIM:', project.aim, subtitle: 'Brief introduction of the project'),
+                const SizedBox(height: 16),
+                
+                // START DATE
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildFormField(
+                        'START DATE:',
+                        project.startDate != null
+                            ? DateFormat('dd/MM/yyyy').format(project.startDate!)
+                            : 'No definida',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildFormField(
+                        'DEADLINE:',
+                        project.deadline != null
+                            ? DateFormat('dd/MM/yyyy').format(project.deadline!)
+                            : 'No definida',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // TEAMMATES Table
+                _buildTableHeader('TEAMMATES'),
+                const SizedBox(height: 12),
+                _buildTeammatesTable(project.teammates),
+                const SizedBox(height: 24),
+                
+                // ACHIEVEMENTS Table
+                _buildTableHeader('ACHIEVEMENTS'),
+                const SizedBox(height: 12),
+                _buildAchievementsTable(project.achievements),
+                const SizedBox(height: 24),
+                
+                // WORKS Table
+                _buildTableHeader('WORKS'),
+                const SizedBox(height: 12),
+                _buildWorksTable(project.works),
+                const SizedBox(height: 24),
+                
+                // FUNDING Table
+                _buildTableHeader('FUNDING'),
+                const SizedBox(height: 12),
+                _buildFundingTable(project.funding),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // PROJECT OVERVIEW Section
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _professionalTeal.withOpacity(0.2),
+                  _professionalAccent.withOpacity(0.15),
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _professionalTeal.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [_professionalTeal, _professionalAccent],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.description, color: AppTheme.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'PROJECT OVERVIEW',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // BUSINESS NAME and DATE
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildFormField(
+                        'BUSINESS NAME:',
+                        project.overview?.businessName ?? '',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildFormField(
+                        'DATE:',
+                        project.overview?.date != null
+                            ? DateFormat('dd/MM/yyyy').format(project.overview!.date!)
+                            : DateFormat('dd/MM/yyyy').format(DateTime.now()),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // CUSTOMER COMPANY, UNDERTAKING, PRESUMPTION
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'CUSTOMER COMPANY',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFormField('Name:', project.overview?.customerCompany?.name ?? ''),
+                          const SizedBox(height: 8),
+                          _buildFormField('Phone:', project.overview?.customerCompany?.phone ?? ''),
+                          const SizedBox(height: 8),
+                          _buildFormField('Email:', project.overview?.customerCompany?.email ?? ''),
+                          const SizedBox(height: 8),
+                          _buildFormField('Address:', project.overview?.customerCompany?.address ?? ''),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'UNDERTAKING',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFormField('Name:', project.overview?.undertaking?.name ?? ''),
+                          const SizedBox(height: 8),
+                          _buildFormField('Customer:', project.overview?.undertaking?.customer ?? ''),
+                          const SizedBox(height: 8),
+                          _buildFormField('Label:', project.overview?.undertaking?.label ?? ''),
+                          const SizedBox(height: 8),
+                          _buildFormField('Notes:', project.overview?.undertaking?.notes ?? ''),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'PRESUMPTION',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Primer text area de PRESUMPTION
+                          Container(
+                            height: 100,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.lightBlue.withOpacity(0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                project.overview?.presumption ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Segundo text area de PRESUMPTION
+                          Container(
+                            height: 100,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.lightBlue.withOpacity(0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                '', // Segundo text area vacío por ahora
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // JOB DESCRIPTION and PROJECT TARGETS
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'JOB DESCRIPTION',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 150,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.lightBlue.withOpacity(0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                project.overview?.jobDescription ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'PROJECT OUTPUTS',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (project.overview?.projectOutputs.isEmpty ?? true)
+                            // Mostrar 3 líneas vacías con checkboxes y campos de entrada
+                            ...List.generate(3, (index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: false,
+                                      onChanged: null,
+                                      fillColor: MaterialStateProperty.all(
+                                        AppTheme.darkSurfaceVariant,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        height: 32,
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: Colors.lightBlue.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            '',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: AppTheme.white40,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            })
+                          else
+                            ...project.overview!.projectOutputs.map((output) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: output.completed,
+                                      onChanged: null,
+                                      fillColor: MaterialStateProperty.all(
+                                        output.completed ? Colors.lightBlue : AppTheme.darkSurfaceVariant,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        height: 32,
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: Colors.lightBlue.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            output.text,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: output.completed ? AppTheme.white60 : AppTheme.white,
+                                              decoration: output.completed ? TextDecoration.lineThrough : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'PROJECT TARGETS',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.orange.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: project.overview?.projectTargets.isEmpty ?? true
+                                  ? List.generate(5, (index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Container(
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              bottom: BorderSide(
+                                                color: AppTheme.white40.withOpacity(0.3),
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    })
+                                  : project.overview!.projectTargets.map((target) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Container(
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              bottom: BorderSide(
+                                                color: AppTheme.white40.withOpacity(0.3),
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              target.text,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: AppTheme.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'ACHIEVEMENTS',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 150,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.orange.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Text(
+                                project.overview?.achievements ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white70,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormField(String label, String value, {String? subtitle}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.white60,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppTheme.white40,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _professionalSecondary.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            value.isEmpty ? 'Sin definir' : value,
+            style: TextStyle(
+              fontSize: 14,
+              color: value.isEmpty ? AppTheme.white40 : AppTheme.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableHeader(String title) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [_professionalPrimary, _professionalSecondary],
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeammatesTable(List<ProjectTeammate> teammates) {
+    if (teammates.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            'Sin compañeros de equipo',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.white40,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalSecondary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Table(
+        border: TableBorder(
+          horizontalInside: BorderSide(
+            color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(
+              color: _professionalPrimary.withOpacity(0.2),
+            ),
+            children: [
+              _buildTableCell('STT', isHeader: true),
+              _buildTableCell('POSITION', isHeader: true),
+              _buildTableCell('NAME', isHeader: true),
+            ],
+          ),
+          ...teammates.asMap().entries.map((entry) {
+            final index = entry.key;
+            final teammate = entry.value;
+            return TableRow(
+              children: [
+                _buildTableCell('${index + 1}'),
+                _buildTableCell(teammate.role),
+                _buildTableCell(teammate.name),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAchievementsTable(List<ProjectAchievement> achievements) {
+    if (achievements.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            'Sin logros definidos',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.white40,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _professionalSecondary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Table(
+        border: TableBorder(
+          horizontalInside: BorderSide(
+            color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(
+              color: _professionalPrimary.withOpacity(0.2),
+            ),
+            children: [
+              _buildTableCell('STT', isHeader: true),
+              _buildTableCell('ACHIEVEMENT NAME', isHeader: true),
+              _buildTableCell('DUE DATE', isHeader: true),
+            ],
+          ),
+          ...achievements.asMap().entries.map((entry) {
+            final index = entry.key;
+            final achievement = entry.value;
+            return TableRow(
+              children: [
+                _buildTableCell('${index + 1}'),
+                _buildTableCell(achievement.text),
+                _buildTableCell(
+                  achievement.date != null
+                      ? DateFormat('dd/MM/yyyy').format(achievement.date!)
+                      : 'Sin fecha',
+                ),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorksTable(List<ProjectWork> works) {
+    if (works.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            'Sin trabajos definidos',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.white40,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: _professionalSecondary.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Table(
+          border: TableBorder(
+            horizontalInside: BorderSide(
+              color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+              width: 1,
+            ),
+          ),
+          columnWidths: const {
+            0: FlexColumnWidth(1.5),
+            1: FlexColumnWidth(1.5),
+            2: FlexColumnWidth(1),
+            3: FlexColumnWidth(1.2),
+            4: FlexColumnWidth(1.2),
+            5: FlexColumnWidth(2),
+          },
+          children: [
+            TableRow(
+              decoration: BoxDecoration(
+                color: _professionalPrimary.withOpacity(0.2),
+              ),
+              children: [
+                _buildTableCell('POSITION', isHeader: true),
+                _buildTableCell('APPOINT', isHeader: true),
+                _buildTableCell('STATUS', isHeader: true),
+                _buildTableCell('START DATE', isHeader: true),
+                _buildTableCell('DEADLINE', isHeader: true),
+                _buildTableCell('NOTES', isHeader: true),
+              ],
+            ),
+            ...works.map((work) {
+              return TableRow(
+                children: [
+                  _buildTableCell(work.position),
+                  _buildTableCell(work.appoint),
+                  _buildTableCell(work.status),
+                  _buildTableCell(
+                    work.startDate != null
+                        ? DateFormat('dd/MM/yyyy').format(work.startDate!)
+                        : 'Sin fecha',
+                  ),
+                  _buildTableCell(
+                    work.deadline != null
+                        ? DateFormat('dd/MM/yyyy').format(work.deadline!)
+                        : 'Sin fecha',
+                  ),
+                  _buildTableCell(work.notes ?? ''),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFundingTable(List<ProjectFunding> funding) {
+    if (funding.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            'Sin financiamiento definido',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.white40,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: _professionalSecondary.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Table(
+          border: TableBorder(
+            horizontalInside: BorderSide(
+              color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+              width: 1,
+            ),
+          ),
+          columnWidths: const {
+            0: FlexColumnWidth(2),
+            1: FlexColumnWidth(1.5),
+            2: FlexColumnWidth(1.5),
+            3: FlexColumnWidth(2),
+          },
+          children: [
+            TableRow(
+              decoration: BoxDecoration(
+                color: _professionalPrimary.withOpacity(0.2),
+              ),
+              children: [
+                _buildTableCell('ELEMENT', isHeader: true),
+                _buildTableCell('PROJECTED COST', isHeader: true),
+                _buildTableCell('REAL COST', isHeader: true),
+                _buildTableCell('NOTES', isHeader: true),
+              ],
+            ),
+            ...funding.map((fund) {
+              return TableRow(
+                children: [
+                  _buildTableCell(fund.element),
+                  _buildTableCell(
+                    fund.projectedCost != null
+                        ? '\$${fund.projectedCost!.toStringAsFixed(2)}'
+                        : 'Sin definir',
+                  ),
+                  _buildTableCell(
+                    fund.realCost != null
+                        ? '\$${fund.realCost!.toStringAsFixed(2)}'
+                        : 'Sin definir',
+                  ),
+                  _buildTableCell(fund.notes ?? ''),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableCell(String text, {bool isHeader = false}) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: isHeader ? 11 : 10,
+          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          color: isHeader ? AppTheme.white : AppTheme.white70,
+        ),
       ),
     );
   }
@@ -3189,9 +6229,24 @@ class _WorkSectionsState extends State<WorkSections> {
 
   Widget _buildGoalsContent() {
     final goalsColors = [Colors.green, Colors.teal, Colors.amber, Colors.red, Colors.grey];
-    final completedGoals = _goals.where((g) => g['completed'] == true).length;
+    // Calcular progreso basado en metas completadas
+    final totalMilestones = _goals.fold<int>(0, (sum, goal) {
+      final milestones = goal['milestones'] as List<dynamic>? ?? [];
+      return sum + milestones.length;
+    });
+    final completedMilestones = _goals.fold<int>(0, (sum, goal) {
+      final milestones = goal['milestones'] as List<dynamic>? ?? [];
+      return sum + milestones.where((m) => m['completed'] == true).length;
+    });
+    final progressPercentage = totalMilestones > 0 
+        ? ((completedMilestones / totalMilestones) * 100).round() 
+        : 0;
+    final completedGoals = _goals.where((g) {
+      final milestones = g['milestones'] as List<dynamic>? ?? [];
+      if (milestones.isEmpty) return false;
+      return milestones.every((m) => m['completed'] == true);
+    }).length;
     final totalGoals = _goals.length;
-    final progressPercentage = totalGoals > 0 ? (completedGoals / totalGoals * 100).round() : 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3203,7 +6258,7 @@ class _WorkSectionsState extends State<WorkSections> {
               child: _buildSummaryCard(
                 icon: Icons.check_circle_outline,
                 value: '$completedGoals/$totalGoals',
-                label: 'Completados',
+                label: 'Objetivos',
                 color: _professionalTeal,
                 gradientColors: [_professionalTeal, _professionalAccent],
               ),
@@ -3214,6 +6269,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 icon: Icons.trending_up,
                 value: '$progressPercentage%',
                 label: 'Progreso',
+                subtitle: '$completedMilestones/$totalMilestones metas',
                 color: _professionalAccent,
                 gradientColors: [_professionalAccent, _professionalSecondary],
               ),
@@ -3431,9 +6487,24 @@ class _WorkSectionsState extends State<WorkSections> {
 
   Widget _buildGoals() {
     final goalsColors = [Colors.green, Colors.teal, Colors.amber, Colors.red, Colors.grey];
-    final completedGoals = _goals.where((g) => g['completed'] == true).length;
+    // Calcular progreso basado en metas completadas
+    final totalMilestones = _goals.fold<int>(0, (sum, goal) {
+      final milestones = goal['milestones'] as List<dynamic>? ?? [];
+      return sum + milestones.length;
+    });
+    final completedMilestones = _goals.fold<int>(0, (sum, goal) {
+      final milestones = goal['milestones'] as List<dynamic>? ?? [];
+      return sum + milestones.where((m) => m['completed'] == true).length;
+    });
+    final progressPercentage = totalMilestones > 0 
+        ? ((completedMilestones / totalMilestones) * 100).round() 
+        : 0;
+    final completedGoals = _goals.where((g) {
+      final milestones = g['milestones'] as List<dynamic>? ?? [];
+      if (milestones.isEmpty) return false;
+      return milestones.every((m) => m['completed'] == true);
+    }).length;
     final totalGoals = _goals.length;
-    final progressPercentage = totalGoals > 0 ? (completedGoals / totalGoals * 100).round() : 0;
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -3508,7 +6579,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 child: _buildSummaryCard(
                   icon: Icons.check_circle_outline,
                   value: '$completedGoals/$totalGoals',
-                  label: 'Completados',
+                  label: 'Objetivos',
                   color: _professionalTeal,
                   gradientColors: [_professionalTeal, _professionalAccent],
                 ),
@@ -3519,6 +6590,7 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.trending_up,
                   value: '$progressPercentage%',
                   label: 'Progreso',
+                  subtitle: '$completedMilestones/$totalMilestones metas',
                   color: _professionalAccent,
                   gradientColors: [_professionalAccent, _professionalSecondary],
                 ),
@@ -3600,21 +6672,44 @@ class _WorkSectionsState extends State<WorkSections> {
     }
     
     setState(() {
+      final goalId = DateTime.now().millisecondsSinceEpoch.toString();
       _goals.add({
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'id': goalId,
         'text': _goalController.text.trim(),
         'completed': false,
+        'milestones': <Map<String, dynamic>>[],
       });
+      _goalMilestoneControllers[goalId] = TextEditingController();
       _goalController.clear();
     });
   }
 
   Widget _buildPlanning() {
-    // Estadísticas de productividad
-    final totalTasks = _workMeetings.length + _dailyTasks.values.expand((t) => t).length;
-    final completedTasks = 0 + // Las juntas/sesiones/citas no tienen estado completado
-                          _dailyTasks.values.expand((t) => t.where((dt) => dt.completed)).length;
-    final efficiency = totalTasks > 0 ? (completedTasks / totalTasks * 100).round() : 0;
+    // Si hay un proyecto seleccionado, mostrar el formulario de estrategia
+    if (_selectedStrategyProject != null) {
+      return _buildProjectStrategyForm(_selectedStrategyProject!);
+    }
+    
+    // Estadísticas de productividad mejoradas
+    final totalDailyTasks = _dailyTasks.values.expand((t) => t).length;
+    final completedDailyTasks = _dailyTasks.values.expand((t) => t.where((dt) => dt.completed)).length;
+    final totalMeetings = _workMeetings.length;
+    final totalTasks = totalDailyTasks;
+    final efficiency = totalTasks > 0 ? ((completedDailyTasks / totalTasks) * 100).round() : 0;
+    
+    // Estadísticas de proyectos
+    final totalProjects = _projects.length;
+    final completedProjects = _projects.where((p) {
+      if (p.goals.isEmpty) return false;
+      final completedGoals = p.goals.where((g) => g.completed == true).length;
+      return completedGoals == p.goals.length && p.goals.isNotEmpty;
+    }).length;
+    final projectProgress = totalProjects > 0 ? ((completedProjects / totalProjects) * 100).round() : 0;
+    
+    // Resumen semanal - calcular tareas por día de la semana
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final weekDays = List.generate(5, (index) => weekStart.add(Duration(days: index)));
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -3652,7 +6747,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Icon(Icons.trending_up, color: AppTheme.white, size: 24),
+                  child: const Icon(Icons.assignment, color: AppTheme.white, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -3660,7 +6755,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Planificación de Trabajo',
+                        'Planificación',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -3668,7 +6763,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         ),
                       ),
                       const Text(
-                        'Analiza tu productividad y progreso',
+                        'Análisis de productividad y progreso',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.white70,
@@ -3682,24 +6777,269 @@ class _WorkSectionsState extends State<WorkSections> {
           ),
           const SizedBox(height: 20),
           
-          // Resumen de productividad
+          // Selector de proyectos para planificación
+          if (_projects.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _professionalTeal.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: _professionalTeal, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Selecciona un proyecto para ver su planificación completa',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.white70,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ..._projects.map((project) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedStrategyProject = project;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _professionalTeal.withOpacity(0.2),
+                                _professionalAccent.withOpacity(0.15),
+                                AppTheme.darkSurface,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _professionalTeal.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [_professionalTeal, _professionalAccent],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.folder_special, color: AppTheme.white, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  project.title,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.white,
+                                  ),
+                                ),
+                              ),
+                              Icon(Icons.arrow_forward_ios, color: _professionalTeal, size: 16),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          const SizedBox(height: 20),
+          
+          // Tarjeta de eficiencia mejorada
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _professionalTeal.withOpacity(0.15),
+                  _professionalAccent.withOpacity(0.1),
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _professionalTeal.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [_professionalTeal, _professionalAccent],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.speed, color: AppTheme.white, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Eficiencia General',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.white60,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Tareas completadas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white40,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: efficiency >= 70
+                              ? [Colors.green, Colors.green.shade700]
+                              : efficiency >= 50
+                                  ? [_professionalTeal, _professionalAccent]
+                                  : [Colors.orange, Colors.deepOrange],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '$efficiency%',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurfaceVariant,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Stack(
+                    children: [
+                      FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: efficiency / 100,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: efficiency >= 70
+                                  ? [Colors.green, Colors.green.shade700]
+                                  : efficiency >= 50
+                                      ? [_professionalTeal, _professionalAccent]
+                                      : [Colors.orange, Colors.deepOrange],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (efficiency >= 70
+                                        ? Colors.green
+                                        : efficiency >= 50
+                                            ? _professionalTeal
+                                            : Colors.orange)
+                                    .withOpacity(0.6),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$completedDailyTasks de $totalTasks tareas completadas',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.white60,
+                      ),
+                    ),
+                    Text(
+                      '$totalMeetings sesiones',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Resumen de productividad mejorado
           Row(
             children: [
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.check_circle_outline,
-                  value: '$completedTasks/$totalTasks',
-                  label: 'Tareas Completadas',
-                  color: Colors.blue,
+                  icon: Icons.task_alt,
+                  value: '$completedDailyTasks/$totalTasks',
+                  label: 'Tareas',
+                  color: _professionalAccent,
+                  gradientColors: [_professionalAccent, _professionalSecondary],
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.trending_up,
-                  value: '$efficiency%',
-                  label: 'Eficiencia',
-                  color: Colors.green,
+                  icon: Icons.event,
+                  value: '$totalMeetings',
+                  label: 'Sesiones',
+                  color: _professionalTeal,
+                  gradientColors: [_professionalTeal, _professionalAccent],
                 ),
               ),
             ],
@@ -3709,10 +7049,11 @@ class _WorkSectionsState extends State<WorkSections> {
             children: [
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.access_time,
-                  value: '${_projects.length}',
+                  icon: Icons.folder_special,
+                  value: '$completedProjects/$totalProjects',
                   label: 'Proyectos',
-                  color: Colors.orange,
+                  color: _professionalIndigo,
+                  gradientColors: [_professionalIndigo, _professionalAccent],
                 ),
               ),
               const SizedBox(width: 12),
@@ -3722,80 +7063,331 @@ class _WorkSectionsState extends State<WorkSections> {
                   value: '${_goals.length}',
                   label: 'Objetivos',
                   color: Colors.purple,
+                  gradientColors: [Colors.purple, Colors.deepPurple],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           
-          // Estadísticas semanales
+          // Resumen Semanal mejorado
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _professionalPrimary.withOpacity(0.15),
+                  _professionalSecondary.withOpacity(0.1),
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _professionalSecondary.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Resumen Semanal',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [_professionalPrimary, _professionalSecondary],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.calendar_view_week, color: AppTheme.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Resumen Semanal',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                ...['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) {
-                  final dayTasks = _workMeetings.length; // Simplificado
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                const SizedBox(height: 20),
+                ...weekDays.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final date = entry.value;
+                  final dayName = DateFormat('EEEE', 'es').format(date);
+                  final isToday = date.year == now.year && 
+                                  date.month == now.month && 
+                                  date.day == now.day;
+                  
+                  // Calcular tareas para este día
+                  final dateKey = DateTime(date.year, date.month, date.day);
+                  final dayTasks = _dailyTasks[dateKey] ?? [];
+                  final completedDayTasks = dayTasks.where((t) => t.completed).length;
+                  final dayMeetings = _workMeetings.where((m) {
+                    try {
+                      final meetingDate = DateFormat('yyyy-MM-dd').parse(m.date);
+                      return meetingDate.year == date.year &&
+                             meetingDate.month == date.month &&
+                             meetingDate.day == date.day;
+                    } catch (e) {
+                      return false;
+                    }
+                  }).length;
+                  final totalDayItems = dayTasks.length + dayMeetings;
+                  final completedDayItems = completedDayTasks;
+                  final dayProgress = totalDayItems > 0 ? ((completedDayItems / totalDayItems) * 100).round() : 0;
+                  
+                  return Container(
+                    margin: EdgeInsets.only(bottom: index < weekDays.length - 1 ? 16 : 0),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isToday
+                            ? [
+                                _professionalAccent.withOpacity(0.2),
+                                _professionalSecondary.withOpacity(0.15),
+                                AppTheme.darkSurface,
+                              ]
+                            : [
+                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                AppTheme.darkSurface.withOpacity(0.5),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isToday
+                            ? _professionalAccent.withOpacity(0.4)
+                            : AppTheme.darkSurfaceVariant.withOpacity(0.2),
+                        width: isToday ? 1.5 : 1,
+                      ),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              day,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.white,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isToday
+                                          ? [_professionalAccent, _professionalSecondary]
+                                          : [_professionalSlate, _professionalIndigo],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    isToday ? Icons.today : Icons.calendar_today,
+                                    color: AppTheme.white,
+                                    size: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          dayName.substring(0, 1).toUpperCase() + dayName.substring(1),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.white,
+                                          ),
+                                        ),
+                                        if (isToday) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: _professionalAccent.withOpacity(0.3),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              'HOY',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: _professionalAccent,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      DateFormat('d MMM', 'es').format(date),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.white60,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            Text(
-                              '$dayTasks tareas',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.white60,
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isToday
+                                      ? [_professionalAccent, _professionalSecondary]
+                                      : [_professionalTeal, _professionalAccent],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$totalDayItems',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.white,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: AppTheme.darkSurfaceVariant,
-                            borderRadius: BorderRadius.circular(3),
+                        if (totalDayItems > 0) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Progreso',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: AppTheme.white60,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '$dayProgress%',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: isToday ? _professionalAccent : AppTheme.white70,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.darkSurfaceVariant,
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: FractionallySizedBox(
+                                        alignment: Alignment.centerLeft,
+                                        widthFactor: dayProgress / 100,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: isToday
+                                                  ? [_professionalAccent, _professionalSecondary]
+                                                  : dayProgress >= 70
+                                                      ? [Colors.green, Colors.green.shade700]
+                                                      : [_professionalTeal, _professionalAccent],
+                                            ),
+                                            borderRadius: BorderRadius.circular(3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Row(
+                                children: [
+                                  if (dayTasks.isNotEmpty) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _professionalAccent.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.task, size: 12, color: _professionalAccent),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${dayTasks.length}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _professionalAccent,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (dayMeetings > 0) ...[
+                                    if (dayTasks.isNotEmpty) const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _professionalTeal.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.event, size: 12, color: _professionalTeal),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '$dayMeetings',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _professionalTeal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: (dayTasks / 10).clamp(0.0, 1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: _professionalSecondary,
-                                borderRadius: BorderRadius.circular(3),
+                        ] else
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              'Sin actividades programadas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white40,
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   );
-                }),
+                }).toList(),
               ],
             ),
           ),
@@ -5652,7 +9244,19 @@ class _WorkSectionsState extends State<WorkSections> {
 
   Widget _buildGoalCard(Map<String, dynamic> goal, int index, List<Color> colors) {
     final color = colors[index % colors.length];
-    final isCompleted = goal['completed'] == true;
+    final milestones = (goal['milestones'] as List<dynamic>?) ?? [];
+    final completedMilestones = milestones.where((m) => m['completed'] == true).length;
+    final totalMilestones = milestones.length;
+    final progressPercentage = totalMilestones > 0 
+        ? (completedMilestones / totalMilestones) 
+        : 0.0;
+    final isCompleted = totalMilestones > 0 && completedMilestones == totalMilestones;
+    
+    // Asegurar que el controller existe
+    if (!_goalMilestoneControllers.containsKey(goal['id'])) {
+      _goalMilestoneControllers[goal['id']] = TextEditingController();
+    }
+    final milestoneController = _goalMilestoneControllers[goal['id']]!;
     
     return Card(
       color: AppTheme.darkSurface,
@@ -5675,7 +9279,9 @@ class _WorkSectionsState extends State<WorkSections> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: color,
+                    gradient: LinearGradient(
+                      colors: [color, color.withOpacity(0.7)],
+                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
@@ -5714,54 +9320,260 @@ class _WorkSectionsState extends State<WorkSections> {
                     },
                   ),
                 ),
-                Checkbox(
-                  value: isCompleted,
-                  onChanged: (value) {
-                    setState(() {
-                      final idx = _goals.indexWhere((g) => g['id'] == goal['id']);
-                      if (idx != -1) {
-                        _goals[idx]['completed'] = value ?? false;
-                      }
-                    });
-                  },
-                  activeColor: AppTheme.orangeAccent,
-                ),
+                if (isCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.green, Colors.teal]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle, color: AppTheme.white, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'Completado',
+                          style: TextStyle(
+                            color: AppTheme.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.red, size: 20),
                   onPressed: () {
                     setState(() {
-                      _goals.removeWhere((g) => g['id'] == goal['id']);
+                      final goalId = goal['id'];
+                      _goals.removeWhere((g) => g['id'] == goalId);
+                      _goalMilestoneControllers.remove(goalId)?.dispose();
                     });
                   },
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            // Barra de progreso
-            Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurfaceVariant,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: isCompleted ? 1.0 : 0.0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(3),
+            
+            // Barra de progreso basada en metas
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurfaceVariant,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progressPercentage,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [color, color.withOpacity(0.7)],
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Text(
+                  '${(progressPercentage * 100).round()}%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
-              isCompleted ? 'Completado' : 'En Progreso',
+              '$completedMilestones/$totalMilestones metas completadas',
               style: TextStyle(
-                fontSize: 12,
-                color: color,
+                fontSize: 11,
+                color: AppTheme.white60,
                 fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Lista de metas
+            if (milestones.isNotEmpty) ...[
+              Text(
+                'Metas:',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...milestones.asMap().entries.map((entry) {
+                final milestoneIndex = entry.key;
+                final milestone = entry.value;
+                final milestoneCompleted = milestone['completed'] == true;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: milestoneCompleted 
+                          ? Colors.green.withOpacity(0.3)
+                          : color.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: milestoneCompleted,
+                        onChanged: (value) {
+                          setState(() {
+                            final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
+                            if (goalIdx != -1) {
+                              final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
+                              final milestoneIdx = milestonesList.indexWhere(
+                                (m) => m['id'] == milestone['id']
+                              );
+                              if (milestoneIdx != -1) {
+                                milestonesList[milestoneIdx]['completed'] = value ?? false;
+                              }
+                            }
+                          });
+                        },
+                        activeColor: Colors.green,
+                      ),
+                      Expanded(
+                        child: Text(
+                          milestone['text'] ?? '',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: milestoneCompleted 
+                                ? AppTheme.white40 
+                                : AppTheme.white,
+                            decoration: milestoneCompleted 
+                                ? TextDecoration.lineThrough 
+                                : null,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 16, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
+                            if (goalIdx != -1) {
+                              final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
+                              milestonesList.removeWhere(
+                                (m) => m['id'] == milestone['id']
+                              );
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+            ],
+            
+            // Formulario para agregar meta
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: color.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: TextField(
+                      controller: milestoneController,
+                      style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: 'Agregar meta...',
+                        hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
+                      onSubmitted: (_) {
+                        if (milestoneController.text.trim().isNotEmpty) {
+                          setState(() {
+                            final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
+                            if (goalIdx != -1) {
+                              final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
+                              milestonesList.add({
+                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                'text': milestoneController.text.trim(),
+                                'completed': false,
+                              });
+                              milestoneController.clear();
+                            }
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          if (milestoneController.text.trim().isNotEmpty) {
+                            setState(() {
+                              final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
+                              if (goalIdx != -1) {
+                                final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
+                                milestonesList.add({
+                                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                  'text': milestoneController.text.trim(),
+                                  'completed': false,
+                                });
+                                milestoneController.clear();
+                              }
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
+                        label: const Text(
+                          'Agregar',
+                          style: TextStyle(
+                            color: AppTheme.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

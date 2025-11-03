@@ -7,6 +7,9 @@ class Recipe {
   final double rating;
   final String prepTime;
   final String ingredients;
+  final int servings;
+  final String instructions;
+  final List<String> tags;
 
   Recipe({
     required this.id,
@@ -17,6 +20,9 @@ class Recipe {
     required this.rating,
     required this.prepTime,
     required this.ingredients,
+    this.servings = 2,
+    this.instructions = '',
+    this.tags = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -29,6 +35,9 @@ class Recipe {
       'rating': rating,
       'prepTime': prepTime,
       'ingredients': ingredients,
+      'servings': servings,
+      'instructions': instructions,
+      'tags': tags,
     };
   }
 
@@ -42,6 +51,9 @@ class Recipe {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       prepTime: json['prepTime'] ?? '',
       ingredients: json['ingredients'] ?? '',
+      servings: json['servings'] ?? 2,
+      instructions: json['instructions'] ?? '',
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 }

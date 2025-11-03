@@ -9,6 +9,7 @@ class WorkProject {
   final List<ProjectWork> works;
   final List<ProjectFunding> funding;
   final List<ProjectGoal> goals;
+  final ProjectOverview? overview;
 
   WorkProject({
     required this.id,
@@ -21,6 +22,7 @@ class WorkProject {
     required this.works,
     required this.funding,
     required this.goals,
+    this.overview,
   });
 
   Map<String, dynamic> toJson() {
@@ -35,6 +37,7 @@ class WorkProject {
       'works': works.map((w) => w.toJson()).toList(),
       'funding': funding.map((f) => f.toJson()).toList(),
       'goals': goals.map((g) => g.toJson()).toList(),
+      'overview': overview?.toJson(),
     };
   }
 
@@ -65,6 +68,9 @@ class WorkProject {
               ?.map((g) => ProjectGoal.fromJson(g as Map<String, dynamic>))
               .toList() ??
           [],
+      overview: json['overview'] != null
+          ? ProjectOverview.fromJson(json['overview'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
@@ -135,52 +141,80 @@ class ProjectAchievement {
 
 class ProjectWork {
   final String id;
-  final String description;
+  final String position;
+  final String appoint;
+  final String status;
+  final DateTime? startDate;
+  final DateTime? deadline;
+  final String? notes;
 
   ProjectWork({
     required this.id,
-    required this.description,
+    required this.position,
+    required this.appoint,
+    required this.status,
+    this.startDate,
+    this.deadline,
+    this.notes,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'description': description,
+      'position': position,
+      'appoint': appoint,
+      'status': status,
+      'startDate': startDate?.toIso8601String(),
+      'deadline': deadline?.toIso8601String(),
+      'notes': notes,
     };
   }
 
   factory ProjectWork.fromJson(Map<String, dynamic> json) {
     return ProjectWork(
       id: json['id'] ?? '',
-      description: json['description'] ?? '',
+      position: json['position'] ?? '',
+      appoint: json['appoint'] ?? '',
+      status: json['status'] ?? '',
+      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
+      notes: json['notes'],
     );
   }
 }
 
 class ProjectFunding {
   final String id;
-  final String description;
-  final double? amount;
+  final String element;
+  final double? projectedCost;
+  final double? realCost;
+  final String? notes;
 
   ProjectFunding({
     required this.id,
-    required this.description,
-    this.amount,
+    required this.element,
+    this.projectedCost,
+    this.realCost,
+    this.notes,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'description': description,
-      'amount': amount,
+      'element': element,
+      'projectedCost': projectedCost,
+      'realCost': realCost,
+      'notes': notes,
     };
   }
 
   factory ProjectFunding.fromJson(Map<String, dynamic> json) {
     return ProjectFunding(
       id: json['id'] ?? '',
-      description: json['description'] ?? '',
-      amount: json['amount']?.toDouble(),
+      element: json['element'] ?? '',
+      projectedCost: json['projectedCost']?.toDouble(),
+      realCost: json['realCost']?.toDouble(),
+      notes: json['notes'],
     );
   }
 }
@@ -220,6 +254,192 @@ class ProjectGoal {
       date: json['date'] != null ? DateTime.parse(json['date']) : null,
       person: json['person'],
       position: json['position'],
+      completed: json['completed'] ?? false,
+    );
+  }
+}
+
+class ProjectOverview {
+  final String id;
+  final String? businessName;
+  final DateTime? date;
+  final CustomerCompany? customerCompany;
+  final Undertaking? undertaking;
+  final String? presumption;
+  final String? jobDescription;
+  final List<ProjectTarget> projectTargets;
+  final List<ProjectOutput> projectOutputs;
+  final String? achievements;
+
+  ProjectOverview({
+    required this.id,
+    this.businessName,
+    this.date,
+    this.customerCompany,
+    this.undertaking,
+    this.presumption,
+    this.jobDescription,
+    this.projectTargets = const [],
+    this.projectOutputs = const [],
+    this.achievements,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'businessName': businessName,
+      'date': date?.toIso8601String(),
+      'customerCompany': customerCompany?.toJson(),
+      'undertaking': undertaking?.toJson(),
+      'presumption': presumption,
+      'jobDescription': jobDescription,
+      'projectTargets': projectTargets.map((t) => t.toJson()).toList(),
+      'projectOutputs': projectOutputs.map((o) => o.toJson()).toList(),
+      'achievements': achievements,
+    };
+  }
+
+  factory ProjectOverview.fromJson(Map<String, dynamic> json) {
+    return ProjectOverview(
+      id: json['id'] ?? '',
+      businessName: json['businessName'],
+      date: json['date'] != null ? DateTime.parse(json['date']) : null,
+      customerCompany: json['customerCompany'] != null
+          ? CustomerCompany.fromJson(json['customerCompany'] as Map<String, dynamic>)
+          : null,
+      undertaking: json['undertaking'] != null
+          ? Undertaking.fromJson(json['undertaking'] as Map<String, dynamic>)
+          : null,
+      presumption: json['presumption'],
+      jobDescription: json['jobDescription'],
+      projectTargets: (json['projectTargets'] as List<dynamic>?)
+              ?.map((t) => ProjectTarget.fromJson(t as Map<String, dynamic>))
+              .toList() ??
+          [],
+      projectOutputs: (json['projectOutputs'] as List<dynamic>?)
+              ?.map((o) => ProjectOutput.fromJson(o as Map<String, dynamic>))
+              .toList() ??
+          [],
+      achievements: json['achievements'],
+    );
+  }
+}
+
+class CustomerCompany {
+  final String name;
+  final String? phone;
+  final String? email;
+  final String? address;
+
+  CustomerCompany({
+    required this.name,
+    this.phone,
+    this.email,
+    this.address,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'address': address,
+    };
+  }
+
+  factory CustomerCompany.fromJson(Map<String, dynamic> json) {
+    return CustomerCompany(
+      name: json['name'] ?? '',
+      phone: json['phone'],
+      email: json['email'],
+      address: json['address'],
+    );
+  }
+}
+
+class Undertaking {
+  final String name;
+  final String? customer;
+  final String? label;
+  final String? notes;
+
+  Undertaking({
+    required this.name,
+    this.customer,
+    this.label,
+    this.notes,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'customer': customer,
+      'label': label,
+      'notes': notes,
+    };
+  }
+
+  factory Undertaking.fromJson(Map<String, dynamic> json) {
+    return Undertaking(
+      name: json['name'] ?? '',
+      customer: json['customer'],
+      label: json['label'],
+      notes: json['notes'],
+    );
+  }
+}
+
+class ProjectTarget {
+  final String id;
+  final String text;
+  final bool completed;
+
+  ProjectTarget({
+    required this.id,
+    required this.text,
+    this.completed = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'completed': completed,
+    };
+  }
+
+  factory ProjectTarget.fromJson(Map<String, dynamic> json) {
+    return ProjectTarget(
+      id: json['id'] ?? '',
+      text: json['text'] ?? '',
+      completed: json['completed'] ?? false,
+    );
+  }
+}
+
+class ProjectOutput {
+  final String id;
+  final String text;
+  final bool completed;
+
+  ProjectOutput({
+    required this.id,
+    required this.text,
+    this.completed = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'completed': completed,
+    };
+  }
+
+  factory ProjectOutput.fromJson(Map<String, dynamic> json) {
+    return ProjectOutput(
+      id: json['id'] ?? '',
+      text: json['text'] ?? '',
       completed: json['completed'] ?? false,
     );
   }
