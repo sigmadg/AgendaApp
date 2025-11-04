@@ -888,7 +888,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 const SizedBox(height: 16),
                 // Selector de fecha con desplazamiento horizontal
                 SizedBox(
-                  height: 70,
+                  height: 60,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -950,60 +950,72 @@ class _PersonalSectionsState extends State<PersonalSections> {
           await _loadTasksForDate(date);
         }
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: isSelected 
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _carminePastel.withOpacity(0.3),
-                    _carminePastel.withOpacity(0.2),
-                  ],
-                )
-              : null,
-          color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected 
-                ? _carminePastel 
-                : Colors.transparent,
-            width: 2,
+      child: SizedBox(
+        height: 55,
+        width: 55,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: isSelected 
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      _carminePastel.withOpacity(0.3),
+                      _carminePastel.withOpacity(0.2),
+                    ],
+                  )
+                : null,
+            color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected 
+                  ? _carminePastel 
+                  : Colors.transparent,
+              width: 2,
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              DateFormat('EEE', 'es').format(date).substring(0, 3).toUpperCase(),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? _carminePastel : AppTheme.white60,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${date.day}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? _carminePastel : AppTheme.white,
-              ),
-            ),
-            if (isToday)
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  shape: BoxShape.circle,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                DateFormat('EEE', 'es').format(date).substring(0, 3).toUpperCase(),
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? _carminePastel : AppTheme.white60,
+                  height: 1.0,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-          ],
+              const SizedBox(height: 0),
+              Text(
+                '${date.day}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? _carminePastel : AppTheme.white,
+                  height: 1.0,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (isToday)
+                Container(
+                  margin: const EdgeInsets.only(top: 0),
+                  width: 3,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1127,7 +1139,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 const SizedBox(height: 16),
                 // Selector de fecha con desplazamiento horizontal
                 SizedBox(
-                  height: 70,
+                  height: 60,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 8),

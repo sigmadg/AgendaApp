@@ -792,7 +792,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 const SizedBox(height: 16),
                 // Selector de fecha con desplazamiento horizontal
                 SizedBox(
-                  height: 70,
+                  height: 55,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -840,7 +840,12 @@ class _WorkSectionsState extends State<WorkSections> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: const BoxConstraints(
+          minWidth: 50,
+          maxHeight: 55,
+          maxWidth: 60,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           gradient: isSelected 
               ? LinearGradient(
@@ -863,29 +868,32 @@ class _WorkSectionsState extends State<WorkSections> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               DateFormat('EEE', 'es').format(date).substring(0, 3).toUpperCase(),
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 8,
                 fontWeight: FontWeight.w600,
                 color: isSelected ? _professionalAccent : AppTheme.white60,
+                height: 1.0,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 1),
             Text(
               '${date.day}',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? _professionalAccent : AppTheme.white,
+                height: 1.0,
               ),
             ),
             if (isToday)
               Container(
-                margin: const EdgeInsets.only(top: 4),
-                width: 4,
-                height: 4,
+                margin: const EdgeInsets.only(top: 1),
+                width: 3,
+                height: 3,
                 decoration: BoxDecoration(
                   color: _professionalAccent,
                   shape: BoxShape.circle,
