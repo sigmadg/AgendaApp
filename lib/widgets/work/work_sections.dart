@@ -666,7 +666,8 @@ class _WorkSectionsState extends State<WorkSections> {
       children: [
         // Header mejorado con paleta profesional
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          margin: const EdgeInsets.only(top: 16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -2197,13 +2198,13 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAddProjectModal() {
     return Container(
-      color: Colors.black87,
+      color: Colors.black.withOpacity(0.85),
       child: SafeArea(
         child: Center(
           child: Container(
             margin: const EdgeInsets.all(16),
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.9,
+              maxHeight: MediaQuery.of(context).size.height * 0.92,
               maxWidth: 500,
             ),
             decoration: BoxDecoration(
@@ -2212,31 +2213,38 @@ class _WorkSectionsState extends State<WorkSections> {
                 end: Alignment.bottomRight,
                 colors: [
                   AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
+                  AppTheme.darkSurfaceVariant.withOpacity(0.8),
+                  _professionalPrimary.withOpacity(0.1),
                   AppTheme.darkSurface,
                 ],
+                stops: const [0.0, 0.3, 0.7, 1.0],
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: _professionalAccent.withOpacity(0.3),
-                width: 1.5,
+                color: _professionalAccent.withOpacity(0.4),
+                width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _professionalPrimary.withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+                  color: _professionalPrimary.withOpacity(0.4),
+                  blurRadius: 30,
+                  spreadRadius: 8,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: _professionalAccent.withOpacity(0.2),
+                  blurRadius: 15,
+                  spreadRadius: 2,
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                 // Header mejorado con gradiente
                 Container(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -2245,28 +2253,51 @@ class _WorkSectionsState extends State<WorkSections> {
                         _professionalPrimary,
                         _professionalSecondary,
                         _professionalAccent,
+                        _professionalSecondary,
                       ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _professionalPrimary.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.25),
+                              Colors.white.withOpacity(0.15),
+                            ],
                           ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.4),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.folder_special,
                           color: AppTheme.white,
-                          size: 28,
+                          size: 32,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 18),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2274,18 +2305,26 @@ class _WorkSectionsState extends State<WorkSections> {
                             const Text(
                               'Agregar Proyecto',
                               style: TextStyle(
-                                fontSize: 24,
+                                fontSize: 26,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.white,
-                                letterSpacing: 0.5,
+                                letterSpacing: 0.8,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
                               'Crea un proyecto para organizar tu trabajo',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.white70,
+                                fontSize: 14,
+                                color: AppTheme.white.withOpacity(0.85),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -2293,8 +2332,26 @@ class _WorkSectionsState extends State<WorkSections> {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.25),
+                              Colors.white.withOpacity(0.15),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.close, color: AppTheme.white),
@@ -2336,22 +2393,40 @@ class _WorkSectionsState extends State<WorkSections> {
                 
                 // Tabs para navegar entre secciones
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  padding: const EdgeInsets.all(4),
+                  margin: const EdgeInsets.fromLTRB(28, 0, 28, 8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.darkSurfaceVariant.withOpacity(0.6),
+                        AppTheme.darkSurface.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _professionalAccent.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Expanded(
-                        child: _buildProjectModalTab('basic', 'Básica', Icons.info_outline),
+                        child: _buildProjectModalTab('basic', 'Básica'),
                       ),
                       Expanded(
-                        child: _buildProjectModalTab('goals', 'Metas', Icons.flag),
+                        child: _buildProjectModalTab('goals', 'Metas'),
                       ),
                       Expanded(
-                        child: _buildProjectModalTab('strategy', 'Estrategia', Icons.track_changes),
+                        child: _buildProjectModalTab('strategy', 'Estrategia'),
                       ),
                     ],
                   ),
@@ -2359,9 +2434,13 @@ class _WorkSectionsState extends State<WorkSections> {
                 
                 // Contenido con scroll
                 Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Column(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.5,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (_activeProjectModalTab == 'basic') ...[
@@ -3285,7 +3364,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       ],
                     ),
                   ),
-                ),
+                    ),
+                  ),
                 
                 // Footer con botones de acción mejorados
                 Container(
@@ -3387,21 +3467,40 @@ class _WorkSectionsState extends State<WorkSections> {
                             ),
                             child: ElevatedButton.icon(
                               onPressed: _addProject,
-                              icon: const Icon(Icons.add_task, size: 20),
+                              icon: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Icon(Icons.add_task, size: 22),
+                              ),
                               label: const Text(
                                 'Crear Proyecto',
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: AppTheme.white,
                                 shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
+                                  side: BorderSide(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1.5,
+                                  ),
                                 ),
                               ),
                             ),
@@ -3411,11 +3510,11 @@ class _WorkSectionsState extends State<WorkSections> {
                     ),
                   ),
                 ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -3471,40 +3570,93 @@ class _WorkSectionsState extends State<WorkSections> {
     });
   }
 
-  Widget _buildProjectModalTab(String tabId, String label, IconData icon) {
+  Widget _buildProjectModalTab(String tabId, String label) {
     final isActive = _activeProjectModalTab == tabId;
+    
+    // Asignar icono según el tabId
+    IconData icon;
+    switch (tabId) {
+      case 'basic':
+        icon = Icons.info_outline;
+        break;
+      case 'goals':
+        icon = Icons.flag;
+        break;
+      case 'strategy':
+        icon = Icons.track_changes;
+        break;
+      default:
+        icon = Icons.circle;
+    }
+    
     return GestureDetector(
       onTap: () {
         setState(() {
           _activeProjectModalTab = tabId;
         });
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
           gradient: isActive
               ? LinearGradient(
-                  colors: [_professionalPrimary, _professionalSecondary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _professionalPrimary,
+                    _professionalSecondary,
+                    _professionalAccent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
                 )
               : null,
           color: isActive ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          border: isActive
+              ? Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                )
+              : null,
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: _professionalPrimary.withOpacity(0.4),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isActive ? AppTheme.white : AppTheme.white60,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? Colors.white.withOpacity(0.2)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                size: 18,
+                color: isActive ? AppTheme.white : AppTheme.white60,
+              ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                 color: isActive ? AppTheme.white : AppTheme.white60,
+                letterSpacing: 0.3,
               ),
             ),
           ],
