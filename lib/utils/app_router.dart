@@ -10,8 +10,6 @@ import '../widgets/travel/travel_sections.dart';
 import '../widgets/work/work_sections.dart';
 import '../widgets/health/health_sections.dart';
 import '../widgets/finance/finance_sections.dart';
-import '../widgets/nutrition/nutrition_sections.dart';
-import '../widgets/exercise/exercise_sections.dart';
 import '../widgets/language/language_sections.dart';
 import '../widgets/menstrual/menstrual_sections.dart';
 import '../widgets/pet/pet_sections.dart';
@@ -65,14 +63,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/finance',
       builder: (context, state) => const FinanceSections(),
-    ),
-    GoRoute(
-      path: '/nutrition',
-      builder: (context, state) => const NutritionSections(),
-    ),
-    GoRoute(
-      path: '/exercise',
-      builder: (context, state) => const ExerciseSections(),
     ),
     GoRoute(
       path: '/language',

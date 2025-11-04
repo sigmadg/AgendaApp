@@ -88,6 +88,20 @@ class _SchoolSectionsState extends State<SchoolSections> {
   final TextEditingController _courseTimeController = TextEditingController();
   final TextEditingController _courseLocationController = TextEditingController();
   final TextEditingController _courseInstructorController = TextEditingController();
+  final TextEditingController _courseContactInfoController = TextEditingController();
+  final TextEditingController _courseOfficeHoursController = TextEditingController();
+  final TextEditingController _courseAccessAccountController = TextEditingController();
+  final TextEditingController _courseAccessLoginController = TextEditingController();
+  final TextEditingController _courseAccessPasswordController = TextEditingController();
+  final TextEditingController _courseNotesController = TextEditingController();
+  final TextEditingController _courseTargetGradeController = TextEditingController();
+  final TextEditingController _courseActualGradeController = TextEditingController();
+  final TextEditingController _importantDateController = TextEditingController();
+  final TextEditingController _gradingComponentNameController = TextEditingController();
+  final TextEditingController _gradingComponentWeightController = TextEditingController();
+  
+  List<Map<String, dynamic>> _importantDates = []; // {id, date, description}
+  List<Map<String, dynamic>> _gradingComponents = []; // {id, name, weight}
 
   final sections = [
     {'id': 'timetable', 'name': 'Horario Semanal', 'icon': Icons.calendar_today},
@@ -118,6 +132,17 @@ class _SchoolSectionsState extends State<SchoolSections> {
     _courseTimeController.dispose();
     _courseLocationController.dispose();
     _courseInstructorController.dispose();
+    _courseContactInfoController.dispose();
+    _courseOfficeHoursController.dispose();
+    _courseAccessAccountController.dispose();
+    _courseAccessLoginController.dispose();
+    _courseAccessPasswordController.dispose();
+    _courseNotesController.dispose();
+    _courseTargetGradeController.dispose();
+    _courseActualGradeController.dispose();
+    _importantDateController.dispose();
+    _gradingComponentNameController.dispose();
+    _gradingComponentWeightController.dispose();
     super.dispose();
   }
 
@@ -246,26 +271,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onTap: () {
               Navigator.pop(context);
               context.go('/finance');
-            },
-          ),
-          _buildDrawerItem(
-            context,
-            icon: Icons.restaurant,
-            title: 'Nutrición',
-            color: Colors.orange,
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/nutrition');
-            },
-          ),
-          _buildDrawerItem(
-            context,
-            icon: Icons.fitness_center,
-            title: 'Ejercicio',
-            color: Colors.red,
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/exercise');
             },
           ),
           _buildDrawerItem(
@@ -972,11 +977,20 @@ class _SchoolSectionsState extends State<SchoolSections> {
   }
 
   Widget _buildClassCardForTimetable(ClassSchedule classItem) {
+    final isCurrentTime = DateTime.now().hour == _convertTo24Hour(classItem.time);
+    
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.purple,
+        color: isCurrentTime ? Colors.orange : Colors.purple,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: (isCurrentTime ? Colors.orange : Colors.purple).withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -993,67 +1007,165 @@ class _SchoolSectionsState extends State<SchoolSections> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  classItem.subject,
-                  style: const TextStyle(
-                    color: AppTheme.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Activa',
-                  style: TextStyle(
-                    color: AppTheme.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      classItem.subject,
+                      style: const TextStyle(
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Activa',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          if (classItem.classroom != null || classItem.professor != null)
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                if (classItem.classroom != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.location_on, size: 14, color: AppTheme.white70),
-                      const SizedBox(width: 4),
-                      Text(
-                        classItem.classroom!,
-                        style: const TextStyle(fontSize: 12, color: AppTheme.white70),
-                      ),
-                    ],
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              if (classItem.classroom != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on, size: 14, color: AppTheme.white70),
+                    const SizedBox(width: 4),
+                    Text(
+                      classItem.classroom!,
+                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                    ),
+                  ],
+                ),
+              if (classItem.professor != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.person, size: 14, color: AppTheme.white70),
+                    const SizedBox(width: 4),
+                    Text(
+                      classItem.professor!,
+                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                    ),
+                  ],
+                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.book, size: 14, color: AppTheme.white70),
+                  const SizedBox(width: 4),
+                  Text(
+                    classItem.subject,
+                    style: const TextStyle(fontSize: 12, color: AppTheme.white70),
                   ),
-                if (classItem.professor != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.person, size: 14, color: AppTheme.white70),
-                      const SizedBox(width: 4),
-                      Text(
-                        classItem.professor!,
-                        style: const TextStyle(fontSize: 12, color: AppTheme.white70),
-                      ),
-                    ],
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-              ],
-            ),
+                  child: TextButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Unirse a ${classItem.subject}')),
+                      );
+                    },
+                    icon: const Icon(Icons.videocam, size: 14, color: AppTheme.white),
+                    label: const Text(
+                      'Unirse',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _activeSection = 'materials';
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Ver materiales del curso')),
+                      );
+                    },
+                    icon: const Icon(Icons.description, size: 14, color: AppTheme.white),
+                    label: const Text(
+                      'Material',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  int _convertTo24Hour(String timeStr) {
+    final parts = timeStr.split(' ');
+    final timePart = parts[0];
+    final period = parts.length > 1 ? parts[1] : '';
+    final time = timePart.split(':');
+    var hour24 = int.parse(time[0]);
+    
+    if (period == 'PM' && hour24 != 12) {
+      hour24 += 12;
+    } else if (period == 'AM' && hour24 == 12) {
+      hour24 = 0;
+    }
+    return hour24;
   }
 
   Widget _buildEmptySlot(bool isCurrentTime) {
@@ -1155,7 +1267,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header mejorado
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1163,25 +1275,33 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.purple.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
+                  Colors.purple,
+                  Colors.purple.withOpacity(0.8),
+                  Colors.purple.withOpacity(0.6),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.list_alt,
-                    size: 32,
-                    color: Colors.purple,
+                    Icons.check_circle_outline,
+                    size: 24,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1206,6 +1326,19 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.school_outlined,
+                    size: 16,
+                    color: Colors.purple,
                   ),
                 ),
               ],
@@ -1255,17 +1388,76 @@ class _SchoolSectionsState extends State<SchoolSections> {
           ),
           const SizedBox(height: 24),
           
-          // Lista de tareas
-          if (_academicTasks.isEmpty)
-            _buildEmptyState(
-              icon: Icons.assignment,
-              title: 'No hay tareas académicas',
-              subtitle: 'Agrega tu primera tarea para comenzar a organizarte',
-            )
-          else
-            Column(
-              children: _academicTasks.map((task) => _buildTaskCard(task)).toList(),
+          // Botón para agregar tarea
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _showAddTaskModal = true;
+                });
+              },
+              icon: const Icon(Icons.add_circle_outline, size: 20),
+              label: const Text('Nueva Tarea Académica'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: AppTheme.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
+              ),
             ),
+          ),
+          
+          // Lista de tareas
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.purple.withOpacity(0.2), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Mis Tareas',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.filter_list, size: 16),
+                      label: const Text('Filtrar'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.purple,
+                        side: BorderSide(color: Colors.purple.withOpacity(0.5)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (_academicTasks.isEmpty)
+                  _buildEmptyState(
+                    icon: Icons.description,
+                    title: 'No hay tareas académicas',
+                    subtitle: 'Agrega tu primera tarea para comenzar a organizarte',
+                  )
+                else
+                  Column(
+                    children: _academicTasks.map((task) => _buildTaskCard(task)).toList(),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1406,44 +1598,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _academicTasks = _academicTasks.where((t) => t.id != task.id).toList();
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tarea eliminada')),
-                  );
-                },
-                icon: const Icon(Icons.delete, color: Colors.red),
-              ),
             ],
           ),
-          if (task.notes != null && task.notes!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.note, size: 16, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      task.notes!,
-                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
           const SizedBox(height: 12),
+          // Información adicional
           Row(
             children: [
               Container(
@@ -1472,7 +1630,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   ],
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -1480,7 +1638,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       ? Colors.green.withOpacity(0.2)
                       : isOverdue
                           ? Colors.red.withOpacity(0.2)
-                          : Colors.orange.withOpacity(0.2),
+                          : isDueToday
+                              ? Colors.orange.withOpacity(0.2)
+                              : Colors.blue.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -1491,13 +1651,17 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           ? Icons.check_circle
                           : isOverdue
                               ? Icons.error
-                              : Icons.pending,
+                              : isDueToday
+                                  ? Icons.warning
+                                  : Icons.pending,
                       size: 12,
                       color: task.completed 
                           ? Colors.green
                           : isOverdue
                               ? Colors.red
-                              : Colors.orange,
+                              : isDueToday
+                                  ? Colors.orange
+                                  : Colors.blue,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1505,22 +1669,63 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           ? 'Completada'
                           : isOverdue
                               ? 'Vencida'
-                              : 'Pendiente',
+                              : isDueToday
+                                  ? 'Hoy'
+                                  : 'Pendiente',
                       style: TextStyle(
                         fontSize: 10,
                         color: task.completed 
                             ? Colors.green
                             : isOverdue
                                 ? Colors.red
-                                : Colors.orange,
+                                : isDueToday
+                                    ? Colors.orange
+                                    : Colors.blue,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
               ),
+              const Spacer(),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _academicTasks = _academicTasks.where((t) => t.id != task.id).toList();
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tarea eliminada')),
+                  );
+                },
+                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+              ),
             ],
           ),
+          // Notas
+          if (task.notes != null && task.notes!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.note, size: 16, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      task.notes!,
+                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1631,10 +1836,19 @@ class _SchoolSectionsState extends State<SchoolSections> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildSummaryCard(
+                  icon: Icons.people,
+                  title: 'Colaboradores',
+                  value: '${_groupProjects.length * 3}', // Placeholder - calcular basado en proyectos
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildSummaryCard(
                   icon: Icons.check_circle,
                   title: 'Tareas Completadas',
                   value: '${_groupProjects.fold<int>(0, (sum, p) => sum + p.actionSteps.where((s) => s.completed).length)}',
-                  color: Colors.green,
+                  color: Colors.orange,
                 ),
               ),
             ],
@@ -1828,34 +2042,77 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             const SizedBox(height: 8),
                             ...project.actionSteps.map((step) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    step.completed ? Icons.check_circle : Icons.radio_button_unchecked,
-                                    size: 20,
-                                    color: step.completed ? Colors.green : AppTheme.white60,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    final projectIndex = _groupProjects.indexWhere((p) => p.id == project.id);
+                                    if (projectIndex != -1) {
+                                      final updatedSteps = project.actionSteps.map((s) {
+                                        if (s.id == step.id) {
+                                          return ActionStep(
+                                            id: s.id,
+                                            text: s.text,
+                                            completed: !s.completed,
+                                          );
+                                        }
+                                        return s;
+                                      }).toList();
+                                      _groupProjects[projectIndex] = GroupProject(
+                                        id: project.id,
+                                        title: project.title,
+                                        objective: project.objective,
+                                        startDate: project.startDate,
+                                        endDate: project.endDate,
+                                        resources: project.resources,
+                                        ideas: project.ideas,
+                                        actionSteps: updatedSteps,
+                                      );
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.darkBackground,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      step.text,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: step.completed ? AppTheme.white40 : AppTheme.white,
-                                        decoration: step.completed ? TextDecoration.lineThrough : null,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        step.completed ? Icons.check_circle : Icons.radio_button_unchecked,
+                                        size: 20,
+                                        color: step.completed ? Colors.green : AppTheme.white60,
                                       ),
-                                    ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          step.text,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: step.completed ? AppTheme.white40 : AppTheme.white,
+                                            decoration: step.completed ? TextDecoration.lineThrough : null,
+                                          ),
+                                        ),
+                                      ),
+                                      if (step.completed)
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Text(
+                                            '✓',
+                                            style: TextStyle(
+                                              color: AppTheme.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                  if (step.completed)
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.check, size: 12, color: AppTheme.white),
-                                    ),
-                                ],
+                                ),
                               ),
                             )),
                           ],
@@ -1973,9 +2230,18 @@ class _SchoolSectionsState extends State<SchoolSections> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildSummaryCard(
+                  icon: Icons.access_time,
+                  title: 'Próximos',
+                  value: '${_examRevisions.where((e) => e.date.isAfter(DateTime.now()) && e.date.isBefore(DateTime.now().add(const Duration(days: 7)))).length}',
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildSummaryCard(
                   icon: Icons.check_circle,
                   title: 'Preparados',
-                  value: '${_examRevisions.fold<int>(0, (sum, e) => sum + e.todos.where((t) => t.completed).length)}',
+                  value: '${_examRevisions.fold<int>(0, (sum, e) => sum + (e.todos.isNotEmpty && e.todos.every((t) => t.completed) ? 1 : 0))}',
                   color: Colors.green,
                 ),
               ),
@@ -2102,34 +2368,74 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             const SizedBox(height: 8),
                             ...exam.todos.map((todo) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    todo.completed ? Icons.check_circle : Icons.radio_button_unchecked,
-                                    size: 20,
-                                    color: todo.completed ? Colors.green : AppTheme.white60,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    final examIndex = _examRevisions.indexWhere((e) => e.id == exam.id);
+                                    if (examIndex != -1) {
+                                      final updatedTodos = exam.todos.map((t) {
+                                        if (t.id == todo.id) {
+                                          return ExamTodo(
+                                            id: t.id,
+                                            text: t.text,
+                                            completed: !t.completed,
+                                          );
+                                        }
+                                        return t;
+                                      }).toList();
+                                      _examRevisions[examIndex] = ExamRevision(
+                                        id: exam.id,
+                                        topic: exam.topic,
+                                        date: exam.date,
+                                        todos: updatedTodos,
+                                        notes: exam.notes,
+                                      );
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.darkBackground,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      todo.text,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: todo.completed ? AppTheme.white40 : AppTheme.white,
-                                        decoration: todo.completed ? TextDecoration.lineThrough : null,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        todo.completed ? Icons.check_circle : Icons.radio_button_unchecked,
+                                        size: 20,
+                                        color: todo.completed ? Colors.green : AppTheme.white60,
                                       ),
-                                    ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          todo.text,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: todo.completed ? AppTheme.white40 : AppTheme.white,
+                                            decoration: todo.completed ? TextDecoration.lineThrough : null,
+                                          ),
+                                        ),
+                                      ),
+                                      if (todo.completed)
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Text(
+                                            '✓',
+                                            style: TextStyle(
+                                              color: AppTheme.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                  if (todo.completed)
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(Icons.check, size: 12, color: AppTheme.white),
-                                    ),
-                                ],
+                                ),
                               ),
                             )),
                           ],
@@ -2450,16 +2756,94 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             if (item['author'] != null || item['book'] != null) ...[
                               const SizedBox(height: 4),
                               Text(
-                                item['author'] ?? item['book'] ?? '',
-                                style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                                item['author'] != null 
+                                    ? 'por ${item['author']}'
+                                    : item['book'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12, 
+                                  color: AppTheme.white70,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                            if (item['genre'] != null || item['price'] != null || item['page'] != null) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  if (item['genre'] != null)
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.library_books, size: 14, color: AppTheme.white60),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          item['genre'],
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.white70),
+                                        ),
+                                      ],
+                                    ),
+                                  if (item['price'] != null)
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.attach_money, size: 14, color: AppTheme.white60),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          item['price'],
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.white70),
+                                        ),
+                                      ],
+                                    ),
+                                  if (item['page'] != null)
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.description, size: 14, color: AppTheme.white60),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Pág. ${item['page']}',
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.white70),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ],
+                            if (item['notes'] != null && item['notes'].toString().isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.darkBackground,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  item['notes'],
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.white60,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
                               ),
                             ],
                           ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => onDelete(index),
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.edit, color: AppTheme.white60, size: 18),
+                          ),
+                          IconButton(
+                            onPressed: () => onDelete(index),
+                            icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -2722,6 +3106,80 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Icons.person,
               _classOverview['instructor'] ?? '',
             ),
+          if (_classOverview['contactInfo'] != null)
+            _buildClassDetailItem(
+              Icons.contact_mail,
+              _classOverview['contactInfo'] ?? '',
+            ),
+          if (_classOverview['officeHours'] != null)
+            _buildClassDetailItem(
+              Icons.schedule,
+              _classOverview['officeHours'] ?? '',
+            ),
+          if (_classOverview['targetGrade'] != null || _classOverview['actualGrade'] != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.purple.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  if (_classOverview['targetGrade'] != null)
+                    Column(
+                      children: [
+                        const Text(
+                          'Objetivo',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.white60,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _classOverview['targetGrade'],
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (_classOverview['targetGrade'] != null && _classOverview['actualGrade'] != null)
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: AppTheme.white.withOpacity(0.2),
+                    ),
+                  if (_classOverview['actualGrade'] != null)
+                    Column(
+                      children: [
+                        const Text(
+                          'Actual',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.white60,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _classOverview['actualGrade'],
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
@@ -2734,6 +3192,20 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       _courseTimeController.text = _classOverview['time'] ?? '';
                       _courseLocationController.text = _classOverview['location'] ?? '';
                       _courseInstructorController.text = _classOverview['instructor'] ?? '';
+                      _courseContactInfoController.text = _classOverview['contactInfo'] ?? '';
+                      _courseOfficeHoursController.text = _classOverview['officeHours'] ?? '';
+                      _courseAccessAccountController.text = _classOverview['account'] ?? '';
+                      _courseAccessLoginController.text = _classOverview['login'] ?? '';
+                      _courseAccessPasswordController.text = _classOverview['password'] ?? '';
+                      _courseNotesController.text = _classOverview['notes'] ?? '';
+                      _courseTargetGradeController.text = _classOverview['targetGrade'] ?? '';
+                      _courseActualGradeController.text = _classOverview['actualGrade'] ?? '';
+                      _importantDates = _classOverview['importantDates'] != null 
+                          ? List<Map<String, dynamic>>.from(_classOverview['importantDates'])
+                          : [];
+                      _gradingComponents = _classOverview['gradingComponents'] != null
+                          ? List<Map<String, dynamic>>.from(_classOverview['gradingComponents'])
+                          : [];
                       _showAddClassOverviewModal = true;
                     });
                   },
@@ -3715,92 +4187,477 @@ class _SchoolSectionsState extends State<SchoolSections> {
   }
 
   Widget _buildAddClassOverviewModal() {
-    return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text('Resumen de Clase', style: TextStyle(color: AppTheme.white)),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _courseNameController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del Curso *',
-                labelStyle: TextStyle(color: AppTheme.white70),
+    return StatefulBuilder(
+      builder: (context, setModalState) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Resumen de Clase', style: TextStyle(color: AppTheme.white)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Información Básica
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.purple, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Información Básica',
+                      style: TextStyle(
+                        color: Colors.purple,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _courseTimeController,
-              decoration: const InputDecoration(
-                labelText: 'Horario',
-                labelStyle: TextStyle(color: AppTheme.white70),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del Curso *',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.school, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _courseLocationController,
-              decoration: const InputDecoration(
-                labelText: 'Ubicación',
-                labelStyle: TextStyle(color: AppTheme.white70),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseTimeController,
+                decoration: const InputDecoration(
+                  labelText: 'Horario',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.access_time, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _courseInstructorController,
-              decoration: const InputDecoration(
-                labelText: 'Instructor',
-                labelStyle: TextStyle(color: AppTheme.white70),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseLocationController,
+                decoration: const InputDecoration(
+                  labelText: 'Ubicación',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.location_on, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseInstructorController,
+                decoration: const InputDecoration(
+                  labelText: 'Instructor',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.person, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseContactInfoController,
+                decoration: const InputDecoration(
+                  labelText: 'Información de Contacto',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.contact_mail, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseOfficeHoursController,
+                decoration: const InputDecoration(
+                  labelText: 'Horario de Atención',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.schedule, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 24),
+              
+              // Información de Acceso
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.lock_outline, color: Colors.orange, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Información de Acceso',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseAccessAccountController,
+                decoration: const InputDecoration(
+                  labelText: 'Cuenta/Plataforma',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.account_circle, color: Colors.orange),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseAccessLoginController,
+                decoration: const InputDecoration(
+                  labelText: 'Usuario/Login',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.person_outline, color: Colors.orange),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseAccessPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Contraseña',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.lock, color: Colors.orange),
+                ),
+                obscureText: true,
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 24),
+              
+              // Fechas Importantes
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: Colors.green, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Fechas Importantes',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        if (_importantDateController.text.isNotEmpty) {
+                          setModalState(() {
+                            _importantDates.add({
+                              'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                              'description': _importantDateController.text,
+                              'date': DateTime.now(),
+                            });
+                            _importantDateController.clear();
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.add_circle, color: Colors.green),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _importantDateController,
+                decoration: const InputDecoration(
+                  hintText: 'Descripción de la fecha importante',
+                  hintStyle: TextStyle(color: AppTheme.white40),
+                  prefixIcon: Icon(Icons.event, color: Colors.green),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    setModalState(() {
+                      _importantDates.add({
+                        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                        'description': value,
+                        'date': DateTime.now(),
+                      });
+                      _importantDateController.clear();
+                    });
+                  }
+                },
+              ),
+              if (_importantDates.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ..._importantDates.map((date) => ListTile(
+                  leading: const Icon(Icons.event, color: Colors.green, size: 20),
+                  title: Text(
+                    date['description'],
+                    style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                    onPressed: () {
+                      setModalState(() {
+                        _importantDates = _importantDates.where((d) => d['id'] != date['id']).toList();
+                      });
+                    },
+                  ),
+                )),
+              ],
+              const SizedBox(height: 24),
+              
+              // Componentes de Calificación
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.grade, color: Colors.blue, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Componentes de Calificación',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        if (_gradingComponentNameController.text.isNotEmpty) {
+                          setModalState(() {
+                            _gradingComponents.add({
+                              'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                              'name': _gradingComponentNameController.text,
+                              'weight': _gradingComponentWeightController.text.isNotEmpty 
+                                  ? _gradingComponentWeightController.text 
+                                  : '0%',
+                            });
+                            _gradingComponentNameController.clear();
+                            _gradingComponentWeightController.clear();
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.add_circle, color: Colors.blue),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: _gradingComponentNameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Nombre del componente',
+                        hintStyle: TextStyle(color: AppTheme.white40),
+                        prefixIcon: Icon(Icons.description, color: Colors.blue),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: _gradingComponentWeightController,
+                      decoration: const InputDecoration(
+                        hintText: 'Peso (%)',
+                        hintStyle: TextStyle(color: AppTheme.white40),
+                        prefixIcon: Icon(Icons.percent, color: Colors.blue),
+                      ),
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                  ),
+                ],
+              ),
+              if (_gradingComponents.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                ..._gradingComponents.map((component) => ListTile(
+                  leading: const Icon(Icons.check_circle_outline, color: Colors.blue, size: 20),
+                  title: Text(
+                    component['name'],
+                    style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    'Peso: ${component['weight']}',
+                    style: const TextStyle(color: AppTheme.white60, fontSize: 12),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                    onPressed: () {
+                      setModalState(() {
+                        _gradingComponents = _gradingComponents.where((c) => c['id'] != component['id']).toList();
+                      });
+                    },
+                  ),
+                )),
+              ],
+              const SizedBox(height: 24),
+              
+              // Calificaciones
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.purple, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Calificaciones',
+                      style: TextStyle(
+                        color: Colors.purple,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _courseTargetGradeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Calificación Objetivo',
+                        labelStyle: TextStyle(color: AppTheme.white70),
+                        prefixIcon: Icon(Icons.track_changes, color: Colors.purple),
+                      ),
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: _courseActualGradeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Calificación Actual',
+                        labelStyle: TextStyle(color: AppTheme.white70),
+                        prefixIcon: Icon(Icons.check_circle, color: Colors.purple),
+                      ),
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Notas
+              TextField(
+                controller: _courseNotesController,
+                decoration: const InputDecoration(
+                  labelText: 'Notas Adicionales',
+                  labelStyle: TextStyle(color: AppTheme.white70),
+                  prefixIcon: Icon(Icons.note, color: Colors.purple),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+                maxLines: 4,
+              ),
+            ],
+          ),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _showAddClassOverviewModal = false;
-              _courseNameController.clear();
-              _courseTimeController.clear();
-              _courseLocationController.clear();
-              _courseInstructorController.clear();
-            });
-            Navigator.pop(context);
-          },
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_courseNameController.text.isNotEmpty) {
+        actions: [
+          TextButton(
+            onPressed: () {
               setState(() {
-                _classOverview = {
-                  'course': _courseNameController.text,
-                  'time': _courseTimeController.text.isNotEmpty ? _courseTimeController.text : null,
-                  'location': _courseLocationController.text.isNotEmpty ? _courseLocationController.text : null,
-                  'instructor': _courseInstructorController.text.isNotEmpty ? _courseInstructorController.text : null,
-                };
                 _showAddClassOverviewModal = false;
+                _courseNameController.clear();
+                _courseTimeController.clear();
+                _courseLocationController.clear();
+                _courseInstructorController.clear();
+                _courseContactInfoController.clear();
+                _courseOfficeHoursController.clear();
+                _courseAccessAccountController.clear();
+                _courseAccessLoginController.clear();
+                _courseAccessPasswordController.clear();
+                _courseNotesController.clear();
+                _courseTargetGradeController.clear();
+                _courseActualGradeController.clear();
+                _importantDates = [];
+                _gradingComponents = [];
+                _importantDateController.clear();
+                _gradingComponentNameController.clear();
+                _gradingComponentWeightController.clear();
               });
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Clase guardada')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Por favor ingresa el nombre del curso')),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-          child: const Text('Guardar'),
-        ),
-      ],
+            },
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_courseNameController.text.isNotEmpty) {
+                setState(() {
+                  _classOverview = {
+                    'course': _courseNameController.text,
+                    'time': _courseTimeController.text.isNotEmpty ? _courseTimeController.text : null,
+                    'location': _courseLocationController.text.isNotEmpty ? _courseLocationController.text : null,
+                    'instructor': _courseInstructorController.text.isNotEmpty ? _courseInstructorController.text : null,
+                    'contactInfo': _courseContactInfoController.text.isNotEmpty ? _courseContactInfoController.text : null,
+                    'officeHours': _courseOfficeHoursController.text.isNotEmpty ? _courseOfficeHoursController.text : null,
+                    'accessInfo': _courseAccessAccountController.text.isNotEmpty ? _courseAccessAccountController.text : null,
+                    'account': _courseAccessAccountController.text.isNotEmpty ? _courseAccessAccountController.text : null,
+                    'login': _courseAccessLoginController.text.isNotEmpty ? _courseAccessLoginController.text : null,
+                    'password': _courseAccessPasswordController.text.isNotEmpty ? _courseAccessPasswordController.text : null,
+                    'notes': _courseNotesController.text.isNotEmpty ? _courseNotesController.text : null,
+                    'targetGrade': _courseTargetGradeController.text.isNotEmpty ? _courseTargetGradeController.text : null,
+                    'actualGrade': _courseActualGradeController.text.isNotEmpty ? _courseActualGradeController.text : null,
+                    'importantDates': List<Map<String, dynamic>>.from(_importantDates),
+                    'gradingComponents': List<Map<String, dynamic>>.from(_gradingComponents),
+                  };
+                  _showAddClassOverviewModal = false;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Clase guardada')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Por favor ingresa el nombre del curso')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
     );
   }
 }

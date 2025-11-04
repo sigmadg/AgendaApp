@@ -252,8 +252,6 @@ class _PersonalSectionsState extends State<PersonalSections> {
             'school': true,
             'health': true,
             'finance': true,
-            'nutrition': true,
-            'exercise': true,
             'language': true,
             'menstrual': true,
             'pet': true,
@@ -559,26 +557,6 @@ class _PersonalSectionsState extends State<PersonalSections> {
             onTap: () {
               Navigator.pop(context);
               context.go('/finance');
-            },
-          ),
-          _buildDrawerItem(
-            context,
-            icon: Icons.restaurant,
-            title: 'Nutrición',
-            color: _carminePastel,
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/nutrition');
-            },
-          ),
-          _buildDrawerItem(
-            context,
-            icon: Icons.fitness_center,
-            title: 'Ejercicio',
-            color: Colors.red,
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/exercise');
             },
           ),
           _buildDrawerItem(
@@ -2638,10 +2616,6 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       const SizedBox(height: 12),
                       _buildSettingsSection('Finanzas', 'Finanzas personales', Icons.account_balance_wallet, 'finance', Colors.amber),
                       const SizedBox(height: 12),
-                      _buildSettingsSection('Nutrición', 'Nutrición y alimentación', Icons.restaurant, 'nutrition', _carminePastel),
-                      const SizedBox(height: 12),
-                      _buildSettingsSection('Ejercicio', 'Ejercicio y fitness', Icons.fitness_center, 'exercise', Colors.red),
-                      const SizedBox(height: 12),
                       _buildSettingsSection('Idiomas', 'Aprendizaje de idiomas', Icons.language, 'language', Colors.teal),
                       const SizedBox(height: 12),
                       _buildSettingsSection('Menstrual', 'Calendario menstrual', Icons.eco_outlined, 'menstrual', Colors.pink),
@@ -2745,7 +2719,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                               insetPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 24),
                               titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                               contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                              actionsPadding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                               title: Row(
                                 children: [
                                   Container(
@@ -4429,8 +4403,6 @@ class _PersonalSectionsState extends State<PersonalSections> {
       {'id': 'school', 'name': 'Escuela', 'icon': '🎓'},
       {'id': 'health', 'name': 'Salud', 'icon': '🏥'},
       {'id': 'finance', 'name': 'Finanzas', 'icon': '💰'},
-      {'id': 'nutrition', 'name': 'Nutrición', 'icon': '🍎'},
-      {'id': 'exercise', 'name': 'Ejercicio', 'icon': '💪'},
       {'id': 'language', 'name': 'Idiomas', 'icon': '🌍'},
       {'id': 'menstrual', 'name': 'Menstrual', 'icon': '🌸'},
       {'id': 'entrepreneurship', 'name': 'Emprendimientos', 'icon': '🚀'},

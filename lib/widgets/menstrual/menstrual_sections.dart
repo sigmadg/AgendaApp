@@ -193,26 +193,6 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
           ),
           _buildDrawerItem(
             context,
-            icon: Icons.restaurant,
-            title: 'Nutrición',
-            color: Colors.orange,
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/nutrition');
-            },
-          ),
-          _buildDrawerItem(
-            context,
-            icon: Icons.fitness_center,
-            title: 'Ejercicio',
-            color: Colors.red,
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/exercise');
-            },
-          ),
-          _buildDrawerItem(
-            context,
             icon: Icons.language,
             title: 'Idiomas',
             color: Colors.teal,

@@ -75,7 +75,13 @@ class MyApp extends StatelessWidget {
         routerConfig: appRouter,
         builder: (context, child) {
           return AppBackground(
-            child: child ?? const SizedBox.shrink(),
+            child: SafeArea(
+              bottom: true,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
           );
         },
       ),
