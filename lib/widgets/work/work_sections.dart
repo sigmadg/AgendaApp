@@ -93,8 +93,7 @@ class _WorkSectionsState extends State<WorkSections> {
     {'id': 'weekly', 'name': 'Sesiones', 'icon': Icons.event},
     {'id': 'daily', 'name': 'Tareas', 'icon': Icons.today},
     {'id': 'projects', 'name': 'Proyectos', 'icon': Icons.folder},
-    {'id': 'strategy', 'name': 'Estrategia', 'icon': Icons.track_changes},
-    {'id': 'planning', 'name': 'Planificación', 'icon': Icons.assignment},
+    {'id': 'strategy', 'name': 'Estrategia y Planificación', 'icon': Icons.track_changes},
     {'id': 'priorities-focus-goals', 'name': 'Prioridades, Enfoque y Objetivos', 'icon': Icons.dashboard},
   ];
 
@@ -594,20 +593,23 @@ class _WorkSectionsState extends State<WorkSections> {
                       ),
                       const SizedBox(height: 2),
                       Flexible(
-                        child: Text(
-                          section['name'] as String,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isActive 
-                                ? _professionalAccent 
-                                : AppTheme.white60,
-                            fontWeight: isActive 
-                                ? FontWeight.w600 
-                                : FontWeight.normal,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            section['name'] as String,
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: isActive 
+                                  ? _professionalAccent 
+                                  : AppTheme.white60,
+                              fontWeight: isActive 
+                                  ? FontWeight.w600 
+                                  : FontWeight.normal,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
@@ -633,8 +635,6 @@ class _WorkSectionsState extends State<WorkSections> {
         return _buildStrategy();
       case 'priorities-focus-goals':
         return _buildPrioritiesFocusGoals();
-      case 'planning':
-        return _buildPlanning();
       default:
         return _buildWeeklyTasks();
     }
@@ -3311,7 +3311,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                   const Text(
                                     'Estrategia del Proyecto',
                                     style: TextStyle(
-                                      fontSize: 18,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       color: AppTheme.white,
                                     ),
@@ -3320,8 +3320,8 @@ class _WorkSectionsState extends State<WorkSections> {
                               ),
                               const SizedBox(height: 20),
                               
-                              // TEAMMATES
-                              _buildStrategySectionHeader('TEAMMATES', Icons.people),
+                              // COMPAÑEROS DE EQUIPO
+                              _buildStrategySectionHeader('COMPAÑEROS DE EQUIPO', Icons.people),
                               const SizedBox(height: 12),
                               _buildAddTeammateForm(),
                               const SizedBox(height: 12),
@@ -3330,8 +3330,8 @@ class _WorkSectionsState extends State<WorkSections> {
                               
                               const SizedBox(height: 24),
                               
-                              // ACHIEVEMENTS
-                              _buildStrategySectionHeader('ACHIEVEMENTS', Icons.star),
+                              // LOGROS
+                              _buildStrategySectionHeader('LOGROS', Icons.star),
                               const SizedBox(height: 12),
                               _buildAddAchievementForm(),
                               const SizedBox(height: 12),
@@ -3340,8 +3340,8 @@ class _WorkSectionsState extends State<WorkSections> {
                               
                               const SizedBox(height: 24),
                               
-                              // WORKS
-                              _buildStrategySectionHeader('WORKS', Icons.work),
+                              // TRABAJOS
+                              _buildStrategySectionHeader('TRABAJOS', Icons.work),
                               const SizedBox(height: 12),
                               _buildAddWorkForm(),
                               const SizedBox(height: 12),
@@ -3350,8 +3350,8 @@ class _WorkSectionsState extends State<WorkSections> {
                               
                               const SizedBox(height: 24),
                               
-                              // FUNDING
-                              _buildStrategySectionHeader('FUNDING', Icons.attach_money),
+                              // FINANCIAMIENTO
+                              _buildStrategySectionHeader('FINANCIAMIENTO', Icons.attach_money),
                               const SizedBox(height: 12),
                               _buildAddFundingForm(),
                               const SizedBox(height: 12),
@@ -3680,14 +3680,14 @@ class _WorkSectionsState extends State<WorkSections> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: _professionalIndigo, size: 18),
+          Icon(icon, color: AppTheme.white, size: 16),
           const SizedBox(width: 8),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 14,
+            style: const TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: _professionalIndigo,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -3713,10 +3713,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempTeammateNameController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Nombre',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -3726,10 +3726,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempTeammateRoleController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Rol/Puesto',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -3835,10 +3835,10 @@ class _WorkSectionsState extends State<WorkSections> {
                 flex: 3,
                 child: TextField(
                   controller: _tempAchievementNameController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Nombre del logro',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -3995,10 +3995,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempWorkPositionController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Posición',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -4008,10 +4008,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempWorkAppointController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Asignación',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -4025,10 +4025,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempWorkStatusController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Estado',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -4136,10 +4136,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempWorkNotesController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Notas (opcional)',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -4317,10 +4317,10 @@ class _WorkSectionsState extends State<WorkSections> {
               Expanded(
                 child: TextField(
                   controller: _tempFundingElementController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
                   decoration: InputDecoration(
                     hintText: 'Elemento',
-                    hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   ),
@@ -4491,6 +4491,23 @@ class _WorkSectionsState extends State<WorkSections> {
       return daysUntilDeadline >= 0 && daysUntilDeadline <= 7;
     }).length;
     
+    // Estadísticas de productividad para planificación
+    final totalDailyTasks = _dailyTasks.values.expand((t) => t).length;
+    final completedDailyTasks = _dailyTasks.values.expand((t) => t.where((dt) => dt.completed)).length;
+    final totalMeetings = _workMeetings.length;
+    final totalTasks = totalDailyTasks;
+    final efficiency = totalTasks > 0 ? ((completedDailyTasks / totalTasks) * 100).round() : 0;
+    
+    // Resumen semanal - calcular tareas por día de la semana
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final weekDays = List.generate(5, (index) => weekStart.add(Duration(days: index)));
+    
+    // Si hay un proyecto seleccionado, mostrar el formulario de estrategia
+    if (_selectedStrategyProject != null) {
+      return _buildProjectStrategyForm(_selectedStrategyProject!);
+    }
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -4535,7 +4552,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Estrategía',
+                        'Estrategia y Planificación',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -4543,7 +4560,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         ),
                       ),
                       const Text(
-                        'Vista general y supervisión estratégica',
+                        'Vista general estratégica y análisis de productividad',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.white70,
@@ -4747,182 +4764,531 @@ class _WorkSectionsState extends State<WorkSections> {
           ),
           const SizedBox(height: 24),
           
-          // Lista de proyectos con título
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [_professionalPrimary, _professionalSecondary],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.folder_special, color: AppTheme.white, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Mis Proyectos',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.white,
-                    ),
-                  ),
+          // Sección de Planificación (Análisis de Productividad)
+          // Tarjeta de eficiencia mejorada
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _professionalTeal.withOpacity(0.15),
+                  _professionalAccent.withOpacity(0.1),
+                  AppTheme.darkSurface,
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _professionalAccent.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$totalProjects',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: _professionalAccent,
-                  ),
-                ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _professionalTeal.withOpacity(0.3),
+                width: 1,
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Selector de proyecto o formulario de estrategia
-          if (_projects.isEmpty)
-            _buildEmptyState(
-              'No hay proyectos creados',
-              Icons.dashboard_customize,
-              'Crea proyectos para ver tu estrategia',
-              'Nuevo Proyecto',
-              () {
-                setState(() {
-                  _showAddProjectModal = true;
-                });
-              },
-              _professionalAccent,
-              [_professionalPrimary, _professionalSecondary],
-            )
-          else if (_selectedStrategyProject == null)
-            // Mostrar selector de proyectos
-            Column(
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _professionalSecondary.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, color: _professionalAccent, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Selecciona un proyecto para ver su estrategia',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.white70,
-                              fontWeight: FontWeight.w500,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [_professionalTeal, _professionalAccent],
                             ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ],
+                          child: const Icon(Icons.speed, color: AppTheme.white, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Eficiencia General',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.white60,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Tareas completadas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white40,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: efficiency >= 70
+                              ? [Colors.green, Colors.green.shade700]
+                              : efficiency >= 50
+                                  ? [_professionalTeal, _professionalAccent]
+                                  : [Colors.orange, Colors.deepOrange],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '$efficiency%',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurfaceVariant,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Stack(
+                    children: [
+                      FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: efficiency / 100,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: efficiency >= 70
+                                  ? [Colors.green, Colors.green.shade700]
+                                  : efficiency >= 50
+                                      ? [_professionalTeal, _professionalAccent]
+                                      : [Colors.orange, Colors.deepOrange],
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (efficiency >= 70
+                                        ? Colors.green
+                                        : efficiency >= 50
+                                            ? _professionalTeal
+                                            : Colors.orange)
+                                    .withOpacity(0.6),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                ..._projects.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final project = entry.value;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedStrategyProject = project;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              _professionalPrimary.withOpacity(0.3),
-                              _professionalSecondary.withOpacity(0.2),
-                              AppTheme.darkSurface,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _professionalAccent.withOpacity(0.3),
-                            width: 1,
-                          ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$completedDailyTasks de $totalTasks tareas completadas',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.white60,
+                      ),
+                    ),
+                    Text(
+                      '$totalMeetings sesiones',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Resumen de productividad mejorado
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
+                  icon: Icons.task_alt,
+                  value: '$completedDailyTasks/$totalTasks',
+                  label: 'Tareas',
+                  color: _professionalAccent,
+                  gradientColors: [_professionalAccent, _professionalSecondary],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryCard(
+                  icon: Icons.event,
+                  value: '$totalMeetings',
+                  label: 'Sesiones',
+                  color: _professionalTeal,
+                  gradientColors: [_professionalTeal, _professionalAccent],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
+                  icon: Icons.folder_special,
+                  value: '$completedProjects/$totalProjects',
+                  label: 'Proyectos',
+                  color: _professionalIndigo,
+                  gradientColors: [_professionalIndigo, _professionalAccent],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryCard(
+                  icon: Icons.flag,
+                  value: '${_goals.length}',
+                  label: 'Objetivos',
+                  color: Colors.purple,
+                  gradientColors: [Colors.purple, Colors.deepPurple],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Resumen Semanal mejorado
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _professionalPrimary.withOpacity(0.15),
+                  _professionalSecondary.withOpacity(0.1),
+                  AppTheme.darkSurface,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _professionalSecondary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [_professionalPrimary, _professionalSecondary],
                         ),
-                        child: Row(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.calendar_view_week, color: AppTheme.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Resumen Semanal',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ...weekDays.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final date = entry.value;
+                  final dayName = DateFormat('EEEE', 'es').format(date);
+                  final isToday = date.year == now.year && 
+                                  date.month == now.month && 
+                                  date.day == now.day;
+                  
+                  // Calcular tareas para este día
+                  final dateKey = DateTime(date.year, date.month, date.day);
+                  final dayTasks = _dailyTasks[dateKey] ?? [];
+                  final completedDayTasks = dayTasks.where((t) => t.completed).length;
+                  final dayMeetings = _workMeetings.where((m) {
+                    try {
+                      final meetingDate = DateFormat('yyyy-MM-dd').parse(m.date);
+                      return meetingDate.year == date.year &&
+                             meetingDate.month == date.month &&
+                             meetingDate.day == date.day;
+                    } catch (e) {
+                      return false;
+                    }
+                  }).length;
+                  final totalDayItems = dayTasks.length + dayMeetings;
+                  final completedDayItems = completedDayTasks;
+                  final dayProgress = totalDayItems > 0 ? ((completedDayItems / totalDayItems) * 100).round() : 0;
+                  
+                  return Container(
+                    margin: EdgeInsets.only(bottom: index < weekDays.length - 1 ? 16 : 0),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isToday
+                            ? [
+                                _professionalAccent.withOpacity(0.2),
+                                _professionalSecondary.withOpacity(0.15),
+                                AppTheme.darkSurface,
+                              ]
+                            : [
+                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                AppTheme.darkSurface.withOpacity(0.5),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isToday
+                            ? _professionalAccent.withOpacity(0.4)
+                            : AppTheme.darkSurfaceVariant.withOpacity(0.2),
+                        width: isToday ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [_professionalAccent, _professionalSecondary],
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.folder_special, color: AppTheme.white, size: 24),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    project.title,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.white,
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isToday
+                                          ? [_professionalAccent, _professionalSecondary]
+                                          : [_professionalSlate, _professionalIndigo],
                                     ),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  if (project.aim.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
+                                  child: Icon(
+                                    isToday ? Icons.today : Icons.calendar_today,
+                                    color: AppTheme.white,
+                                    size: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          dayName.substring(0, 1).toUpperCase() + dayName.substring(1),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.white,
+                                          ),
+                                        ),
+                                        if (isToday) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: _professionalAccent.withOpacity(0.3),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              'HOY',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: _professionalAccent,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
                                     Text(
-                                      project.aim,
+                                      DateFormat('d MMM', 'es').format(date),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.white60,
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isToday
+                                      ? [_professionalAccent, _professionalSecondary]
+                                      : [_professionalTeal, _professionalAccent],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$totalDayItems',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (totalDayItems > 0) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Progreso',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: AppTheme.white60,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '$dayProgress%',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: isToday ? _professionalAccent : AppTheme.white70,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.darkSurfaceVariant,
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: FractionallySizedBox(
+                                        alignment: Alignment.centerLeft,
+                                        widthFactor: dayProgress / 100,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: isToday
+                                                  ? [_professionalAccent, _professionalSecondary]
+                                                  : dayProgress >= 70
+                                                      ? [Colors.green, Colors.green.shade700]
+                                                      : [_professionalTeal, _professionalAccent],
+                                            ),
+                                            borderRadius: BorderRadius.circular(3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Row(
+                                children: [
+                                  if (dayTasks.isNotEmpty) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _professionalAccent.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.task, size: 12, color: _professionalAccent),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${dayTasks.length}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _professionalAccent,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (dayMeetings > 0) ...[
+                                    if (dayTasks.isNotEmpty) const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: _professionalTeal.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.event, size: 12, color: _professionalTeal),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '$dayMeetings',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _professionalTeal,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ],
                               ),
+                            ],
+                          ),
+                        ] else
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              'Sin actividades programadas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white40,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
-                            Icon(Icons.arrow_forward_ios, color: _professionalAccent, size: 20),
-                          ],
-                        ),
-                      ),
+                          ),
+                      ],
                     ),
                   );
-                }),
+                }).toList(),
               ],
-            )
-          else
-            // Mostrar formulario completo de PROJECT STRATEGY y PROJECT OVERVIEW
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Mostrar formulario de estrategia si hay un proyecto seleccionado
+          if (_selectedStrategyProject != null)
             _buildProjectStrategyForm(_selectedStrategyProject!),
         ],
       ),
@@ -5042,26 +5408,26 @@ class _WorkSectionsState extends State<WorkSections> {
                 ),
                 const SizedBox(height: 24),
                 
-                // TEAMMATES Table
-                _buildTableHeader('TEAMMATES'),
+                // Tabla de Compañeros de Equipo
+                _buildTableHeader('COMPAÑEROS DE EQUIPO'),
                 const SizedBox(height: 12),
                 _buildTeammatesTable(project.teammates),
                 const SizedBox(height: 24),
                 
-                // ACHIEVEMENTS Table
-                _buildTableHeader('ACHIEVEMENTS'),
+                // Tabla de Logros
+                _buildTableHeader('LOGROS'),
                 const SizedBox(height: 12),
                 _buildAchievementsTable(project.achievements),
                 const SizedBox(height: 24),
                 
-                // WORKS Table
-                _buildTableHeader('WORKS'),
+                // Tabla de Trabajos
+                _buildTableHeader('TRABAJOS'),
                 const SizedBox(height: 12),
                 _buildWorksTable(project.works),
                 const SizedBox(height: 24),
                 
-                // FUNDING Table
-                _buildTableHeader('FUNDING'),
+                // Tabla de Financiamiento
+                _buildTableHeader('FINANCIAMIENTO'),
                 const SizedBox(height: 12),
                 _buildFundingTable(project.funding),
               ],
@@ -5611,7 +5977,7 @@ class _WorkSectionsState extends State<WorkSections> {
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
           color: AppTheme.white,
         ),
@@ -5630,9 +5996,9 @@ class _WorkSectionsState extends State<WorkSections> {
         child: Center(
           child: Text(
             'Sin compañeros de equipo',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white40,
+              color: AppTheme.white70,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -5694,9 +6060,9 @@ class _WorkSectionsState extends State<WorkSections> {
         child: Center(
           child: Text(
             'Sin logros definidos',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white40,
+              color: AppTheme.white70,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -5762,9 +6128,9 @@ class _WorkSectionsState extends State<WorkSections> {
         child: Center(
           child: Text(
             'Sin trabajos definidos',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white40,
+              color: AppTheme.white70,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -5849,9 +6215,9 @@ class _WorkSectionsState extends State<WorkSections> {
         child: Center(
           child: Text(
             'Sin financiamiento definido',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white40,
+              color: AppTheme.white70,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -6824,717 +7190,6 @@ class _WorkSectionsState extends State<WorkSections> {
     });
   }
 
-  Widget _buildPlanning() {
-    // Si hay un proyecto seleccionado, mostrar el formulario de estrategia
-    if (_selectedStrategyProject != null) {
-      return _buildProjectStrategyForm(_selectedStrategyProject!);
-    }
-    
-    // Estadísticas de productividad mejoradas
-    final totalDailyTasks = _dailyTasks.values.expand((t) => t).length;
-    final completedDailyTasks = _dailyTasks.values.expand((t) => t.where((dt) => dt.completed)).length;
-    final totalMeetings = _workMeetings.length;
-    final totalTasks = totalDailyTasks;
-    final efficiency = totalTasks > 0 ? ((completedDailyTasks / totalTasks) * 100).round() : 0;
-    
-    // Estadísticas de proyectos
-    final totalProjects = _projects.length;
-    final completedProjects = _projects.where((p) {
-      if (p.goals.isEmpty) return false;
-      final completedGoals = p.goals.where((g) => g.completed == true).length;
-      return completedGoals == p.goals.length && p.goals.isNotEmpty;
-    }).length;
-    final projectProgress = totalProjects > 0 ? ((completedProjects / totalProjects) * 100).round() : 0;
-    
-    // Resumen semanal - calcular tareas por día de la semana
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final weekDays = List.generate(5, (index) => weekStart.add(Duration(days: index)));
-    
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header mejorado con paleta profesional
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _professionalPrimary,
-                  _professionalSecondary,
-                  _professionalAccent,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: _professionalSecondary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(Icons.assignment, color: AppTheme.white, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Planificación',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                      const Text(
-                        'Análisis de productividad y progreso',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Selector de proyectos para planificación
-          if (_projects.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _professionalTeal.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.info_outline, color: _professionalTeal, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Selecciona un proyecto para ver su planificación completa',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.white70,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ..._projects.map((project) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedStrategyProject = project;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                _professionalTeal.withOpacity(0.2),
-                                _professionalAccent.withOpacity(0.15),
-                                AppTheme.darkSurface,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _professionalTeal.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [_professionalTeal, _professionalAccent],
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.folder_special, color: AppTheme.white, size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  project.title,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.white,
-                                  ),
-                                ),
-                              ),
-                              Icon(Icons.arrow_forward_ios, color: _professionalTeal, size: 16),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-          const SizedBox(height: 20),
-          
-          // Tarjeta de eficiencia mejorada
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _professionalTeal.withOpacity(0.15),
-                  _professionalAccent.withOpacity(0.1),
-                  AppTheme.darkSurface,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _professionalTeal.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [_professionalTeal, _professionalAccent],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.speed, color: AppTheme.white, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Eficiencia General',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppTheme.white60,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Tareas completadas',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.white40,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: efficiency >= 70
-                              ? [Colors.green, Colors.green.shade700]
-                              : efficiency >= 50
-                                  ? [_professionalTeal, _professionalAccent]
-                                  : [Colors.orange, Colors.deepOrange],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '$efficiency%',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Stack(
-                    children: [
-                      FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: efficiency / 100,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: efficiency >= 70
-                                  ? [Colors.green, Colors.green.shade700]
-                                  : efficiency >= 50
-                                      ? [_professionalTeal, _professionalAccent]
-                                      : [Colors.orange, Colors.deepOrange],
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (efficiency >= 70
-                                        ? Colors.green
-                                        : efficiency >= 50
-                                            ? _professionalTeal
-                                            : Colors.orange)
-                                    .withOpacity(0.6),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '$completedDailyTasks de $totalTasks tareas completadas',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                    Text(
-                      '$totalMeetings sesiones',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Resumen de productividad mejorado
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.task_alt,
-                  value: '$completedDailyTasks/$totalTasks',
-                  label: 'Tareas',
-                  color: _professionalAccent,
-                  gradientColors: [_professionalAccent, _professionalSecondary],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.event,
-                  value: '$totalMeetings',
-                  label: 'Sesiones',
-                  color: _professionalTeal,
-                  gradientColors: [_professionalTeal, _professionalAccent],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.folder_special,
-                  value: '$completedProjects/$totalProjects',
-                  label: 'Proyectos',
-                  color: _professionalIndigo,
-                  gradientColors: [_professionalIndigo, _professionalAccent],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.flag,
-                  value: '${_goals.length}',
-                  label: 'Objetivos',
-                  color: Colors.purple,
-                  gradientColors: [Colors.purple, Colors.deepPurple],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Resumen Semanal mejorado
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _professionalPrimary.withOpacity(0.15),
-                  _professionalSecondary.withOpacity(0.1),
-                  AppTheme.darkSurface,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _professionalSecondary.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [_professionalPrimary, _professionalSecondary],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.calendar_view_week, color: AppTheme.white, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Resumen Semanal',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ...weekDays.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final date = entry.value;
-                  final dayName = DateFormat('EEEE', 'es').format(date);
-                  final isToday = date.year == now.year && 
-                                  date.month == now.month && 
-                                  date.day == now.day;
-                  
-                  // Calcular tareas para este día
-                  final dateKey = DateTime(date.year, date.month, date.day);
-                  final dayTasks = _dailyTasks[dateKey] ?? [];
-                  final completedDayTasks = dayTasks.where((t) => t.completed).length;
-                  final dayMeetings = _workMeetings.where((m) {
-                    try {
-                      final meetingDate = DateFormat('yyyy-MM-dd').parse(m.date);
-                      return meetingDate.year == date.year &&
-                             meetingDate.month == date.month &&
-                             meetingDate.day == date.day;
-                    } catch (e) {
-                      return false;
-                    }
-                  }).length;
-                  final totalDayItems = dayTasks.length + dayMeetings;
-                  final completedDayItems = completedDayTasks;
-                  final dayProgress = totalDayItems > 0 ? ((completedDayItems / totalDayItems) * 100).round() : 0;
-                  
-                  return Container(
-                    margin: EdgeInsets.only(bottom: index < weekDays.length - 1 ? 16 : 0),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isToday
-                            ? [
-                                _professionalAccent.withOpacity(0.2),
-                                _professionalSecondary.withOpacity(0.15),
-                                AppTheme.darkSurface,
-                              ]
-                            : [
-                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
-                                AppTheme.darkSurface.withOpacity(0.5),
-                              ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isToday
-                            ? _professionalAccent.withOpacity(0.4)
-                            : AppTheme.darkSurfaceVariant.withOpacity(0.2),
-                        width: isToday ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: isToday
-                                          ? [_professionalAccent, _professionalSecondary]
-                                          : [_professionalSlate, _professionalIndigo],
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    isToday ? Icons.today : Icons.calendar_today,
-                                    color: AppTheme.white,
-                                    size: 16,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          dayName.substring(0, 1).toUpperCase() + dayName.substring(1),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.white,
-                                          ),
-                                        ),
-                                        if (isToday) ...[
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: _professionalAccent.withOpacity(0.3),
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              'HOY',
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.bold,
-                                                color: _professionalAccent,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      DateFormat('d MMM', 'es').format(date),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppTheme.white60,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isToday
-                                      ? [_professionalAccent, _professionalSecondary]
-                                      : [_professionalTeal, _professionalAccent],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '$totalDayItems',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (totalDayItems > 0) ...[
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Progreso',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: AppTheme.white60,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          '$dayProgress%',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: isToday ? _professionalAccent : AppTheme.white70,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      height: 6,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.darkSurfaceVariant,
-                                        borderRadius: BorderRadius.circular(3),
-                                      ),
-                                      child: FractionallySizedBox(
-                                        alignment: Alignment.centerLeft,
-                                        widthFactor: dayProgress / 100,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: isToday
-                                                  ? [_professionalAccent, _professionalSecondary]
-                                                  : dayProgress >= 70
-                                                      ? [Colors.green, Colors.green.shade700]
-                                                      : [_professionalTeal, _professionalAccent],
-                                            ),
-                                            borderRadius: BorderRadius.circular(3),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Row(
-                                children: [
-                                  if (dayTasks.isNotEmpty) ...[
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _professionalAccent.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.task, size: 12, color: _professionalAccent),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${dayTasks.length}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _professionalAccent,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  if (dayMeetings > 0) ...[
-                                    if (dayTasks.isNotEmpty) const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _professionalTeal.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.event, size: 12, color: _professionalTeal),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '$dayMeetings',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _professionalTeal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-                          ),
-                        ] else
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              'Sin actividades programadas',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.white40,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyState(
     String message,
