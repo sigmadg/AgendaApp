@@ -186,6 +186,8 @@ class ProjectWork {
 class ProjectFunding {
   final String id;
   final String element;
+  final String? fondo;
+  final String? financiadoPor;
   final double? projectedCost;
   final double? realCost;
   final String? notes;
@@ -193,6 +195,8 @@ class ProjectFunding {
   ProjectFunding({
     required this.id,
     required this.element,
+    this.fondo,
+    this.financiadoPor,
     this.projectedCost,
     this.realCost,
     this.notes,
@@ -202,6 +206,8 @@ class ProjectFunding {
     return {
       'id': id,
       'element': element,
+      'fondo': fondo,
+      'financiadoPor': financiadoPor,
       'projectedCost': projectedCost,
       'realCost': realCost,
       'notes': notes,
@@ -212,6 +218,8 @@ class ProjectFunding {
     return ProjectFunding(
       id: json['id'] ?? '',
       element: json['element'] ?? '',
+      fondo: json['fondo'],
+      financiadoPor: json['financiadoPor'],
       projectedCost: json['projectedCost']?.toDouble(),
       realCost: json['realCost']?.toDouble(),
       notes: json['notes'],

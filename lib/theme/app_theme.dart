@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pro_palette.dart';
 
 class AppTheme {
   // Dark Mode Colors (basado en UI de referencia)
@@ -28,6 +29,9 @@ class AppTheme {
         onSecondary: white,
         onSurface: white,
       ),
+      extensions: <ThemeExtension<dynamic>>[
+        ProPalette.work, // Paleta profesional para la sección de trabajo
+      ],
       appBarTheme: const AppBarTheme(
         backgroundColor: darkBackground,
         elevation: 0,

@@ -292,6 +292,119 @@ class _PersonalSectionsState extends State<PersonalSections> {
     }
   }
 
+  // Función para verificar empalmes de eventos
+  Future<List<EventOrganization>> _checkEventOverlaps(String date, String? time) async {
+    if (time == null || time.isEmpty) return [];
+    
+    try {
+      return _events.where((event) {
+        if (event.date != date) return false;
+        if (event.time == null || event.time!.isEmpty) return false;
+        return event.time == time;
+      }).toList();
+    } catch (e) {
+      print('Error al verificar empalmes: $e');
+      return [];
+    }
+  }
+  
+  // Función para mostrar advertencia de empalme
+  Future<bool> _showOverlapWarning(BuildContext context, List<EventOrganization> overlappingEvents) async {
+    if (overlappingEvents.isEmpty) return true;
+    
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Evento Empalmado',
+                style: TextStyle(color: AppTheme.white, fontSize: 20),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ya existe un evento a la misma hora y fecha:',
+              style: TextStyle(color: AppTheme.white70),
+            ),
+            const SizedBox(height: 12),
+            ...overlappingEvents.map((event) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.event, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      event.eventName,
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+            const SizedBox(height: 12),
+            const Text(
+              '¿Deseas crear el evento de todas formas?',
+              style: TextStyle(color: AppTheme.white70, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.white60,
+              side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+            ),
+            child: const Text('Cancelar'),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: AppTheme.white,
+            ),
+            child: const Text('Crear de todas formas'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   // Cargar tareas desde Supabase
   Future<void> _loadTasks() async {
     setState(() {
@@ -4326,11 +4439,26 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     print('PersonalSections: Nombre: ${nameController.text}');
                     print('PersonalSections: Fecha: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}');
 
+                    final eventDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+                    final eventTime = timeController.text.isNotEmpty ? timeController.text : null;
+                    
+                    // Verificar empalmes
+                    final overlappingEvents = await _checkEventOverlaps(eventDate, eventTime);
+                    if (overlappingEvents.isNotEmpty) {
+                      final shouldContinue = await _showOverlapWarning(context, overlappingEvents);
+                      if (!shouldContinue) {
+                        setDialogState(() {
+                          isSaving = false;
+                        });
+                        return;
+                      }
+                    }
+
                     final newEvent = EventOrganization(
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
                       eventName: nameController.text,
-                      date: DateFormat('yyyy-MM-dd').format(_selectedDate),
-                      time: timeController.text.isNotEmpty ? timeController.text : null,
+                      date: eventDate,
+                      time: eventTime,
                       location: locationController.text.isNotEmpty ? locationController.text : null,
                       type: selectedType,
                       createdAt: DateTime.now(),
@@ -4352,10 +4480,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         Navigator.of(dialogContext).pop();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Evento agregado exitosamente'),
+                            SnackBar(
+                              content: Text(
+                                selectedType == 'work'
+                                    ? 'Evento agregado exitosamente y sincronizado con sesiones de trabajo'
+                                    : 'Evento agregado exitosamente',
+                              ),
                               backgroundColor: Colors.green,
-                              duration: Duration(seconds: 2),
+                              duration: const Duration(seconds: 2),
                             ),
                           );
                         }

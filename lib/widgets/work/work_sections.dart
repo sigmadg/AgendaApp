@@ -6,9 +6,21 @@ import '../../models/work/weekly_task.dart';
 import '../../models/work/work_meeting.dart';
 import '../../models/work/daily_task.dart';
 import '../../models/work/work_project.dart';
+import '../../models/event/event_organization.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/context_ext.dart';
+import '../../theme/spacing.dart';
+import '../../theme/shadows.dart';
+import '../../theme/radius.dart';
+import '../../services/event_service.dart';
 import '../common/navigation_header.dart';
+
+// part 'work_sections.weekly.part.dart';
+// part 'work_sections.daily.part.dart';
+// part 'work_sections.projects.part.dart';
+// part 'work_sections.strategy.part.dart';
+// part 'work_sections.priorities.part.dart';
 
 class WorkSections extends StatefulWidget {
   const WorkSections({super.key});
@@ -21,18 +33,11 @@ class _WorkSectionsState extends State<WorkSections> {
   String _activeSection = 'weekly';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
-  // Paleta de colores profesional para trabajo
-  static const Color _professionalPrimary = Color(0xFF1E3A8A); // Navy Blue
-  static const Color _professionalSecondary = Color(0xFF2563EB); // Professional Blue
-  static const Color _professionalAccent = Color(0xFF3B82F6); // Bright Blue
-  static const Color _professionalTeal = Color(0xFF0891B2); // Professional Teal
-  static const Color _professionalSlate = Color(0xFF475569); // Professional Slate
-  static const Color _professionalIndigo = Color(0xFF4338CA); // Deep Indigo
-  
   List<WorkMeeting> _workMeetings = [];
   Map<DateTime, List<DailyTask>> _dailyTasks = {};
   List<WorkProject> _projects = [];
   List<Map<String, dynamic>> _priorities = []; // {id, text, completed}
+  final EventService _eventService = EventService();
   List<Map<String, dynamic>> _focus = []; // {id, text, completed}
   List<Map<String, dynamic>> _goals = []; // {id, text, completed, milestones: [{id, text, completed}]}
   
@@ -57,10 +62,14 @@ class _WorkSectionsState extends State<WorkSections> {
   String _selectedWeeklyPriority = 'medium';
   String _selectedDailyPriority = 'medium';
   
+  DateTime _selectedMeetingDate = DateTime.now();
+  final ScrollController _meetingDateScrollController = ScrollController();
+  
   bool _showNotesModal = false;
   // WeeklyTask? _editingTask; // Obsoleto - reemplazado por WorkMeeting
   DailyTask? _editingDailyTask;
   bool _showAddProjectModal = false;
+  String? _editingProjectId;
   List<ProjectGoal> _tempProjectGoals = [];
   final TextEditingController _tempGoalTextController = TextEditingController();
   final TextEditingController _tempGoalPersonController = TextEditingController();
@@ -83,6 +92,8 @@ class _WorkSectionsState extends State<WorkSections> {
   final TextEditingController _tempWorkStatusController = TextEditingController();
   final TextEditingController _tempWorkNotesController = TextEditingController();
   final TextEditingController _tempFundingElementController = TextEditingController();
+  final TextEditingController _tempFundingFondoController = TextEditingController();
+  final TextEditingController _tempFundingFinanciadoPorController = TextEditingController();
   final TextEditingController _tempFundingNotesController = TextEditingController();
   
   DateTime? _tempAchievementDueDate;
@@ -100,7 +111,7 @@ class _WorkSectionsState extends State<WorkSections> {
   String _activeSubSection = 'priorities'; // Para la subsección agrupada
 
   // Funciones helper para prioridad
-  Color _getPriorityColor(String priority) {
+  Color _getPriorityColor(String priority, BuildContext context) {
     switch (priority) {
       case 'high':
         return Colors.red;
@@ -109,7 +120,7 @@ class _WorkSectionsState extends State<WorkSections> {
       case 'low':
         return Colors.green;
       default:
-        return _professionalAccent;
+        return context.pro.accent;
     }
   }
 
@@ -139,9 +150,155 @@ class _WorkSectionsState extends State<WorkSections> {
     }
   }
 
+  // Función para verificar empalmes de eventos
+  Future<List<EventOrganization>> _checkEventOverlaps(String date, String? time) async {
+    if (time == null || time.isEmpty) return [];
+    
+    try {
+      final allEvents = await _eventService.getAllEvents();
+      return allEvents.where((event) {
+        if (event.date != date) return false;
+        if (event.time == null || event.time!.isEmpty) return false;
+        return event.time == time;
+      }).toList();
+    } catch (e) {
+      print('Error al verificar empalmes: $e');
+      return [];
+    }
+  }
+  
+  // Función para mostrar advertencia de empalme
+  Future<bool> _showOverlapWarning(BuildContext context, List<EventOrganization> overlappingEvents) async {
+    if (overlappingEvents.isEmpty) return true;
+    
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Evento Empalmado',
+                style: TextStyle(color: AppTheme.white, fontSize: 20),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ya existe un evento a la misma hora y fecha:',
+              style: TextStyle(color: AppTheme.white70),
+            ),
+            const SizedBox(height: 12),
+            ...overlappingEvents.map((event) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.event, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      event.eventName,
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+            const SizedBox(height: 12),
+            const Text(
+              '¿Deseas crear el evento de todas formas?',
+              style: TextStyle(color: AppTheme.white70, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.white60,
+              side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+            ),
+            child: const Text('Cancelar'),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: AppTheme.white,
+            ),
+            child: const Text('Crear de todas formas'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+  
+  // Cargar eventos de trabajo desde Supabase
+  Future<void> _loadWorkEvents() async {
+    try {
+      final allEvents = await _eventService.getAllEvents();
+      final workEvents = allEvents.where((event) => event.type == 'work').toList();
+      
+      // Convertir EventOrganization a WorkMeeting y agregar si no existe
+      for (final event in workEvents) {
+        final exists = _workMeetings.any((meeting) => meeting.id == event.id);
+        if (!exists) {
+          _workMeetings.add(WorkMeeting(
+            id: event.id,
+            name: event.eventName,
+            date: event.date,
+            time: event.time,
+            location: event.location,
+            type: event.type,
+            notes: event.notes,
+            createdAt: event.createdAt,
+          ));
+        }
+      }
+      
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error al cargar eventos de trabajo: $e');
+    }
+  }
+  
   @override
   void initState() {
     super.initState();
+    _loadWorkEvents();
     // Inicializar la posición del scroll en el día actual
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final todayIndex = 14; // Día 15 (índice 14) es hoy
@@ -180,18 +337,12 @@ class _WorkSectionsState extends State<WorkSections> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _professionalPrimary,
-              _professionalSecondary,
+              context.pro.primary,
+              context.pro.secondary,
             ],
           ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: _professionalSecondary.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: AppRadius.circleAll,
+          boxShadow: AppShadows.elevated(context.pro.secondary),
         ),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddMeetingDialog(context),
@@ -215,18 +366,12 @@ class _WorkSectionsState extends State<WorkSections> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _professionalPrimary,
-              _professionalSecondary,
+              context.pro.primary,
+              context.pro.secondary,
             ],
           ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: _professionalSecondary.withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: AppRadius.circleAll,
+          boxShadow: AppShadows.elevated(context.pro.secondary),
         ),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddDailyTaskDialog(context),
@@ -251,18 +396,12 @@ class _WorkSectionsState extends State<WorkSections> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                _professionalPrimary,
-                _professionalSecondary,
+                context.pro.primary,
+                context.pro.secondary,
               ],
             ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: _professionalSecondary.withOpacity(0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            borderRadius: AppRadius.circleAll,
+            boxShadow: AppShadows.elevated(context.pro.secondary),
           ),
           child: FloatingActionButton.extended(
             onPressed: () => setState(() => _showAddProjectModal = true),
@@ -292,7 +431,7 @@ class _WorkSectionsState extends State<WorkSections> {
         children: [
           _buildSectionTabs(),
           Expanded(
-            child: _buildActiveSection(),
+                child: _buildActiveSection(context),
           ),
         ],
       ),
@@ -315,8 +454,8 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary.withOpacity(0.4),
-                  _professionalSecondary.withOpacity(0.2),
+                  context.pro.primary.withOpacity(0.4),
+                  context.pro.secondary.withOpacity(0.2),
                   AppTheme.darkBackground,
                 ],
               ),
@@ -332,7 +471,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [_professionalSecondary, _professionalAccent],
+                      colors: [context.pro.secondary, context.pro.accent],
                     ),
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -366,7 +505,7 @@ class _WorkSectionsState extends State<WorkSections> {
             context,
             icon: Icons.person_outline,
             title: 'Personal',
-            color: _professionalSecondary,
+            color: context.pro.secondary,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=profile');
@@ -376,7 +515,7 @@ class _WorkSectionsState extends State<WorkSections> {
             context,
             icon: Icons.work_outline,
             title: 'Trabajo',
-            color: _professionalSecondary,
+            color: context.pro.secondary,
             isActive: true,
             onTap: () {
               Navigator.pop(context);
@@ -566,8 +705,8 @@ class _WorkSectionsState extends State<WorkSections> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              _professionalSecondary.withOpacity(0.3),
-                              _professionalAccent.withOpacity(0.2),
+                              context.pro.secondary.withOpacity(0.3),
+                              context.pro.accent.withOpacity(0.2),
                             ],
                           )
                         : null,
@@ -575,7 +714,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isActive 
-                          ? _professionalSecondary 
+                          ? context.pro.secondary 
                           : AppTheme.darkSurfaceVariant,
                       width: isActive ? 2 : 1,
                     ),
@@ -587,7 +726,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       Icon(
                         section['icon'] as IconData,
                         color: isActive 
-                            ? _professionalAccent 
+                            ? context.pro.accent 
                             : AppTheme.white60,
                         size: 20,
                       ),
@@ -600,7 +739,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             style: TextStyle(
                               fontSize: 9,
                               color: isActive 
-                                  ? _professionalAccent 
+                                  ? context.pro.accent 
                                   : AppTheme.white60,
                               fontWeight: isActive 
                                   ? FontWeight.w600 
@@ -623,756 +762,22 @@ class _WorkSectionsState extends State<WorkSections> {
     );
   }
 
-  Widget _buildActiveSection() {
+  Widget _buildActiveSection(BuildContext context) {
     switch (_activeSection) {
       case 'weekly':
-        return _buildWeeklyTasks();
+        return _buildWeeklyTasks(context);
       case 'daily':
-        return _buildDailyTasks();
+        return _buildDailyTasks(context);
       case 'projects':
-        return _buildProjects();
+        return _buildProjects(context);
       case 'strategy':
-        return _buildStrategy();
+        return _buildStrategy(context);
       case 'priorities-focus-goals':
-        return _buildPrioritiesFocusGoals();
+        return _buildPrioritiesFocusGoals(context);
       default:
-        return _buildWeeklyTasks();
+        return _buildWeeklyTasks(context);
     }
   }
-
-  DateTime _selectedMeetingDate = DateTime.now();
-  final ScrollController _meetingDateScrollController = ScrollController();
-
-  List<WorkMeeting> _getMeetingsForDate(DateTime date) {
-    return _workMeetings.where((meeting) {
-      try {
-        final meetingDate = DateFormat('yyyy-MM-dd').parse(meeting.date);
-        return meetingDate.year == date.year &&
-               meetingDate.month == date.month &&
-               meetingDate.day == date.day;
-      } catch (e) {
-        return false;
-      }
-    }).toList();
-  }
-
-  Widget _buildWeeklyTasks() {
-    final todayMeetings = _getMeetingsForDate(_selectedMeetingDate);
-    final isToday = _selectedMeetingDate.year == DateTime.now().year &&
-                    _selectedMeetingDate.month == DateTime.now().month &&
-                    _selectedMeetingDate.day == DateTime.now().day;
-
-    return Column(
-      children: [
-        // Header mejorado con paleta profesional
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-          margin: const EdgeInsets.only(top: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                _professionalPrimary,
-                _professionalSecondary,
-                _professionalAccent,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: _professionalSecondary.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Icon(Icons.event, color: AppTheme.white, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Juntas, Sesiones y Citas',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    const Text(
-                      'Organiza tus reuniones y citas',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Selector de fecha con fondo
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                _professionalPrimary.withOpacity(0.2),
-                _professionalSecondary.withOpacity(0.15),
-                _professionalAccent.withOpacity(0.1),
-                AppTheme.darkSurface,
-              ],
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _professionalAccent.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.event, size: 16, color: _professionalAccent),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedMeetingDate),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _professionalAccent,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (todayMeetings.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              '${todayMeetings.length} evento${todayMeetings.length == 1 ? '' : 's'}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.white60,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Selector de fecha con desplazamiento horizontal
-                SizedBox(
-                  height: 55,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    controller: _meetingDateScrollController,
-                    itemCount: 30,
-                    itemBuilder: (context, index) {
-                      final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
-                      final dateIsSelected = _selectedMeetingDate.year == date.year &&
-                                           _selectedMeetingDate.month == date.month &&
-                                           _selectedMeetingDate.day == date.day;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: _buildMeetingDateSelector(date, dateIsSelected),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: todayMeetings.isEmpty
-              ? _buildEmptyState('No hay eventos para esta fecha', Icons.event_busy)
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: todayMeetings.length,
-                  itemBuilder: (context, index) => _buildMeetingCard(todayMeetings[index], index),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMeetingDateSelector(DateTime date, bool isSelected) {
-    final isToday = date.year == DateTime.now().year &&
-                    date.month == DateTime.now().month &&
-                    date.day == DateTime.now().day;
-    
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedMeetingDate = date;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        constraints: const BoxConstraints(
-          minWidth: 50,
-          maxHeight: 55,
-          maxWidth: 60,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          gradient: isSelected 
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _professionalAccent.withOpacity(0.3),
-                    _professionalSecondary.withOpacity(0.2),
-                  ],
-                )
-              : null,
-          color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected 
-                ? _professionalAccent 
-                : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              DateFormat('EEE', 'es').format(date).substring(0, 3).toUpperCase(),
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? _professionalAccent : AppTheme.white60,
-                height: 1.0,
-              ),
-            ),
-            const SizedBox(height: 1),
-            Text(
-              '${date.day}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? _professionalAccent : AppTheme.white,
-                height: 1.0,
-              ),
-            ),
-            if (isToday)
-              Container(
-                margin: const EdgeInsets.only(top: 1),
-                width: 3,
-                height: 3,
-                decoration: BoxDecoration(
-                  color: _professionalAccent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getMeetingTypeLabel(String? type) {
-    switch (type) {
-      case 'meeting':
-        return 'Junta';
-      case 'session':
-        return 'Sesión';
-      case 'appointment':
-        return 'Cita';
-      default:
-        return 'Evento';
-    }
-  }
-
-  IconData _getMeetingTypeIcon(String? type) {
-    switch (type) {
-      case 'meeting':
-        return Icons.groups;
-      case 'session':
-        return Icons.psychology;
-      case 'appointment':
-        return Icons.event;
-      default:
-        return Icons.event;
-    }
-  }
-
-  Widget _buildMeetingCard(WorkMeeting meeting, int index) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (index * 50)),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              _professionalPrimary.withOpacity(0.15),
-              _professionalSecondary.withOpacity(0.1),
-              _professionalAccent.withOpacity(0.05),
-              AppTheme.darkSurface,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _professionalAccent.withOpacity(0.4),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _professionalSecondary.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Barra lateral con gradiente profesional
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                width: 6,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      _professionalPrimary,
-                      _professionalSecondary,
-                      _professionalAccent,
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Icono del evento
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              _professionalAccent.withOpacity(0.4),
-                              _professionalSecondary.withOpacity(0.3),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _professionalAccent.withOpacity(0.5),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _professionalAccent.withOpacity(0.3),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          _getMeetingTypeIcon(meeting.type),
-                          color: AppTheme.white,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              meeting.name,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.white,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            // Tipo de evento
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    _professionalAccent.withOpacity(0.25),
-                                    _professionalSecondary.withOpacity(0.15),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: _professionalAccent.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                _getMeetingTypeLabel(meeting.type),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _professionalAccent,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (meeting.time != null || meeting.location != null) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        if (meeting.time != null) ...[
-                          Icon(Icons.access_time, size: 18, color: _professionalAccent,),
-                          const SizedBox(width: 8),
-                          Text(
-                            meeting.time!,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.white70,
-                            ),
-                          ),
-                          if (meeting.location != null) const SizedBox(width: 16),
-                        ],
-                        if (meeting.location != null) ...[
-                          Icon(Icons.location_on, size: 18, color: _professionalAccent),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              meeting.location!,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppTheme.white70,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-
-  void _showAddMeetingDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final timeController = TextEditingController();
-    final locationController = TextEditingController();
-    String? selectedType;
-    TimeOfDay? selectedTime;
-    String? errorMessage;
-    bool isSaving = false;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: AppTheme.darkSurface,
-              title: const Text(
-                'Agregar Junta, Sesión o Cita',
-                style: TextStyle(color: AppTheme.white),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Mensaje de error visible
-                    if (errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.red,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                errorMessage!,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                              onPressed: () {
-                                setDialogState(() {
-                                  errorMessage = null;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    TextField(
-                      controller: nameController,
-                      style: const TextStyle(color: AppTheme.white),
-                      decoration: InputDecoration(
-                        labelText: 'Nombre',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: _professionalAccent),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedType,
-                      decoration: InputDecoration(
-                        labelText: 'Tipo',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: _professionalAccent),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      dropdownColor: AppTheme.darkSurface,
-                      style: const TextStyle(color: AppTheme.white),
-                      items: const [
-                        DropdownMenuItem(value: 'meeting', child: Text('Junta', style: TextStyle(color: AppTheme.white))),
-                        DropdownMenuItem(value: 'session', child: Text('Sesión', style: TextStyle(color: AppTheme.white))),
-                        DropdownMenuItem(value: 'appointment', child: Text('Cita', style: TextStyle(color: AppTheme.white))),
-                      ],
-                      onChanged: (value) {
-                        setDialogState(() {
-                          selectedType = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: timeController,
-                            readOnly: true,
-                            style: const TextStyle(color: AppTheme.white),
-                            decoration: InputDecoration(
-                              labelText: 'Hora',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: _professionalAccent),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
-                            ),
-                            onTap: () async {
-                              final time = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.now(),
-                                builder: (context, child) {
-                                  return Theme(
-                                    data: ThemeData.dark().copyWith(
-                                      colorScheme: ColorScheme.dark(
-                                        primary: _professionalAccent,
-                                        onPrimary: AppTheme.white,
-                                        surface: AppTheme.darkSurface,
-                                        onSurface: AppTheme.white,
-                                      ),
-                                    ),
-                                    child: child!,
-                                  );
-                                },
-                              );
-                              if (time != null) {
-                                setDialogState(() {
-                                  selectedTime = time;
-                                  timeController.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: locationController,
-                      style: const TextStyle(color: AppTheme.white),
-                      decoration: InputDecoration(
-                        labelText: 'Ubicación (opcional)',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: _professionalAccent),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text(
-                    'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: isSaving ? null : () async {
-                    setDialogState(() {
-                      errorMessage = null;
-                      isSaving = true;
-                    });
-
-                    if (nameController.text.isEmpty) {
-                      setDialogState(() {
-                        errorMessage = 'Por favor ingresa el nombre';
-                        isSaving = false;
-                      });
-                      return;
-                    }
-
-                    setState(() {
-                      _workMeetings.add(WorkMeeting(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        name: nameController.text.trim(),
-                        date: DateFormat('yyyy-MM-dd').format(_selectedMeetingDate),
-                        time: timeController.text.isNotEmpty ? timeController.text : null,
-                        location: locationController.text.isNotEmpty ? locationController.text : null,
-                        type: selectedType,
-                        createdAt: DateTime.now(),
-                      ));
-                    });
-
-                    Navigator.of(dialogContext).pop();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Evento agregado exitosamente'),
-                          backgroundColor: Colors.green,
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _professionalAccent,
-                    foregroundColor: AppTheme.white,
-                    disabledBackgroundColor: AppTheme.darkSurfaceVariant,
-                  ),
-                  child: isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
-                          ),
-                        )
-                      : const Text('Agregar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   
   Widget _buildSummaryCard({
     required IconData icon,
@@ -1548,7 +953,778 @@ class _WorkSectionsState extends State<WorkSections> {
     );
   }
 
-  Widget _buildDailyTasks() {
+  List<WorkMeeting> _getMeetingsForDate(DateTime date) {
+    return _workMeetings.where((meeting) {
+      try {
+        final meetingDate = DateFormat('yyyy-MM-dd').parse(meeting.date);
+        return meetingDate.year == date.year &&
+               meetingDate.month == date.month &&
+               meetingDate.day == date.day;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
+  Widget _buildWeeklyTasks(BuildContext context) {
+    final todayMeetings = _getMeetingsForDate(_selectedMeetingDate);
+    final isToday = _selectedMeetingDate.year == DateTime.now().year &&
+                    _selectedMeetingDate.month == DateTime.now().month &&
+                    _selectedMeetingDate.day == DateTime.now().day;
+
+    return Column(
+      children: [
+        // Header mejorado con paleta profesional
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          margin: const EdgeInsets.only(top: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                context.pro.primary,
+                context.pro.secondary,
+                context.pro.accent,
+              ],
+            ),
+            borderRadius: AppRadius.xLargeAll,
+            boxShadow: AppShadows.elevated(context.pro.secondary),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Icon(Icons.event, color: AppTheme.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sesiones',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                    const Text(
+                      'Organiza tus reuniones y citas profesionales.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Selector de fecha con fondo
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                context.pro.primary.withOpacity(0.2),
+                context.pro.secondary.withOpacity(0.15),
+                context.pro.accent.withOpacity(0.1),
+                AppTheme.darkSurface,
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: context.pro.accent.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.event, size: 16, color: context.pro.accent),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedMeetingDate),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: context.pro.accent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (todayMeetings.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '${todayMeetings.length} evento${todayMeetings.length == 1 ? '' : 's'}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white60,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Selector de fecha con desplazamiento horizontal
+                SizedBox(
+                  height: 55,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    controller: _meetingDateScrollController,
+                    itemCount: 30,
+                    itemBuilder: (context, index) {
+                      final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
+                      final dateIsSelected = _selectedMeetingDate.year == date.year &&
+                                           _selectedMeetingDate.month == date.month &&
+                                           _selectedMeetingDate.day == date.day;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: _buildMeetingDateSelector(date, dateIsSelected),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: todayMeetings.isEmpty
+              ? _buildEmptyState('No hay eventos para esta fecha', Icons.event_busy)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: todayMeetings.length,
+                  itemBuilder: (context, index) => _buildMeetingCard(todayMeetings[index], index),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMeetingDateSelector(DateTime date, bool isSelected) {
+    final isToday = date.year == DateTime.now().year &&
+                    date.month == DateTime.now().month &&
+                    date.day == DateTime.now().day;
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedMeetingDate = date;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        constraints: const BoxConstraints(
+          minWidth: 50,
+          maxHeight: 55,
+          maxWidth: 60,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          gradient: isSelected 
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.pro.accent.withOpacity(0.3),
+                    context.pro.secondary.withOpacity(0.2),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected 
+                ? context.pro.accent 
+                : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              DateFormat('EEE', 'es').format(date).substring(0, 3).toUpperCase(),
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? context.pro.accent : AppTheme.white60,
+                height: 1.0,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              '${date.day}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? context.pro.accent : AppTheme.white,
+                height: 1.0,
+              ),
+            ),
+            if (isToday)
+              Container(
+                margin: const EdgeInsets.only(top: 1),
+                width: 3,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: context.pro.accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getMeetingTypeLabel(String? type) {
+    switch (type) {
+      case 'meeting':
+        return 'Junta';
+      case 'session':
+        return 'Sesión';
+      case 'appointment':
+        return 'Cita';
+      default:
+        return 'Evento';
+    }
+  }
+
+  IconData _getMeetingTypeIcon(String? type) {
+    switch (type) {
+      case 'meeting':
+        return Icons.groups;
+      case 'session':
+        return Icons.psychology;
+      case 'appointment':
+        return Icons.event;
+      default:
+        return Icons.event;
+    }
+  }
+
+  Widget _buildMeetingCard(WorkMeeting meeting, int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + (index * 50)),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.pro.primary.withOpacity(0.15),
+              context.pro.secondary.withOpacity(0.1),
+              context.pro.accent.withOpacity(0.05),
+              AppTheme.darkSurface,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: context.pro.accent.withOpacity(0.4),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: context.pro.secondary.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Barra lateral con gradiente profesional
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 6,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      context.pro.primary,
+                      context.pro.secondary,
+                      context.pro.accent,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icono del evento
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              context.pro.accent.withOpacity(0.4),
+                              context.pro.secondary.withOpacity(0.3),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: context.pro.accent.withOpacity(0.5),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.pro.accent.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          _getMeetingTypeIcon(meeting.type),
+                          color: AppTheme.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              meeting.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Tipo de evento
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    context.pro.accent.withOpacity(0.25),
+                                    context.pro.secondary.withOpacity(0.15),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: context.pro.accent.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _getMeetingTypeLabel(meeting.type),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.pro.accent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (meeting.time != null || meeting.location != null) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        if (meeting.time != null) ...[
+                          Icon(Icons.access_time, size: 18, color: context.pro.accent,),
+                          const SizedBox(width: 8),
+                          Text(
+                            meeting.time!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.white70,
+                            ),
+                          ),
+                          if (meeting.location != null) const SizedBox(width: 16),
+                        ],
+                        if (meeting.location != null) ...[
+                          Icon(Icons.location_on, size: 18, color: context.pro.accent),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              meeting.location!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.white70,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+
+  void _showAddMeetingDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final timeController = TextEditingController();
+    final locationController = TextEditingController();
+    String? selectedType;
+    TimeOfDay? selectedTime;
+    String? errorMessage;
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.darkSurface,
+              title: const Text(
+                'Agregar sesión',
+                style: TextStyle(color: AppTheme.white),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Mensaje de error visible
+                    if (errorMessage != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.red,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                              onPressed: () {
+                                setDialogState(() {
+                                  errorMessage = null;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Nombre',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: context.pro.accent),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      decoration: InputDecoration(
+                        labelText: 'Tipo',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: context.pro.accent),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      dropdownColor: AppTheme.darkSurface,
+                      style: const TextStyle(color: AppTheme.white),
+                      items: const [
+                        DropdownMenuItem(value: 'meeting', child: Text('Junta', style: TextStyle(color: AppTheme.white))),
+                        DropdownMenuItem(value: 'session', child: Text('Sesión', style: TextStyle(color: AppTheme.white))),
+                        DropdownMenuItem(value: 'appointment', child: Text('Cita', style: TextStyle(color: AppTheme.white))),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedType = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: timeController,
+                            readOnly: true,
+                            style: const TextStyle(color: AppTheme.white),
+                            decoration: InputDecoration(
+                              labelText: 'Hora',
+                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: context.pro.accent),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              suffixIcon: const Icon(Icons.access_time, color: AppTheme.white),
+                            ),
+                            onTap: () async {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.now(),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark().copyWith(
+                                      colorScheme: ColorScheme.dark(
+                                        primary: context.pro.accent,
+                                        onPrimary: AppTheme.white,
+                                        surface: AppTheme.darkSurface,
+                                        onSurface: AppTheme.white,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (time != null) {
+                                setDialogState(() {
+                                  selectedTime = time;
+                                  timeController.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: locationController,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        labelText: 'Ubicación (opcional)',
+                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: context.pro.accent),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: AppTheme.white60),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving ? null : () async {
+                    setDialogState(() {
+                      errorMessage = null;
+                      isSaving = true;
+                    });
+
+                    if (nameController.text.isEmpty) {
+                      setDialogState(() {
+                        errorMessage = 'Por favor ingresa el nombre';
+                        isSaving = false;
+                      });
+                      return;
+                    }
+
+                    final meetingDate = DateFormat('yyyy-MM-dd').format(_selectedMeetingDate);
+                    final meetingTime = timeController.text.isNotEmpty ? timeController.text : null;
+                    
+                    // Verificar empalmes
+                    final overlappingEvents = await _checkEventOverlaps(meetingDate, meetingTime);
+                    if (overlappingEvents.isNotEmpty) {
+                      final shouldContinue = await _showOverlapWarning(context, overlappingEvents);
+                      if (!shouldContinue) {
+                        setDialogState(() {
+                          isSaving = false;
+                        });
+                        return;
+                      }
+                    }
+
+                    final meetingId = DateTime.now().millisecondsSinceEpoch.toString();
+                    
+                    // Crear WorkMeeting
+                    final newMeeting = WorkMeeting(
+                      id: meetingId,
+                      name: nameController.text.trim(),
+                      date: meetingDate,
+                      time: meetingTime,
+                      location: locationController.text.isNotEmpty ? locationController.text : null,
+                      type: selectedType,
+                      createdAt: DateTime.now(),
+                    );
+
+                    // Crear EventOrganization para sincronizar con personal
+                    final syncEvent = EventOrganization(
+                      id: meetingId,
+                      eventName: nameController.text.trim(),
+                      date: meetingDate,
+                      time: meetingTime,
+                      location: locationController.text.isNotEmpty ? locationController.text : null,
+                      type: 'work',
+                      createdAt: DateTime.now(),
+                    );
+
+                    // Guardar en Supabase
+                    try {
+                      final result = await _eventService.addEvent(syncEvent);
+                      if (result['success'] == true) {
+                        setState(() {
+                          _workMeetings.add(newMeeting);
+                        });
+
+                        Navigator.of(dialogContext).pop();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Sesión agregada exitosamente y sincronizada con eventos personales'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } else {
+                        setDialogState(() {
+                          errorMessage = result['error'] ?? 'Error al sincronizar con eventos personales';
+                          isSaving = false;
+                        });
+                      }
+                    } catch (e) {
+                      setDialogState(() {
+                        errorMessage = 'Error al sincronizar: $e';
+                        isSaving = false;
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.pro.accent,
+                    foregroundColor: AppTheme.white,
+                    disabledBackgroundColor: AppTheme.darkSurfaceVariant,
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                          ),
+                        )
+                      : const Text('Agregar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDailyTasks(BuildContext context) {
     final allTasks = _dailyTasks.values.expand((tasks) => tasks).toList();
     final completedTasks = allTasks.where((t) => t.completed).length;
     final totalTasks = allTasks.length;
@@ -1571,15 +1747,15 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary,
-                  _professionalSecondary,
-                  _professionalAccent,
+                  context.pro.primary,
+                  context.pro.secondary,
+                  context.pro.accent,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: _professionalSecondary.withOpacity(0.3),
+                  color: context.pro.secondary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -1632,8 +1808,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.check_circle_outline,
                   value: '$completedTasks/$totalTasks',
                   label: 'Completadas',
-                  color: _professionalTeal,
-                  gradientColors: [_professionalTeal, _professionalAccent],
+                  color: context.pro.teal,
+                  gradientColors: [context.pro.teal, context.pro.accent],
                 ),
               ),
               const SizedBox(width: 12),
@@ -1642,8 +1818,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.today,
                   value: '$todayTasks',
                   label: 'Hoy',
-                  color: _professionalAccent,
-                  gradientColors: [_professionalAccent, _professionalSecondary],
+                  color: context.pro.accent,
+                  gradientColors: [context.pro.accent, context.pro.secondary],
                 ),
               ),
             ],
@@ -1780,7 +1956,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: _professionalAccent),
+                          borderSide: BorderSide(color: context.pro.accent),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -1801,7 +1977,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: _professionalAccent),
+                                borderSide: BorderSide(color: context.pro.accent),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white60),
@@ -1816,7 +1992,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                   return Theme(
                                     data: ThemeData.dark().copyWith(
                                       colorScheme: ColorScheme.dark(
-                                        primary: _professionalAccent,
+                                        primary: context.pro.accent,
                                         onPrimary: AppTheme.white,
                                         surface: AppTheme.darkSurface,
                                         onSurface: AppTheme.white,
@@ -1849,10 +2025,10 @@ class _WorkSectionsState extends State<WorkSections> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: _professionalAccent),
+                                borderSide: BorderSide(color: context.pro.accent),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
+                              suffixIcon: const Icon(Icons.access_time, color: AppTheme.white),
                             ),
                             onTap: () async {
                               final time = await showTimePicker(
@@ -1862,7 +2038,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                   return Theme(
                                     data: ThemeData.dark().copyWith(
                                       colorScheme: ColorScheme.dark(
-                                        primary: _professionalAccent,
+                                        primary: context.pro.accent,
                                         onPrimary: AppTheme.white,
                                         surface: AppTheme.darkSurface,
                                         onSurface: AppTheme.white,
@@ -1894,7 +2070,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: _professionalAccent),
+                          borderSide: BorderSide(color: context.pro.accent),
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
@@ -1908,7 +2084,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               Icon(
                                 _getPriorityIcon('high'),
                                 size: 16,
-                                color: _getPriorityColor('high'),
+                                color: _getPriorityColor('high', context),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -1925,7 +2101,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               Icon(
                                 _getPriorityIcon('medium'),
                                 size: 16,
-                                color: _getPriorityColor('medium'),
+                                color: _getPriorityColor('medium', context),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -1942,7 +2118,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               Icon(
                                 _getPriorityIcon('low'),
                                 size: 16,
-                                color: _getPriorityColor('low'),
+                                color: _getPriorityColor('low', context),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -2023,7 +2199,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _professionalAccent,
+                    backgroundColor: context.pro.accent,
                     foregroundColor: AppTheme.white,
                     disabledBackgroundColor: AppTheme.darkSurfaceVariant,
                   ),
@@ -2046,7 +2222,8 @@ class _WorkSectionsState extends State<WorkSections> {
     );
   }
 
-  Widget _buildProjects() {
+
+  Widget _buildProjects(BuildContext context) {
     final completedProjects = _projects.where((p) {
       if (p.goals.isEmpty) return false;
       final completedGoals = p.goals.where((g) => g.completed == true).length;
@@ -2069,15 +2246,15 @@ class _WorkSectionsState extends State<WorkSections> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      _professionalPrimary,
-                      _professionalSecondary,
-                      _professionalAccent,
+                      context.pro.primary,
+                      context.pro.secondary,
+                      context.pro.accent,
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: _professionalSecondary.withOpacity(0.3),
+                      color: context.pro.secondary.withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -2130,8 +2307,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       icon: Icons.rocket_launch,
                       value: '$activeProjects',
                       label: 'Proyectos Activos',
-                      color: _professionalAccent,
-                      gradientColors: [_professionalAccent, _professionalSecondary],
+                      color: context.pro.accent,
+                      gradientColors: [context.pro.accent, context.pro.secondary],
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -2140,8 +2317,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       icon: Icons.check_circle,
                       value: '$completedProjects',
                       label: 'Completados',
-                      color: _professionalTeal,
-                      gradientColors: [_professionalTeal, Colors.green],
+                      color: context.pro.teal,
+                      gradientColors: [context.pro.teal, Colors.green],
                     ),
                   ),
                 ],
@@ -2154,8 +2331,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       icon: Icons.flag,
                       value: '$completedGoals/$totalGoals',
                       label: 'Metas',
-                      color: _professionalIndigo,
-                      gradientColors: [_professionalIndigo, _professionalAccent],
+                      color: AppTheme.white,
+                      gradientColors: [context.pro.indigo, context.pro.accent],
                     ),
                   ),
                 ],
@@ -2174,8 +2351,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       _showAddProjectModal = true;
                     });
                   },
-                  _professionalAccent,
-                  [_professionalPrimary, _professionalSecondary],
+                  context.pro.accent,
+                  [context.pro.primary, context.pro.secondary],
                 )
               else
                 ..._projects.asMap().entries.map((entry) {
@@ -2214,25 +2391,25 @@ class _WorkSectionsState extends State<WorkSections> {
                 colors: [
                   AppTheme.darkSurface,
                   AppTheme.darkSurfaceVariant.withOpacity(0.8),
-                  _professionalPrimary.withOpacity(0.1),
+                  context.pro.primary.withOpacity(0.1),
                   AppTheme.darkSurface,
                 ],
                 stops: const [0.0, 0.3, 0.7, 1.0],
               ),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: _professionalAccent.withOpacity(0.4),
+                color: context.pro.accent.withOpacity(0.4),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _professionalPrimary.withOpacity(0.4),
+                  color: context.pro.primary.withOpacity(0.4),
                   blurRadius: 30,
                   spreadRadius: 8,
                   offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: _professionalAccent.withOpacity(0.2),
+                  color: context.pro.accent.withOpacity(0.2),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -2250,16 +2427,16 @@ class _WorkSectionsState extends State<WorkSections> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        _professionalPrimary,
-                        _professionalSecondary,
-                        _professionalAccent,
-                        _professionalSecondary,
+                        context.pro.primary,
+                        context.pro.secondary,
+                        context.pro.accent,
+                        context.pro.secondary,
                       ],
                       stops: const [0.0, 0.3, 0.7, 1.0],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: _professionalPrimary.withOpacity(0.3),
+                        color: context.pro.primary.withOpacity(0.3),
                         blurRadius: 15,
                         offset: const Offset(0, 4),
                       ),
@@ -2302,10 +2479,10 @@ class _WorkSectionsState extends State<WorkSections> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Agregar Proyecto',
-                              style: TextStyle(
-                                fontSize: 26,
+                            Text(
+                              _editingProjectId != null ? 'Editar Proyecto' : 'Agregar Proyecto',
+                              style: const TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.white,
                                 letterSpacing: 0.8,
@@ -2320,7 +2497,9 @@ class _WorkSectionsState extends State<WorkSections> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Crea un proyecto para organizar tu trabajo',
+                              _editingProjectId != null
+                                  ? 'Modifica los datos del proyecto.'
+                                  : 'Crea un proyecto.',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.white.withOpacity(0.85),
@@ -2358,31 +2537,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           onPressed: () {
                             setState(() {
                               _showAddProjectModal = false;
-                              _projectNameController.clear();
-                              _projectDescriptionController.clear();
-                              _tempProjectGoals.clear();
-                              _tempGoalTextController.clear();
-                              _tempGoalPersonController.clear();
-                              _tempGoalDate = null;
-                              _selectedProjectDeadline = null;
-                              _activeProjectModalTab = 'basic';
-                              _tempProjectTeammates.clear();
-                              _tempProjectAchievements.clear();
-                              _tempProjectWorks.clear();
-                              _tempProjectFunding.clear();
-                              _tempTeammateNameController.clear();
-                              _tempTeammateRoleController.clear();
-                              _tempAchievementNameController.clear();
-                              _tempAchievementDueDateController.clear();
-                              _tempWorkPositionController.clear();
-                              _tempWorkAppointController.clear();
-                              _tempWorkStatusController.clear();
-                              _tempWorkNotesController.clear();
-                              _tempFundingElementController.clear();
-                              _tempFundingNotesController.clear();
-                              _tempAchievementDueDate = null;
-                              _tempWorkStartDate = null;
-                              _tempWorkDeadline = null;
+                              _clearProjectModal();
                             });
                           },
                         ),
@@ -2393,8 +2548,8 @@ class _WorkSectionsState extends State<WorkSections> {
                 
                 // Tabs para navegar entre secciones
                 Container(
-                  margin: const EdgeInsets.fromLTRB(28, 0, 28, 8),
-                  padding: const EdgeInsets.all(6),
+                  margin: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -2404,15 +2559,15 @@ class _WorkSectionsState extends State<WorkSections> {
                         AppTheme.darkSurface.withOpacity(0.8),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: _professionalAccent.withOpacity(0.2),
-                      width: 1.5,
+                      color: context.pro.accent.withOpacity(0.2),
+                      width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
+                        blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -2422,9 +2577,11 @@ class _WorkSectionsState extends State<WorkSections> {
                       Expanded(
                         child: _buildProjectModalTab('basic', 'Básica'),
                       ),
+                      const SizedBox(width: 4),
                       Expanded(
                         child: _buildProjectModalTab('goals', 'Metas'),
                       ),
+                      const SizedBox(width: 4),
                       Expanded(
                         child: _buildProjectModalTab('strategy', 'Estrategia'),
                       ),
@@ -2441,9 +2598,9 @@ class _WorkSectionsState extends State<WorkSections> {
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                       child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (_activeProjectModalTab == 'basic') ...[
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_activeProjectModalTab == 'basic') ...[
                         // Sección: Información Básica
                         Container(
                           margin: const EdgeInsets.only(top: 8),
@@ -2453,14 +2610,14 @@ class _WorkSectionsState extends State<WorkSections> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                _professionalPrimary.withOpacity(0.15),
-                                _professionalSecondary.withOpacity(0.1),
+                                context.pro.primary.withOpacity(0.15),
+                                context.pro.secondary.withOpacity(0.1),
                                 AppTheme.darkSurfaceVariant.withOpacity(0.3),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _professionalPrimary.withOpacity(0.3),
+                              color: context.pro.primary.withOpacity(0.3),
                               width: 1,
                             ),
                           ),
@@ -2473,7 +2630,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: [_professionalPrimary, _professionalSecondary],
+                                        colors: [context.pro.primary, context.pro.secondary],
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -2483,7 +2640,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                       size: 20,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 10),
                                   const Text(
                                     'Información Básica',
                                     style: TextStyle(
@@ -2515,28 +2672,28 @@ class _WorkSectionsState extends State<WorkSections> {
                                   ),
                                   prefixIcon: Icon(
                                     Icons.title,
-                                    color: _professionalAccent,
+                                    color: context.pro.accent,
                                   ),
                                   filled: true,
                                   fillColor: AppTheme.darkSurface.withOpacity(0.6),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalAccent.withOpacity(0.3),
+                                      color: context.pro.accent.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalAccent.withOpacity(0.3),
+                                      color: context.pro.accent.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalAccent,
+                                      color: context.pro.accent,
                                       width: 2,
                                     ),
                                   ),
@@ -2570,7 +2727,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                     padding: const EdgeInsets.only(bottom: 60),
                                     child: Icon(
                                       Icons.description,
-                                      color: _professionalAccent,
+                                      color: context.pro.accent,
                                     ),
                                   ),
                                   filled: true,
@@ -2578,21 +2735,21 @@ class _WorkSectionsState extends State<WorkSections> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalAccent.withOpacity(0.3),
+                                      color: context.pro.accent.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalAccent.withOpacity(0.3),
+                                      color: context.pro.accent.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalAccent,
+                                      color: context.pro.accent,
                                       width: 2,
                                     ),
                                   ),
@@ -2622,8 +2779,8 @@ class _WorkSectionsState extends State<WorkSections> {
                                       end: Alignment.bottomRight,
                                       colors: _selectedProjectDeadline != null
                                           ? [
-                                              _professionalTeal.withOpacity(0.3),
-                                              _professionalAccent.withOpacity(0.2),
+                                              context.pro.teal.withOpacity(0.3),
+                                              context.pro.accent.withOpacity(0.2),
                                             ]
                                           : [
                                               AppTheme.darkSurface.withOpacity(0.6),
@@ -2633,8 +2790,8 @@ class _WorkSectionsState extends State<WorkSections> {
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: _selectedProjectDeadline != null
-                                          ? _professionalTeal.withOpacity(0.5)
-                                          : _professionalAccent.withOpacity(0.3),
+                                          ? context.pro.teal.withOpacity(0.5)
+                                          : context.pro.accent.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
@@ -2645,10 +2802,10 @@ class _WorkSectionsState extends State<WorkSections> {
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
                                             colors: _selectedProjectDeadline != null
-                                                ? [_professionalTeal, _professionalAccent]
+                                                ? [context.pro.teal, context.pro.accent]
                                                 : [
-                                                    _professionalAccent.withOpacity(0.5),
-                                                    _professionalSecondary.withOpacity(0.5),
+                                                    context.pro.accent.withOpacity(0.5),
+                                                    context.pro.secondary.withOpacity(0.5),
                                                   ],
                                           ),
                                           borderRadius: BorderRadius.circular(8),
@@ -2693,7 +2850,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                       Icon(
                                         Icons.arrow_forward_ios,
                                         size: 16,
-                                        color: _professionalAccent,
+                                        color: context.pro.accent,
                                       ),
                                     ],
                                   ),
@@ -2702,7 +2859,8 @@ class _WorkSectionsState extends State<WorkSections> {
                             ],
                           ),
                         ),
-                        ] else if (_activeProjectModalTab == 'goals') ...[
+                          ],
+                          if (_activeProjectModalTab == 'goals') ...[
                         // Sección: Metas del Proyecto
                         Container(
                           margin: const EdgeInsets.only(top: 8),
@@ -2712,14 +2870,14 @@ class _WorkSectionsState extends State<WorkSections> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                _professionalIndigo.withOpacity(0.15),
-                                _professionalAccent.withOpacity(0.1),
+                                context.pro.indigo.withOpacity(0.15),
+                                context.pro.accent.withOpacity(0.1),
                                 AppTheme.darkSurfaceVariant.withOpacity(0.3),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _professionalIndigo.withOpacity(0.3),
+                              color: context.pro.indigo.withOpacity(0.3),
                               width: 1,
                             ),
                           ),
@@ -2732,7 +2890,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: [_professionalIndigo, _professionalAccent],
+                                        colors: [context.pro.indigo, context.pro.accent],
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -2757,7 +2915,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
-                                          colors: [_professionalIndigo, _professionalAccent],
+                                          colors: [context.pro.indigo, context.pro.accent],
                                         ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
@@ -2793,28 +2951,28 @@ class _WorkSectionsState extends State<WorkSections> {
                                   ),
                                   prefixIcon: Icon(
                                     Icons.flag,
-                                    color: _professionalIndigo,
+                                    color: context.pro.indigo,
                                   ),
                                   filled: true,
                                   fillColor: AppTheme.darkSurface.withOpacity(0.6),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalIndigo.withOpacity(0.3),
+                                      color: context.pro.indigo.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalIndigo.withOpacity(0.3),
+                                      color: context.pro.indigo.withOpacity(0.3),
                                       width: 1,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide(
-                                      color: _professionalIndigo,
+                                      color: context.pro.indigo,
                                       width: 2,
                                     ),
                                   ),
@@ -2826,158 +2984,287 @@ class _WorkSectionsState extends State<WorkSections> {
                               ),
                               const SizedBox(height: 12),
                               
-                              // Campos para responsable y fecha
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _tempGoalPersonController,
-                                      style: const TextStyle(
-                                        color: AppTheme.white,
-                                        fontSize: 14,
-                                      ),
-                                      decoration: InputDecoration(
-                                        labelText: 'Responsable',
-                                        labelStyle: TextStyle(
-                                          color: AppTheme.white60,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        hintText: 'Nombre',
-                                        hintStyle: TextStyle(
-                                          color: AppTheme.white40,
-                                        ),
-                                        prefixIcon: Icon(
-                                          Icons.person,
-                                          color: _professionalTeal,
-                                          size: 20,
-                                        ),
-                                        filled: true,
-                                        fillColor: AppTheme.darkSurface.withOpacity(0.6),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                            color: _professionalTeal.withOpacity(0.3),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                            color: _professionalTeal.withOpacity(0.3),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                            color: _professionalTeal,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 16,
-                                        ),
-                                      ),
+                              // Campo para responsable
+                              TextField(
+                                controller: _tempGoalPersonController,
+                                style: const TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 14,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Responsable',
+                                  labelStyle: TextStyle(
+                                    color: AppTheme.white60,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  hintText: 'Nombre',
+                                  hintStyle: TextStyle(
+                                    color: AppTheme.white40,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person,
+                                    color: context.pro.teal,
+                                    size: 20,
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.darkSurface.withOpacity(0.6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: context.pro.teal.withOpacity(0.3),
+                                      width: 1,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        final date = await showDatePicker(
-                                          context: context,
-                                          initialDate: _tempGoalDate ?? DateTime.now(),
-                                          firstDate: DateTime(2020),
-                                          lastDate: DateTime(2030),
-                                        );
-                                        if (date != null) {
-                                          setState(() => _tempGoalDate = date);
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: _tempGoalDate != null
-                                                ? [
-                                                    _professionalTeal.withOpacity(0.3),
-                                                    _professionalAccent.withOpacity(0.2),
-                                                  ]
-                                                : [
-                                                    AppTheme.darkSurface.withOpacity(0.6),
-                                                    AppTheme.darkSurfaceVariant.withOpacity(0.4),
-                                                  ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: context.pro.teal.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: context.pro.teal,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              
+                              // Campo para fecha
+                              GestureDetector(
+                                onTap: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: _tempGoalDate ?? DateTime.now(),
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2030),
+                                  );
+                                  if (date != null) {
+                                    setState(() => _tempGoalDate = date);
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: _tempGoalDate != null
+                                          ? [
+                                              context.pro.teal.withOpacity(0.3),
+                                              context.pro.accent.withOpacity(0.2),
+                                            ]
+                                          : [
+                                              AppTheme.darkSurface.withOpacity(0.6),
+                                              AppTheme.darkSurfaceVariant.withOpacity(0.4),
+                                            ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _tempGoalDate != null
+                                          ? context.pro.teal.withOpacity(0.5)
+                                          : context.pro.teal.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        color: _tempGoalDate != null
+                                            ? context.pro.teal
+                                            : AppTheme.white60,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _tempGoalDate != null
+                                              ? DateFormat('dd/MM/yyyy').format(_tempGoalDate!)
+                                              : 'Fecha',
+                                          style: TextStyle(
+                                            fontSize: 14,
                                             color: _tempGoalDate != null
-                                                ? _professionalTeal.withOpacity(0.5)
-                                                : _professionalTeal.withOpacity(0.3),
-                                            width: 1,
+                                                ? AppTheme.white
+                                                : AppTheme.white60,
+                                            fontWeight: _tempGoalDate != null
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
                                           ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_today,
-                                              color: _tempGoalDate != null
-                                                  ? _professionalTeal
-                                                  : AppTheme.white60,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                _tempGoalDate != null
-                                                    ? DateFormat('dd/MM/yyyy').format(_tempGoalDate!)
-                                                    : 'Fecha',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: _tempGoalDate != null
-                                                      ? AppTheme.white
-                                                      : AppTheme.white60,
-                                                  fontWeight: _tempGoalDate != null
-                                                      ? FontWeight.w600
-                                                      : FontWeight.normal,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                               const SizedBox(height: 16),
                               
                               // Botón para agregar meta mejorado
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      _professionalIndigo,
-                                      _professionalAccent,
-                                      _professionalTeal,
+                              SizedBox(
+                                width: double.infinity,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        context.pro.indigo,
+                                        context.pro.accent,
+                                        context.pro.teal,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: context.pro.indigo.withOpacity(0.4),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: _professionalIndigo.withOpacity(0.4),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: ElevatedButton.icon(
+                                  child: ElevatedButton.icon(
                                   onPressed: () {
                                     if (_tempGoalTextController.text.trim().isNotEmpty) {
+                                      // Validar que la fecha de la meta no sea posterior a la fecha límite del proyecto
+                                      if (_selectedProjectDeadline != null && _tempGoalDate != null) {
+                                        // Comparar solo las fechas (sin hora)
+                                        final goalDateOnly = DateTime(_tempGoalDate!.year, _tempGoalDate!.month, _tempGoalDate!.day);
+                                        final deadlineDateOnly = DateTime(_selectedProjectDeadline!.year, _selectedProjectDeadline!.month, _selectedProjectDeadline!.day);
+                                        
+                                        if (goalDateOnly.isAfter(deadlineDateOnly)) {
+                                          // Mostrar diálogo de advertencia
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                backgroundColor: AppTheme.darkSurface,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(20),
+                                                ),
+                                                title: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.red.withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.warning_amber_rounded,
+                                                        color: Colors.red,
+                                                        size: 24,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    const Expanded(
+                                                      child: Text(
+                                                        'Fecha Inválida',
+                                                        style: TextStyle(
+                                                          color: AppTheme.white,
+                                                          fontSize: 18,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                content: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'La fecha de la meta no puede ser posterior a la fecha límite del proyecto.',
+                                                      style: TextStyle(
+                                                        color: AppTheme.white,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    Container(
+                                                      padding: const EdgeInsets.all(12),
+                                                      decoration: BoxDecoration(
+                                                        color: AppTheme.darkBackground,
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                                                              const SizedBox(width: 8),
+                                                              const Text(
+                                                                'Fecha de la meta:',
+                                                                style: TextStyle(
+                                                                  color: AppTheme.white60,
+                                                                  fontSize: 12,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: 4),
+                                                          Text(
+                                                            DateFormat('EEEE, d MMMM yyyy', 'es').format(_tempGoalDate!),
+                                                            style: const TextStyle(
+                                                              color: AppTheme.white,
+                                                              fontSize: 14,
+                                                              fontWeight: FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(height: 12),
+                                                          Row(
+                                                            children: [
+                                                              const Icon(Icons.event_busy, size: 16, color: AppTheme.white60),
+                                                              const SizedBox(width: 8),
+                                                              const Text(
+                                                                'Fecha límite del proyecto:',
+                                                                style: TextStyle(
+                                                                  color: AppTheme.white60,
+                                                                  fontSize: 12,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: 4),
+                                                          Text(
+                                                            DateFormat('EEEE, d MMMM yyyy', 'es').format(_selectedProjectDeadline!),
+                                                            style: const TextStyle(
+                                                              color: AppTheme.white,
+                                                              fontSize: 14,
+                                                              fontWeight: FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(context).pop(),
+                                                    child: const Text(
+                                                      'Entendido',
+                                                      style: TextStyle(
+                                                        color: AppTheme.orangeAccent,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                          return;
+                                        }
+                                      }
+                                      
                                       setState(() {
                                         _tempProjectGoals.add(ProjectGoal(
                                           id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -3016,60 +3303,86 @@ class _WorkSectionsState extends State<WorkSections> {
                                   ),
                                 ),
                               ),
+                            ),
                               const SizedBox(height: 16),
                               
                               // Lista de metas agregadas mejorada
                               if (_tempProjectGoals.isNotEmpty)
                                 Container(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        _professionalIndigo.withOpacity(0.2),
-                                        _professionalAccent.withOpacity(0.15),
-                                        AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                        context.pro.indigo.withOpacity(0.25),
+                                        context.pro.accent.withOpacity(0.18),
+                                        AppTheme.darkSurfaceVariant.withOpacity(0.35),
                                       ],
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: _professionalIndigo.withOpacity(0.4),
-                                      width: 1,
+                                      color: context.pro.indigo.withOpacity(0.5),
+                                      width: 1.5,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: context.pro.indigo.withOpacity(0.15),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(
-                                            Icons.checklist,
-                                            color: _professionalIndigo,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Metas Agregadas',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: _professionalIndigo,
-                                            ),
-                                          ),
-                                          const Spacer(),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
-                                                colors: [_professionalIndigo, _professionalAccent],
+                                                colors: [context.pro.indigo, context.pro.accent],
                                               ),
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: const Icon(
+                                              Icons.checklist_rounded,
+                                              color: AppTheme.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              'Metas Agregadas',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.white,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [context.pro.indigo, context.pro.accent],
+                                              ),
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: context.pro.indigo.withOpacity(0.4),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
                                             ),
                                             child: Text(
                                               '${_tempProjectGoals.length}',
                                               style: const TextStyle(
-                                                fontSize: 12,
+                                                fontSize: 13,
                                                 fontWeight: FontWeight.bold,
                                                 color: AppTheme.white,
                                               ),
@@ -3077,7 +3390,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 16),
                                       ..._tempProjectGoals.asMap().entries.map((entry) {
                                         final index = entry.key;
                                         final goal = entry.value;
@@ -3094,27 +3407,27 @@ class _WorkSectionsState extends State<WorkSections> {
                                             );
                                           },
                                           child: Container(
-                                            margin: const EdgeInsets.only(bottom: 10),
-                                            padding: const EdgeInsets.all(14),
+                                            margin: const EdgeInsets.only(bottom: 12),
+                                            padding: const EdgeInsets.all(16),
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
                                                 colors: [
-                                                  AppTheme.darkSurface.withOpacity(0.8),
-                                                  AppTheme.darkSurfaceVariant.withOpacity(0.6),
+                                                  AppTheme.darkSurface.withOpacity(0.9),
+                                                  AppTheme.darkSurfaceVariant.withOpacity(0.7),
                                                 ],
                                               ),
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius: BorderRadius.circular(14),
                                               border: Border.all(
-                                                color: _professionalIndigo.withOpacity(0.3),
-                                                width: 1,
+                                                color: context.pro.indigo.withOpacity(0.4),
+                                                width: 1.5,
                                               ),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: _professionalIndigo.withOpacity(0.1),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 2),
+                                                  color: context.pro.indigo.withOpacity(0.15),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 3),
                                                 ),
                                               ],
                                             ),
@@ -3124,18 +3437,18 @@ class _WorkSectionsState extends State<WorkSections> {
                                                 Row(
                                                   children: [
                                                     Container(
-                                                      width: 32,
-                                                      height: 32,
+                                                      width: 36,
+                                                      height: 36,
                                                       decoration: BoxDecoration(
                                                         gradient: LinearGradient(
-                                                          colors: [_professionalIndigo, _professionalAccent],
+                                                          colors: [context.pro.indigo, context.pro.accent],
                                                         ),
-                                                        borderRadius: BorderRadius.circular(16),
+                                                        borderRadius: BorderRadius.circular(18),
                                                         boxShadow: [
                                                           BoxShadow(
-                                                            color: _professionalIndigo.withOpacity(0.4),
-                                                            blurRadius: 4,
-                                                            offset: const Offset(0, 2),
+                                                            color: context.pro.indigo.withOpacity(0.5),
+                                                            blurRadius: 6,
+                                                            offset: const Offset(0, 3),
                                                           ),
                                                         ],
                                                       ),
@@ -3143,31 +3456,39 @@ class _WorkSectionsState extends State<WorkSections> {
                                                         child: Text(
                                                           '${index + 1}',
                                                           style: const TextStyle(
-                                                            fontSize: 14,
+                                                            fontSize: 15,
                                                             fontWeight: FontWeight.bold,
                                                             color: AppTheme.white,
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 12),
+                                                    const SizedBox(width: 14),
                                                     Expanded(
                                                       child: Text(
                                                         goal.text,
                                                         style: const TextStyle(
                                                           color: AppTheme.white,
-                                                          fontSize: 15,
+                                                          fontSize: 16,
                                                           fontWeight: FontWeight.w600,
+                                                          letterSpacing: 0.2,
                                                         ),
                                                       ),
                                                     ),
+                                                    const SizedBox(width: 8),
                                                     Container(
                                                       decoration: BoxDecoration(
-                                                        color: Colors.red.withOpacity(0.2),
-                                                        borderRadius: BorderRadius.circular(8),
+                                                        color: Colors.red.withOpacity(0.15),
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        border: Border.all(
+                                                          color: Colors.red.withOpacity(0.3),
+                                                          width: 1,
+                                                        ),
                                                       ),
                                                       child: IconButton(
-                                                        icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                                                        icon: const Icon(Icons.close_rounded, size: 18, color: Colors.red),
+                                                        padding: const EdgeInsets.all(8),
+                                                        constraints: const BoxConstraints(),
                                                         onPressed: () {
                                                           setState(() {
                                                             _tempProjectGoals.removeWhere((g) => g.id == goal.id);
@@ -3178,78 +3499,103 @@ class _WorkSectionsState extends State<WorkSections> {
                                                   ],
                                                 ),
                                                 if (goal.person != null || goal.date != null) ...[
-                                                  const SizedBox(height: 12),
+                                                  const SizedBox(height: 16),
                                                   Container(
-                                                    padding: const EdgeInsets.all(10),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                                                     decoration: BoxDecoration(
-                                                      color: _professionalIndigo.withOpacity(0.1),
-                                                      borderRadius: BorderRadius.circular(8),
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment.topLeft,
+                                                        end: Alignment.bottomRight,
+                                                        colors: [
+                                                          context.pro.indigo.withOpacity(0.15),
+                                                          context.pro.accent.withOpacity(0.1),
+                                                        ],
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(10),
                                                       border: Border.all(
-                                                        color: _professionalIndigo.withOpacity(0.2),
+                                                        color: context.pro.indigo.withOpacity(0.3),
                                                         width: 1,
                                                       ),
                                                     ),
-                                                    child: Row(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         if (goal.person != null) ...[
-                                                          Container(
-                                                            padding: const EdgeInsets.all(6),
-                                                            decoration: BoxDecoration(
-                                                              gradient: LinearGradient(
-                                                                colors: [_professionalTeal, _professionalAccent],
+                                                          Row(
+                                                            children: [
+                                                              Container(
+                                                                padding: const EdgeInsets.all(7),
+                                                                decoration: BoxDecoration(
+                                                                  gradient: LinearGradient(
+                                                                    colors: [context.pro.teal, context.pro.accent],
+                                                                  ),
+                                                                  borderRadius: BorderRadius.circular(8),
+                                                                  boxShadow: [
+                                                                    BoxShadow(
+                                                                      color: context.pro.teal.withOpacity(0.3),
+                                                                      blurRadius: 4,
+                                                                      offset: const Offset(0, 2),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                child: const Icon(
+                                                                  Icons.person_rounded,
+                                                                  size: 16,
+                                                                  color: AppTheme.white,
+                                                                ),
                                                               ),
-                                                              borderRadius: BorderRadius.circular(6),
-                                                            ),
-                                                            child: const Icon(
-                                                              Icons.person,
-                                                              size: 14,
-                                                              color: AppTheme.white,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(width: 8),
-                                                          Expanded(
-                                                            child: Text(
-                                                              goal.person!,
-                                                              style: const TextStyle(
-                                                                fontSize: 13,
-                                                                color: AppTheme.white,
-                                                                fontWeight: FontWeight.w500,
+                                                              const SizedBox(width: 10),
+                                                              Expanded(
+                                                                child: Text(
+                                                                  goal.person!,
+                                                                  style: const TextStyle(
+                                                                    fontSize: 14,
+                                                                    color: AppTheme.white,
+                                                                    fontWeight: FontWeight.w600,
+                                                                  ),
+                                                                ),
                                                               ),
-                                                            ),
+                                                            ],
                                                           ),
                                                         ],
                                                         if (goal.person != null && goal.date != null)
-                                                          Container(
-                                                            margin: const EdgeInsets.symmetric(horizontal: 12),
-                                                            width: 1,
-                                                            height: 16,
-                                                            color: AppTheme.white40,
-                                                          ),
+                                                          const SizedBox(height: 12),
                                                         if (goal.date != null) ...[
-                                                          Container(
-                                                            padding: const EdgeInsets.all(6),
-                                                            decoration: BoxDecoration(
-                                                              gradient: LinearGradient(
-                                                                colors: [_professionalTeal, _professionalAccent],
+                                                          Row(
+                                                            children: [
+                                                              Container(
+                                                                padding: const EdgeInsets.all(7),
+                                                                decoration: BoxDecoration(
+                                                                  gradient: LinearGradient(
+                                                                    colors: [context.pro.teal, context.pro.accent],
+                                                                  ),
+                                                                  borderRadius: BorderRadius.circular(8),
+                                                                  boxShadow: [
+                                                                    BoxShadow(
+                                                                      color: context.pro.teal.withOpacity(0.3),
+                                                                      blurRadius: 4,
+                                                                      offset: const Offset(0, 2),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                child: const Icon(
+                                                                  Icons.calendar_today_rounded,
+                                                                  size: 16,
+                                                                  color: AppTheme.white,
+                                                                ),
                                                               ),
-                                                              borderRadius: BorderRadius.circular(6),
-                                                            ),
-                                                            child: const Icon(
-                                                              Icons.calendar_today,
-                                                              size: 14,
-                                                              color: AppTheme.white,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(width: 8),
-                                                          Expanded(
-                                                            child: Text(
-                                                              DateFormat('dd MMM yyyy', 'es').format(goal.date!),
-                                                              style: const TextStyle(
-                                                                fontSize: 13,
-                                                                color: AppTheme.white,
-                                                                fontWeight: FontWeight.w500,
+                                                              const SizedBox(width: 10),
+                                                              Expanded(
+                                                                child: Text(
+                                                                  DateFormat('dd MMM yyyy', 'es').format(goal.date!),
+                                                                  style: const TextStyle(
+                                                                    fontSize: 14,
+                                                                    color: AppTheme.white,
+                                                                    fontWeight: FontWeight.w600,
+                                                                  ),
+                                                                ),
                                                               ),
-                                                            ),
+                                                            ],
                                                           ),
                                                         ],
                                                       ],
@@ -3264,29 +3610,37 @@ class _WorkSectionsState extends State<WorkSections> {
                                     ],
                                   ),
                                 ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        ] else if (_activeProjectModalTab == 'strategy') ...[
+                          ],
+                          if (_activeProjectModalTab == 'strategy') ...[
                         // Sección: Estrategia del Proyecto
                         Container(
                           margin: const EdgeInsets.only(top: 8),
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                _professionalIndigo.withOpacity(0.15),
-                                _professionalAccent.withOpacity(0.1),
-                                AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                context.pro.indigo.withOpacity(0.2),
+                                context.pro.accent.withOpacity(0.15),
+                                AppTheme.darkSurfaceVariant.withOpacity(0.35),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _professionalIndigo.withOpacity(0.3),
-                              width: 1,
+                              color: context.pro.indigo.withOpacity(0.4),
+                              width: 1.5,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.pro.indigo.withOpacity(0.15),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3294,34 +3648,44 @@ class _WorkSectionsState extends State<WorkSections> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: [_professionalIndigo, _professionalAccent],
+                                        colors: [context.pro.indigo, context.pro.accent],
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: context.pro.indigo.withOpacity(0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
                                     ),
                                     child: const Icon(
-                                      Icons.track_changes,
+                                      Icons.track_changes_rounded,
                                       color: AppTheme.white,
-                                      size: 20,
+                                      size: 22,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Estrategia del Proyecto',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.white,
+                                  const SizedBox(width: 14),
+                                  const Expanded(
+                                    child: Text(
+                                      'Estrategia del Proyecto',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.white,
+                                        letterSpacing: 0.5,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 24),
                               
                               // COMPAÑEROS DE EQUIPO
-                              _buildStrategySectionHeader('COMPAÑEROS DE EQUIPO', Icons.people),
+                              _buildStrategySectionHeader('Compañeros de equipo', Icons.people),
                               const SizedBox(height: 12),
                               _buildAddTeammateForm(),
                               const SizedBox(height: 12),
@@ -3331,7 +3695,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               const SizedBox(height: 24),
                               
                               // LOGROS
-                              _buildStrategySectionHeader('LOGROS', Icons.star),
+                              _buildStrategySectionHeader('Logros', Icons.star),
                               const SizedBox(height: 12),
                               _buildAddAchievementForm(),
                               const SizedBox(height: 12),
@@ -3341,7 +3705,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               const SizedBox(height: 24),
                               
                               // TRABAJOS
-                              _buildStrategySectionHeader('TRABAJOS', Icons.work),
+                              _buildStrategySectionHeader('Actividades', Icons.work),
                               const SizedBox(height: 12),
                               _buildAddWorkForm(),
                               const SizedBox(height: 12),
@@ -3351,7 +3715,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               const SizedBox(height: 24),
                               
                               // FINANCIAMIENTO
-                              _buildStrategySectionHeader('FINANCIAMIENTO', Icons.attach_money),
+                              _buildStrategySectionHeader('Financiamiento', null),
                               const SizedBox(height: 12),
                               _buildAddFundingForm(),
                               const SizedBox(height: 12),
@@ -3360,12 +3724,12 @@ class _WorkSectionsState extends State<WorkSections> {
                             ],
                           ),
                         ),
+                          ],
                         ],
-                      ],
                     ),
                   ),
-                    ),
-                  ),
+                ),
+                ),
                 
                 // Footer con botones de acción mejorados
                 Container(
@@ -3381,7 +3745,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     ),
                     border: Border(
                       top: BorderSide(
-                        color: _professionalAccent.withOpacity(0.2),
+                        color: context.pro.accent.withOpacity(0.2),
                         width: 1,
                       ),
                     ),
@@ -3451,15 +3815,15 @@ class _WorkSectionsState extends State<WorkSections> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  _professionalPrimary,
-                                  _professionalSecondary,
-                                  _professionalAccent,
+                                  context.pro.primary,
+                                  context.pro.secondary,
+                                  context.pro.accent,
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _professionalAccent.withOpacity(0.4),
+                                  color: context.pro.accent.withOpacity(0.4),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -3473,11 +3837,14 @@ class _WorkSectionsState extends State<WorkSections> {
                                   color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Icon(Icons.add_task, size: 22),
+                                child: Icon(
+                                  _editingProjectId != null ? Icons.save : Icons.add_task,
+                                  size: 22,
+                                ),
                               ),
-                              label: const Text(
-                                'Crear Proyecto',
-                                style: TextStyle(
+                              label: Text(
+                                _editingProjectId != null ? 'Guardar Cambios' : 'Crear Proyecto',
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -3519,6 +3886,53 @@ class _WorkSectionsState extends State<WorkSections> {
     );
   }
   
+  void _editProject(WorkProject project) {
+    setState(() {
+      _editingProjectId = project.id;
+      _projectNameController.text = project.title;
+      _projectDescriptionController.text = project.aim;
+      _selectedProjectDeadline = project.deadline;
+      _tempProjectTeammates = List.from(project.teammates);
+      _tempProjectAchievements = List.from(project.achievements);
+      _tempProjectWorks = List.from(project.works);
+      _tempProjectFunding = List.from(project.funding);
+      _tempProjectGoals = List.from(project.goals);
+      _activeProjectModalTab = 'basic';
+      _showAddProjectModal = true;
+    });
+  }
+  
+  void _clearProjectModal() {
+    _editingProjectId = null;
+    _projectNameController.clear();
+    _projectDescriptionController.clear();
+    _tempProjectGoals.clear();
+    _tempGoalTextController.clear();
+    _tempGoalPersonController.clear();
+    _tempGoalDate = null;
+    _selectedProjectDeadline = null;
+    _activeProjectModalTab = 'basic';
+    _tempProjectTeammates.clear();
+    _tempProjectAchievements.clear();
+    _tempProjectWorks.clear();
+    _tempProjectFunding.clear();
+    _tempTeammateNameController.clear();
+    _tempTeammateRoleController.clear();
+    _tempAchievementNameController.clear();
+    _tempAchievementDueDateController.clear();
+    _tempWorkPositionController.clear();
+    _tempWorkAppointController.clear();
+    _tempWorkStatusController.clear();
+    _tempWorkNotesController.clear();
+    _tempFundingElementController.clear();
+    _tempFundingFondoController.clear();
+    _tempFundingFinanciadoPorController.clear();
+    _tempFundingNotesController.clear();
+    _tempAchievementDueDate = null;
+    _tempWorkStartDate = null;
+    _tempWorkDeadline = null;
+  }
+  
   void _addProject() {
     if (_projectNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3528,45 +3942,50 @@ class _WorkSectionsState extends State<WorkSections> {
     }
     
     setState(() {
-      _projects.add(WorkProject(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: _projectNameController.text.trim(),
-        aim: _projectDescriptionController.text.trim(),
-        startDate: DateTime.now(),
-        deadline: _selectedProjectDeadline,
-        teammates: _tempProjectTeammates,
-        achievements: _tempProjectAchievements,
-        works: _tempProjectWorks,
-        funding: _tempProjectFunding,
-        goals: _tempProjectGoals,
-        overview: null,
-      ));
+      if (_editingProjectId != null) {
+        // Actualizar proyecto existente
+        final projectIndex = _projects.indexWhere((p) => p.id == _editingProjectId);
+        if (projectIndex != -1) {
+          final existingProject = _projects[projectIndex];
+          _projects[projectIndex] = WorkProject(
+            id: existingProject.id,
+            title: _projectNameController.text.trim(),
+            aim: _projectDescriptionController.text.trim(),
+            startDate: existingProject.startDate,
+            deadline: _selectedProjectDeadline,
+            teammates: List<ProjectTeammate>.from(_tempProjectTeammates),
+            achievements: List<ProjectAchievement>.from(_tempProjectAchievements),
+            works: List<ProjectWork>.from(_tempProjectWorks),
+            funding: List<ProjectFunding>.from(_tempProjectFunding),
+            goals: List<ProjectGoal>.from(_tempProjectGoals),
+            overview: existingProject.overview,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Proyecto actualizado exitosamente'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Crear nuevo proyecto con copias de las listas para evitar referencias
+        _projects.add(WorkProject(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          title: _projectNameController.text.trim(),
+          aim: _projectDescriptionController.text.trim(),
+          startDate: DateTime.now(),
+          deadline: _selectedProjectDeadline,
+          teammates: List<ProjectTeammate>.from(_tempProjectTeammates),
+          achievements: List<ProjectAchievement>.from(_tempProjectAchievements),
+          works: List<ProjectWork>.from(_tempProjectWorks),
+          funding: List<ProjectFunding>.from(_tempProjectFunding),
+          goals: List<ProjectGoal>.from(_tempProjectGoals),
+          overview: null,
+        ));
+      }
       _showAddProjectModal = false;
-      _projectNameController.clear();
-      _projectDescriptionController.clear();
-      _tempProjectGoals.clear();
-      _tempGoalTextController.clear();
-      _tempGoalPersonController.clear();
-      _tempGoalDate = null;
-      _selectedProjectDeadline = null;
-      _activeProjectModalTab = 'basic';
-      _tempProjectTeammates.clear();
-      _tempProjectAchievements.clear();
-      _tempProjectWorks.clear();
-      _tempProjectFunding.clear();
-      _tempTeammateNameController.clear();
-      _tempTeammateRoleController.clear();
-      _tempAchievementNameController.clear();
-      _tempAchievementDueDateController.clear();
-      _tempWorkPositionController.clear();
-      _tempWorkAppointController.clear();
-      _tempWorkStatusController.clear();
-      _tempWorkNotesController.clear();
-      _tempFundingElementController.clear();
-      _tempFundingNotesController.clear();
-      _tempAchievementDueDate = null;
-      _tempWorkStartDate = null;
-      _tempWorkDeadline = null;
+      _clearProjectModal();
     });
   }
 
@@ -3598,65 +4017,69 @@ class _WorkSectionsState extends State<WorkSections> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
           gradient: isActive
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _professionalPrimary,
-                    _professionalSecondary,
-                    _professionalAccent,
+                    context.pro.primary,
+                    context.pro.secondary,
+                    context.pro.accent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 )
               : null,
           color: isActive ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: isActive
               ? Border.all(
                   color: Colors.white.withOpacity(0.3),
-                  width: 1.5,
+                  width: 1.2,
                 )
               : null,
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: _professionalPrimary.withOpacity(0.4),
-                    blurRadius: 12,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 3),
+                    color: context.pro.primary.withOpacity(0.4),
+                    blurRadius: 8,
+                    spreadRadius: 0.5,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: isActive
                     ? Colors.white.withOpacity(0.2)
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(5),
               ),
               child: Icon(
                 icon,
-                size: 18,
+                size: 14,
                 color: isActive ? AppTheme.white : AppTheme.white60,
               ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive ? AppTheme.white : AppTheme.white60,
-                letterSpacing: 0.3,
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? AppTheme.white : AppTheme.white60,
+                  letterSpacing: 0.2,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -3665,29 +4088,55 @@ class _WorkSectionsState extends State<WorkSections> {
     );
   }
   
-  Widget _buildStrategySectionHeader(String title, IconData icon) {
+  Widget _buildStrategySectionHeader(String title, IconData? icon) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_professionalIndigo.withOpacity(0.3), _professionalAccent.withOpacity(0.2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.pro.indigo.withOpacity(0.35),
+            context.pro.accent.withOpacity(0.25),
+          ],
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _professionalIndigo.withOpacity(0.4),
-          width: 1,
+          color: context.pro.indigo.withOpacity(0.5),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.white, size: 16),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.white,
+          if (icon != null) ...[
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.pro.teal, context.pro.accent],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: AppTheme.white, size: 18),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.white,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
         ],
@@ -3697,69 +4146,147 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAddTeammateForm() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.2),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurfaceVariant.withOpacity(0.4),
+            AppTheme.darkSurface.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _tempTeammateNameController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Nombre',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          TextField(
+            controller: _tempTeammateNameController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Nombre',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tempTeammateRoleController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Rol/Puesto',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.pro.indigo, context.pro.accent],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.pro.indigo.withOpacity(0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  if (_tempTeammateNameController.text.trim().isNotEmpty &&
+                      _tempTeammateRoleController.text.trim().isNotEmpty) {
+                    setState(() {
+                      _tempProjectTeammates.add(ProjectTeammate(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: _tempTeammateNameController.text.trim(),
+                        role: _tempTeammateRoleController.text.trim(),
+                      ));
+                      _tempTeammateNameController.clear();
+                      _tempTeammateRoleController.clear();
+                    });
+                  }
+                },
+                icon: const Icon(Icons.add_rounded, color: AppTheme.white, size: 20),
+                label: const Text(
+                  'Agregar Compañero',
+                  style: TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _tempTeammateRoleController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Rol/Puesto',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
-                  onPressed: () {
-                    if (_tempTeammateNameController.text.trim().isNotEmpty &&
-                        _tempTeammateRoleController.text.trim().isNotEmpty) {
-                      setState(() {
-                        _tempProjectTeammates.add(ProjectTeammate(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          name: _tempTeammateNameController.text.trim(),
-                          role: _tempTeammateRoleController.text.trim(),
-                        ));
-                        _tempTeammateNameController.clear();
-                        _tempTeammateRoleController.clear();
-                      });
-                    }
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -3768,18 +4295,54 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildTeammateCard(ProjectTeammate teammate) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.3),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurface.withOpacity(0.8),
+            AppTheme.darkSurfaceVariant.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [context.pro.teal, context.pro.accent],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: context.pro.teal.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.person_rounded,
+              color: AppTheme.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3788,28 +4351,41 @@ class _WorkSectionsState extends State<WorkSections> {
                   teammate.name,
                   style: const TextStyle(
                     color: AppTheme.white,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   teammate.role,
                   style: TextStyle(
-                    color: AppTheme.white60,
-                    fontSize: 12,
+                    color: AppTheme.white70,
+                    fontSize: 13,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 16, color: Colors.red),
-            onPressed: () {
-              setState(() {
-                _tempProjectTeammates.removeWhere((t) => t.id == teammate.id);
-              });
-            },
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.red.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18, color: Colors.red),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                setState(() {
+                  _tempProjectTeammates.removeWhere((t) => t.id == teammate.id);
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -3818,107 +4394,169 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAddAchievementForm() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.2),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurfaceVariant.withOpacity(0.4),
+            AppTheme.darkSurface.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  controller: _tempAchievementNameController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Nombre del logro',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
+          TextField(
+            controller: _tempAchievementNameController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Nombre del logro',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: GestureDetector(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _tempAchievementDueDate ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) {
-                      setState(() {
-                        _tempAchievementDueDate = date;
-                        _tempAchievementDueDateController.text = DateFormat('dd/MM/yyyy').format(date);
-                      });
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkSurface.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: _professionalIndigo.withOpacity(0.3),
-                        width: 1,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _tempAchievementDueDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (date != null) {
+                setState(() {
+                  _tempAchievementDueDate = date;
+                  _tempAchievementDueDateController.text = DateFormat('dd/MM/yyyy').format(date);
+                });
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    context.pro.indigo.withOpacity(0.3),
+                    context.pro.accent.withOpacity(0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: context.pro.indigo.withOpacity(0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today_rounded, size: 16, color: context.pro.indigo),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _tempAchievementDueDate != null
+                          ? DateFormat('dd/MM/yyyy').format(_tempAchievementDueDate!)
+                          : 'Fecha',
+                      style: TextStyle(
+                        color: _tempAchievementDueDate != null
+                            ? AppTheme.white
+                            : AppTheme.white60,
+                        fontSize: 13,
+                        fontWeight: _tempAchievementDueDate != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 14, color: _professionalIndigo),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _tempAchievementDueDate != null
-                                ? DateFormat('dd/MM/yyyy').format(_tempAchievementDueDate!)
-                                : 'Fecha',
-                            style: TextStyle(
-                              color: _tempAchievementDueDate != null
-                                  ? AppTheme.white
-                                  : AppTheme.white60,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.pro.indigo, context.pro.accent],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.pro.indigo.withOpacity(0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  if (_tempAchievementNameController.text.trim().isNotEmpty) {
+                    setState(() {
+                      _tempProjectAchievements.add(ProjectAchievement(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        text: _tempAchievementNameController.text.trim(),
+                        date: _tempAchievementDueDate,
+                      ));
+                      _tempAchievementNameController.clear();
+                      _tempAchievementDueDateController.clear();
+                      _tempAchievementDueDate = null;
+                    });
+                  }
+                },
+                icon: const Icon(Icons.add_rounded, color: AppTheme.white, size: 20),
+                label: const Text(
+                  'Agregar Logro',
+                  style: TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
-                  onPressed: () {
-                    if (_tempAchievementNameController.text.trim().isNotEmpty) {
-                      setState(() {
-                        _tempProjectAchievements.add(ProjectAchievement(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          text: _tempAchievementNameController.text.trim(),
-                          date: _tempAchievementDueDate,
-                        ));
-                        _tempAchievementNameController.clear();
-                        _tempAchievementDueDateController.clear();
-                        _tempAchievementDueDate = null;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -3927,18 +4565,54 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAchievementCard(ProjectAchievement achievement) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.3),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurface.withOpacity(0.8),
+            AppTheme.darkSurfaceVariant.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [context.pro.teal, context.pro.accent],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: context.pro.teal.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.star_rounded,
+              color: AppTheme.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3947,30 +4621,49 @@ class _WorkSectionsState extends State<WorkSections> {
                   achievement.text,
                   style: const TextStyle(
                     color: AppTheme.white,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
                   ),
                 ),
                 if (achievement.date != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Fecha: ${DateFormat('dd/MM/yyyy').format(achievement.date!)}',
-                    style: TextStyle(
-                      color: AppTheme.white60,
-                      fontSize: 12,
-                    ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.white60),
+                      const SizedBox(width: 6),
+                      Text(
+                        DateFormat('dd MMM yyyy', 'es').format(achievement.date!),
+                        style: TextStyle(
+                          color: AppTheme.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 16, color: Colors.red),
-            onPressed: () {
-              setState(() {
-                _tempProjectAchievements.removeWhere((a) => a.id == achievement.id);
-              });
-            },
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.red.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18, color: Colors.red),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                setState(() {
+                  _tempProjectAchievements.removeWhere((a) => a.id == achievement.id);
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -3979,208 +4672,329 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAddWorkForm() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.2),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurfaceVariant.withOpacity(0.4),
+            AppTheme.darkSurface.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _tempWorkPositionController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Posición',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
+          TextField(
+            controller: _tempWorkPositionController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Posición',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _tempWorkAppointController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Asignación',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
-            ],
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _tempWorkStatusController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Estado',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tempWorkAppointController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Asignación',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _tempWorkStartDate ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) {
-                      setState(() => _tempWorkStartDate = date);
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkSurface.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: _professionalIndigo.withOpacity(0.3),
-                        width: 1,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tempWorkStatusController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Estado',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _tempWorkStartDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (date != null) {
+                setState(() => _tempWorkStartDate = date);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    context.pro.indigo.withOpacity(0.3),
+                    context.pro.accent.withOpacity(0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: context.pro.indigo.withOpacity(0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today_rounded, size: 16, color: context.pro.indigo),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _tempWorkStartDate != null
+                          ? DateFormat('dd/MM/yyyy').format(_tempWorkStartDate!)
+                          : 'Fecha de Inicio',
+                      style: TextStyle(
+                        color: _tempWorkStartDate != null
+                            ? AppTheme.white
+                            : AppTheme.white60,
+                        fontSize: 13,
+                        fontWeight: _tempWorkStartDate != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 14, color: _professionalIndigo),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _tempWorkStartDate != null
-                                ? DateFormat('dd/MM/yyyy').format(_tempWorkStartDate!)
-                                : 'Inicio',
-                            style: TextStyle(
-                              color: _tempWorkStartDate != null
-                                  ? AppTheme.white
-                                  : AppTheme.white60,
-                              fontSize: 11,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _tempWorkDeadline ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (date != null) {
+                setState(() => _tempWorkDeadline = date);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    context.pro.indigo.withOpacity(0.3),
+                    context.pro.accent.withOpacity(0.2),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: context.pro.indigo.withOpacity(0.4),
+                  width: 1.5,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _tempWorkDeadline ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) {
-                      setState(() => _tempWorkDeadline = date);
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkSurface.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: _professionalIndigo.withOpacity(0.3),
-                        width: 1,
+              child: Row(
+                children: [
+                  Icon(Icons.event_rounded, size: 16, color: context.pro.indigo),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _tempWorkDeadline != null
+                          ? DateFormat('dd/MM/yyyy').format(_tempWorkDeadline!)
+                          : 'Fecha Límite',
+                      style: TextStyle(
+                        color: _tempWorkDeadline != null
+                            ? AppTheme.white
+                            : AppTheme.white60,
+                        fontSize: 13,
+                        fontWeight: _tempWorkDeadline != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.event, size: 14, color: _professionalIndigo),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            _tempWorkDeadline != null
-                                ? DateFormat('dd/MM/yyyy').format(_tempWorkDeadline!)
-                                : 'Límite',
-                            style: TextStyle(
-                              color: _tempWorkDeadline != null
-                                  ? AppTheme.white
-                                  : AppTheme.white60,
-                              fontSize: 11,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _tempWorkNotesController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Notas (opcional)',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tempWorkNotesController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Notas (opcional)',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.pro.indigo, context.pro.accent],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.pro.indigo.withOpacity(0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  if (_tempWorkPositionController.text.trim().isNotEmpty &&
+                      _tempWorkAppointController.text.trim().isNotEmpty &&
+                      _tempWorkStatusController.text.trim().isNotEmpty) {
+                    setState(() {
+                      _tempProjectWorks.add(ProjectWork(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        position: _tempWorkPositionController.text.trim(),
+                        appoint: _tempWorkAppointController.text.trim(),
+                        status: _tempWorkStatusController.text.trim(),
+                        startDate: _tempWorkStartDate,
+                        deadline: _tempWorkDeadline,
+                        notes: _tempWorkNotesController.text.trim().isNotEmpty
+                            ? _tempWorkNotesController.text.trim()
+                            : null,
+                      ));
+                      _tempWorkPositionController.clear();
+                      _tempWorkAppointController.clear();
+                      _tempWorkStatusController.clear();
+                      _tempWorkNotesController.clear();
+                      _tempWorkStartDate = null;
+                      _tempWorkDeadline = null;
+                    });
+                  }
+                },
+                icon: const Icon(Icons.add_rounded, color: AppTheme.white, size: 20),
+                label: const Text(
+                  'Agregar Actividad',
+                  style: TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
-                  onPressed: () {
-                    if (_tempWorkPositionController.text.trim().isNotEmpty &&
-                        _tempWorkAppointController.text.trim().isNotEmpty &&
-                        _tempWorkStatusController.text.trim().isNotEmpty) {
-                      setState(() {
-                        _tempProjectWorks.add(ProjectWork(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          position: _tempWorkPositionController.text.trim(),
-                          appoint: _tempWorkAppointController.text.trim(),
-                          status: _tempWorkStatusController.text.trim(),
-                          startDate: _tempWorkStartDate,
-                          deadline: _tempWorkDeadline,
-                          notes: _tempWorkNotesController.text.trim().isNotEmpty
-                              ? _tempWorkNotesController.text.trim()
-                              : null,
-                        ));
-                        _tempWorkPositionController.clear();
-                        _tempWorkAppointController.clear();
-                        _tempWorkStatusController.clear();
-                        _tempWorkNotesController.clear();
-                        _tempWorkStartDate = null;
-                        _tempWorkDeadline = null;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -4189,21 +5003,57 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildWorkCard(ProjectWork work) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.3),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurface.withOpacity(0.8),
+            AppTheme.darkSurfaceVariant.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [context.pro.teal, context.pro.accent],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.pro.teal.withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.work_rounded,
+                  color: AppTheme.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -4212,87 +5062,178 @@ class _WorkSectionsState extends State<WorkSections> {
                       work.position,
                       style: const TextStyle(
                         color: AppTheme.white,
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Asignación: ${work.appoint}',
+                      work.appoint,
                       style: TextStyle(
-                        color: AppTheme.white60,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      'Estado: ${work.status}',
-                      style: TextStyle(
-                        color: AppTheme.white60,
-                        fontSize: 12,
+                        color: AppTheme.white70,
+                        fontSize: 13,
                       ),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 16, color: Colors.red),
-                onPressed: () {
-                  setState(() {
-                    _tempProjectWorks.removeWhere((w) => w.id == work.id);
-                  });
-                },
-              ),
-            ],
-          ),
-          if (work.startDate != null || work.deadline != null || work.notes != null) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                if (work.startDate != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.calendar_today, size: 12, color: _professionalIndigo),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Inicio: ${DateFormat('dd/MM/yyyy').format(work.startDate!)}',
-                        style: TextStyle(
-                          color: AppTheme.white60,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.3),
+                    width: 1,
                   ),
-                if (work.deadline != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.event, size: 12, color: _professionalIndigo),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Límite: ${DateFormat('dd/MM/yyyy').format(work.deadline!)}',
-                        style: TextStyle(
-                          color: AppTheme.white60,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            if (work.notes != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Notas: ${work.notes}',
-                style: TextStyle(
-                  color: AppTheme.white60,
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 18, color: Colors.red),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    setState(() {
+                      _tempProjectWorks.removeWhere((w) => w.id == work.id);
+                    });
+                  },
                 ),
               ),
             ],
+          ),
+          if (work.status.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.pro.indigo.withOpacity(0.3), context.pro.accent.withOpacity(0.2)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: context.pro.indigo.withOpacity(0.4),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'Estado: ${work.status}',
+                style: const TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          if (work.startDate != null || work.deadline != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (work.startDate != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          context.pro.indigo.withOpacity(0.2),
+                          context.pro.accent.withOpacity(0.15),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.pro.indigo.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today_rounded, size: 14, color: context.pro.indigo),
+                        const SizedBox(width: 6),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(work.startDate!),
+                          style: const TextStyle(
+                            color: AppTheme.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (work.startDate != null && work.deadline != null)
+                  const SizedBox(width: 10),
+                if (work.deadline != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          context.pro.indigo.withOpacity(0.2),
+                          context.pro.accent.withOpacity(0.15),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.pro.indigo.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.event_rounded, size: 14, color: context.pro.indigo),
+                        const SizedBox(width: 6),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(work.deadline!),
+                          style: const TextStyle(
+                            color: AppTheme.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+          if (work.notes != null && work.notes!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    context.pro.indigo.withOpacity(0.15),
+                    context.pro.accent.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.note_rounded, size: 14, color: AppTheme.white60),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      work.notes!,
+                      style: const TextStyle(
+                        color: AppTheme.white70,
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ],
       ),
@@ -4301,86 +5242,241 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildAddFundingForm() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.2),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurfaceVariant.withOpacity(0.4),
+            AppTheme.darkSurface.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _tempFundingElementController,
-                  style: const TextStyle(color: AppTheme.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: 'Elemento',
-                    hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 12),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          TextField(
+            controller: _tempFundingElementController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [context.pro.indigo.withOpacity(0.4), context.pro.accent.withOpacity(0.3)],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: context.pro.indigo.withOpacity(0.5),
+                    width: 1,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [_professionalIndigo, _professionalAccent]),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      if (_tempFundingElementController.text.trim().isNotEmpty) {
-                        setState(() {
-                          _tempProjectFunding.add(ProjectFunding(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
-                            element: _tempFundingElementController.text.trim(),
-                            notes: _tempFundingNotesController.text.trim().isNotEmpty
-                                ? _tempFundingNotesController.text.trim()
-                                : null,
-                          ));
-                          _tempFundingElementController.clear();
-                          _tempFundingNotesController.clear();
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
-                    label: const Text(
-                      'Agregar',
-                      style: TextStyle(
-                        color: AppTheme.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                  ),
+                child: const Icon(
+                  Icons.attach_money_rounded,
+                  color: AppTheme.white,
+                  size: 18,
                 ),
               ),
-            ],
+              hintText: 'Elemento',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tempFundingFondoController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Fondo a financiar',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _tempFundingFinanciadoPorController,
+            style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Por quién',
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
           TextField(
             controller: _tempFundingNotesController,
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
+            maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Notas (opcional)',
-              hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              filled: true,
+              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: context.pro.indigo,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [context.pro.indigo, context.pro.accent],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.pro.indigo.withOpacity(0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  if (_tempFundingElementController.text.trim().isNotEmpty) {
+                    setState(() {
+                      _tempProjectFunding.add(ProjectFunding(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        element: _tempFundingElementController.text.trim(),
+                        fondo: _tempFundingFondoController.text.trim().isNotEmpty
+                            ? _tempFundingFondoController.text.trim()
+                            : null,
+                        financiadoPor: _tempFundingFinanciadoPorController.text.trim().isNotEmpty
+                            ? _tempFundingFinanciadoPorController.text.trim()
+                            : null,
+                        notes: _tempFundingNotesController.text.trim().isNotEmpty
+                            ? _tempFundingNotesController.text.trim()
+                            : null,
+                      ));
+                      _tempFundingElementController.clear();
+                      _tempFundingFondoController.clear();
+                      _tempFundingFinanciadoPorController.clear();
+                      _tempFundingNotesController.clear();
+                    });
+                  }
+                },
+                icon: const Icon(Icons.add_rounded, color: AppTheme.white, size: 20),
+                label: const Text(
+                  'Agregar Financiamiento',
+                  style: TextStyle(
+                    color: AppTheme.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -4390,18 +5486,54 @@ class _WorkSectionsState extends State<WorkSections> {
   
   Widget _buildFundingCard(ProjectFunding funding) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _professionalIndigo.withOpacity(0.3),
-          width: 1,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.darkSurface.withOpacity(0.8),
+            AppTheme.darkSurfaceVariant.withOpacity(0.6),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.pro.indigo.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.pro.indigo.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [context.pro.teal, context.pro.accent],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: context.pro.teal.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.attach_money_rounded,
+              color: AppTheme.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -4410,62 +5542,178 @@ class _WorkSectionsState extends State<WorkSections> {
                   funding.element,
                   style: const TextStyle(
                     color: AppTheme.white,
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
                   ),
                 ),
-                if (funding.projectedCost != null || funding.realCost != null) ...[
-                  const SizedBox(height: 4),
-                  Wrap(
-                    spacing: 12,
+                if (funding.fondo != null || funding.financiadoPor != null) ...[
+                  const SizedBox(height: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (funding.projectedCost != null)
-                        Text(
-                          'Proyectado: \$${funding.projectedCost!.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: AppTheme.white60,
-                            fontSize: 11,
-                          ),
+                      if (funding.fondo != null) ...[
+                        Row(
+                          children: [
+                            Icon(Icons.account_balance_wallet_rounded, size: 14, color: AppTheme.white60),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Fondo: ${funding.fondo}',
+                              style: TextStyle(
+                                color: AppTheme.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                      if (funding.realCost != null)
-                        Text(
-                          'Real: \$${funding.realCost!.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: AppTheme.white60,
-                            fontSize: 11,
-                          ),
+                      ],
+                      if (funding.fondo != null && funding.financiadoPor != null)
+                        const SizedBox(height: 6),
+                      if (funding.financiadoPor != null) ...[
+                        Row(
+                          children: [
+                            Icon(Icons.person_rounded, size: 14, color: AppTheme.white60),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Por: ${funding.financiadoPor}',
+                              style: TextStyle(
+                                color: AppTheme.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
+                      ],
                     ],
                   ),
                 ],
-                if (funding.notes != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Notas: ${funding.notes}',
-                    style: TextStyle(
-                      color: AppTheme.white60,
-                      fontSize: 11,
-                      fontStyle: FontStyle.italic,
+                if (funding.projectedCost != null || funding.realCost != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (funding.projectedCost != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                context.pro.indigo.withOpacity(0.3),
+                                context.pro.accent.withOpacity(0.2),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: context.pro.indigo.withOpacity(0.4),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'Proyectado: \$${funding.projectedCost!.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (funding.projectedCost != null && funding.realCost != null)
+                        const SizedBox(width: 10),
+                      if (funding.realCost != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                context.pro.teal.withOpacity(0.3),
+                                context.pro.accent.withOpacity(0.2),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: context.pro.teal.withOpacity(0.4),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'Real: \$${funding.realCost!.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+                if (funding.notes != null && funding.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          context.pro.indigo.withOpacity(0.15),
+                          context.pro.accent.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.pro.indigo.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.note_rounded, size: 14, color: AppTheme.white60),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            funding.notes!,
+                            style: const TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 16, color: Colors.red),
-            onPressed: () {
-              setState(() {
-                _tempProjectFunding.removeWhere((f) => f.id == funding.id);
-              });
-            },
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.red.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18, color: Colors.red),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                setState(() {
+                  _tempProjectFunding.removeWhere((f) => f.id == funding.id);
+                });
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStrategy() {
+
+  Widget _buildStrategy(BuildContext context) {
     final totalProjects = _projects.length;
     final completedProjects = _projects.where((p) {
       if (p.goals.isEmpty) return false;
@@ -4521,19 +5769,13 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary,
-                  _professionalSecondary,
-                  _professionalAccent,
+                  context.pro.primary,
+                  context.pro.secondary,
+                  context.pro.accent,
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: _professionalSecondary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: AppRadius.xLargeAll,
+              boxShadow: AppShadows.elevated(context.pro.secondary),
             ),
             child: Row(
               children: [
@@ -4582,14 +5824,14 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalIndigo.withOpacity(0.15),
-                  _professionalAccent.withOpacity(0.1),
+                  context.pro.indigo.withOpacity(0.15),
+                  context.pro.accent.withOpacity(0.1),
                   AppTheme.darkSurface,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _professionalIndigo.withOpacity(0.3),
+                color: context.pro.indigo.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -4605,7 +5847,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [_professionalIndigo, _professionalAccent],
+                              colors: [context.pro.indigo, context.pro.accent],
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -4639,7 +5881,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [_professionalIndigo, _professionalAccent],
+                          colors: [context.pro.indigo, context.pro.accent],
                         ),
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -4670,15 +5912,15 @@ class _WorkSectionsState extends State<WorkSections> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                _professionalIndigo,
-                                _professionalAccent,
-                                _professionalTeal,
+                                context.pro.indigo,
+                                context.pro.accent,
+                                context.pro.teal,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: [
                               BoxShadow(
-                                color: _professionalIndigo.withOpacity(0.6),
+                                color: context.pro.indigo.withOpacity(0.6),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                               ),
@@ -4722,8 +5964,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.rocket_launch,
                   value: '$activeProjects',
                   label: 'Activos',
-                  color: _professionalAccent,
-                  gradientColors: [_professionalAccent, _professionalSecondary],
+                  color: context.pro.accent,
+                  gradientColors: [context.pro.accent, context.pro.secondary],
                 ),
               ),
               const SizedBox(width: 12),
@@ -4732,8 +5974,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.check_circle,
                   value: '$completedProjects',
                   label: 'Completados',
-                  color: _professionalTeal,
-                  gradientColors: [_professionalTeal, Colors.green],
+                  color: context.pro.teal,
+                  gradientColors: [context.pro.teal, Colors.green],
                 ),
               ),
             ],
@@ -4773,14 +6015,14 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalTeal.withOpacity(0.15),
-                  _professionalAccent.withOpacity(0.1),
+                  context.pro.teal.withOpacity(0.15),
+                  context.pro.accent.withOpacity(0.1),
                   AppTheme.darkSurface,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _professionalTeal.withOpacity(0.3),
+                color: context.pro.teal.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -4796,7 +6038,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [_professionalTeal, _professionalAccent],
+                              colors: [context.pro.teal, context.pro.accent],
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -4833,7 +6075,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           colors: efficiency >= 70
                               ? [Colors.green, Colors.green.shade700]
                               : efficiency >= 50
-                                  ? [_professionalTeal, _professionalAccent]
+                                  ? [context.pro.teal, context.pro.accent]
                                   : [Colors.orange, Colors.deepOrange],
                         ),
                         borderRadius: BorderRadius.circular(20),
@@ -4867,7 +6109,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               colors: efficiency >= 70
                                   ? [Colors.green, Colors.green.shade700]
                                   : efficiency >= 50
-                                      ? [_professionalTeal, _professionalAccent]
+                                      ? [context.pro.teal, context.pro.accent]
                                       : [Colors.orange, Colors.deepOrange],
                             ),
                             borderRadius: BorderRadius.circular(6),
@@ -4876,7 +6118,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 color: (efficiency >= 70
                                         ? Colors.green
                                         : efficiency >= 50
-                                            ? _professionalTeal
+                                            ? context.pro.teal
                                             : Colors.orange)
                                     .withOpacity(0.6),
                                 blurRadius: 8,
@@ -4922,8 +6164,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.task_alt,
                   value: '$completedDailyTasks/$totalTasks',
                   label: 'Tareas',
-                  color: _professionalAccent,
-                  gradientColors: [_professionalAccent, _professionalSecondary],
+                  color: context.pro.accent,
+                  gradientColors: [context.pro.accent, context.pro.secondary],
                 ),
               ),
               const SizedBox(width: 12),
@@ -4932,8 +6174,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.event,
                   value: '$totalMeetings',
                   label: 'Sesiones',
-                  color: _professionalTeal,
-                  gradientColors: [_professionalTeal, _professionalAccent],
+                  color: context.pro.teal,
+                  gradientColors: [context.pro.teal, context.pro.accent],
                 ),
               ),
             ],
@@ -4946,8 +6188,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.folder_special,
                   value: '$completedProjects/$totalProjects',
                   label: 'Proyectos',
-                  color: _professionalIndigo,
-                  gradientColors: [_professionalIndigo, _professionalAccent],
+                  color: context.pro.indigo,
+                  gradientColors: [context.pro.indigo, context.pro.accent],
                 ),
               ),
               const SizedBox(width: 12),
@@ -4972,14 +6214,14 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary.withOpacity(0.15),
-                  _professionalSecondary.withOpacity(0.1),
+                  context.pro.primary.withOpacity(0.15),
+                  context.pro.secondary.withOpacity(0.1),
                   AppTheme.darkSurface,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _professionalSecondary.withOpacity(0.3),
+                color: context.pro.secondary.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -4992,7 +6234,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [_professionalPrimary, _professionalSecondary],
+                          colors: [context.pro.primary, context.pro.secondary],
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -5032,6 +6274,19 @@ class _WorkSectionsState extends State<WorkSections> {
                       return false;
                     }
                   }).length;
+                  
+                  // Calcular proyectos completados (proyectos donde todas las metas están completadas)
+                  final completedProjects = _projects.where((p) {
+                    if (p.goals.isEmpty) return false;
+                    final completedGoals = p.goals.where((g) => g.completed == true).length;
+                    return completedGoals == p.goals.length && p.goals.isNotEmpty;
+                  }).length;
+                  
+                  // Calcular progreso de proyectos (basado en metas completadas)
+                  final totalProjectGoals = _projects.fold(0, (sum, p) => sum + p.goals.length);
+                  final completedProjectGoals = _projects.fold(0, (sum, p) => sum + p.goals.where((g) => g.completed == true).length);
+                  final projectProgress = totalProjectGoals > 0 ? ((completedProjectGoals / totalProjectGoals) * 100).round() : 0;
+                  
                   final totalDayItems = dayTasks.length + dayMeetings;
                   final completedDayItems = completedDayTasks;
                   final dayProgress = totalDayItems > 0 ? ((completedDayItems / totalDayItems) * 100).round() : 0;
@@ -5045,8 +6300,8 @@ class _WorkSectionsState extends State<WorkSections> {
                         end: Alignment.bottomRight,
                         colors: isToday
                             ? [
-                                _professionalAccent.withOpacity(0.2),
-                                _professionalSecondary.withOpacity(0.15),
+                                context.pro.accent.withOpacity(0.2),
+                                context.pro.secondary.withOpacity(0.15),
                                 AppTheme.darkSurface,
                               ]
                             : [
@@ -5057,7 +6312,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isToday
-                            ? _professionalAccent.withOpacity(0.4)
+                            ? context.pro.accent.withOpacity(0.4)
                             : AppTheme.darkSurfaceVariant.withOpacity(0.2),
                         width: isToday ? 1.5 : 1,
                       ),
@@ -5075,8 +6330,8 @@ class _WorkSectionsState extends State<WorkSections> {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: isToday
-                                          ? [_professionalAccent, _professionalSecondary]
-                                          : [_professionalSlate, _professionalIndigo],
+                                          ? [context.pro.accent, context.pro.secondary]
+                                          : [context.pro.slate, context.pro.indigo],
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -5105,7 +6360,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: _professionalAccent.withOpacity(0.3),
+                                              color: context.pro.accent.withOpacity(0.3),
                                               borderRadius: BorderRadius.circular(6),
                                             ),
                                             child: Text(
@@ -5113,7 +6368,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                               style: TextStyle(
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.bold,
-                                                color: _professionalAccent,
+                                                color: context.pro.accent,
                                                 letterSpacing: 0.5,
                                               ),
                                             ),
@@ -5126,136 +6381,248 @@ class _WorkSectionsState extends State<WorkSections> {
                                       DateFormat('d MMM', 'es').format(date),
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: AppTheme.white60,
+                                        color: AppTheme.white,
                                       ),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isToday
-                                      ? [_professionalAccent, _professionalSecondary]
-                                      : [_professionalTeal, _professionalAccent],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '$totalDayItems',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (totalDayItems > 0) ...[
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Row(
+                              children: [
+                                if (completedProjects > 0) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Colors.green, Colors.green.shade700],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
+                                        const Icon(Icons.check_circle, size: 14, color: AppTheme.white),
+                                        const SizedBox(width: 4),
                                         Text(
-                                          'Progreso',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: AppTheme.white60,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          '$dayProgress%',
-                                          style: TextStyle(
-                                            fontSize: 11,
+                                          '$completedProjects',
+                                          style: const TextStyle(
+                                            fontSize: 12,
                                             fontWeight: FontWeight.bold,
-                                            color: isToday ? _professionalAccent : AppTheme.white70,
+                                            color: AppTheme.white,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      height: 6,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.darkSurfaceVariant,
-                                        borderRadius: BorderRadius.circular(3),
-                                      ),
-                                      child: FractionallySizedBox(
-                                        alignment: Alignment.centerLeft,
-                                        widthFactor: dayProgress / 100,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: isToday
-                                                  ? [_professionalAccent, _professionalSecondary]
-                                                  : dayProgress >= 70
-                                                      ? [Colors.green, Colors.green.shade700]
-                                                      : [_professionalTeal, _professionalAccent],
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isToday
+                                          ? [context.pro.accent, context.pro.secondary]
+                                          : [context.pro.teal, context.pro.accent],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '$totalDayItems',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        if (totalDayItems > 0 || _projects.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              if (totalDayItems > 0) ...[
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Progreso Tareas',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: AppTheme.white,
+                                              fontWeight: FontWeight.w500,
                                             ),
-                                            borderRadius: BorderRadius.circular(3),
+                                          ),
+                                          Text(
+                                            '$dayProgress%',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.darkSurfaceVariant,
+                                          borderRadius: BorderRadius.circular(3),
+                                        ),
+                                        child: FractionallySizedBox(
+                                          alignment: Alignment.centerLeft,
+                                          widthFactor: dayProgress / 100,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: isToday
+                                                    ? [context.pro.accent, context.pro.secondary]
+                                                    : dayProgress >= 70
+                                                        ? [Colors.green, Colors.green.shade700]
+                                                        : [context.pro.teal, context.pro.accent],
+                                              ),
+                                              borderRadius: BorderRadius.circular(3),
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Row(
-                                children: [
-                                  if (dayTasks.isNotEmpty) ...[
+                              ],
+                              if (_projects.isNotEmpty) ...[
+                                if (totalDayItems > 0) const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Progreso Proyectos',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: AppTheme.white,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          Text(
+                                            '$projectProgress%',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.darkSurfaceVariant,
+                                          borderRadius: BorderRadius.circular(3),
+                                        ),
+                                        child: FractionallySizedBox(
+                                          alignment: Alignment.centerLeft,
+                                          widthFactor: projectProgress / 100,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: projectProgress >= 100
+                                                    ? [Colors.green, Colors.green.shade700]
+                                                    : projectProgress >= 70
+                                                        ? [context.pro.teal, context.pro.accent]
+                                                        : [context.pro.indigo, context.pro.secondary],
+                                              ),
+                                              borderRadius: BorderRadius.circular(3),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if (completedProjects > 0) ...[
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.check_circle, size: 11, color: Colors.green),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                '$completedProjects/${_projects.length} completados',
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  color: Colors.green,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (totalDayItems > 0) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                if (dayTasks.isNotEmpty) ...[
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: _professionalAccent.withOpacity(0.2),
+                                        color: context.pro.accent.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.task, size: 12, color: _professionalAccent),
+                                          Icon(Icons.task, size: 12, color: context.pro.accent),
                                           const SizedBox(width: 4),
                                           Text(
                                             '${dayTasks.length}',
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
-                                              color: _professionalAccent,
+                                              color: context.pro.accent,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                  if (dayMeetings > 0) ...[
+                                ],
+                                if (dayMeetings > 0) ...[
                                     if (dayTasks.isNotEmpty) const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: _professionalTeal.withOpacity(0.2),
+                                        color: context.pro.teal.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.event, size: 12, color: _professionalTeal),
+                                          Icon(Icons.event, size: 12, color: context.pro.teal),
                                           const SizedBox(width: 4),
                                           Text(
                                             '$dayMeetings',
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
-                                              color: _professionalTeal,
+                                              color: context.pro.teal,
                                             ),
                                           ),
                                         ],
@@ -5265,21 +6632,9 @@ class _WorkSectionsState extends State<WorkSections> {
                                 ],
                               ),
                             ],
-                          ),
-                        ] else
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              'Sin actividades programadas',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.white40,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                          ],
+                        ],
+                      ),
                   );
                 }).toList(),
               ],
@@ -5310,10 +6665,10 @@ class _WorkSectionsState extends State<WorkSections> {
                     _selectedStrategyProject = null;
                   });
                 },
-                icon: Icon(Icons.arrow_back, color: _professionalAccent),
+                icon: Icon(Icons.arrow_back, color: context.pro.accent),
                 label: Text(
                   'Volver',
-                  style: TextStyle(color: _professionalAccent),
+                  style: TextStyle(color: context.pro.accent),
                 ),
               ),
               const Spacer(),
@@ -5337,14 +6692,14 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary.withOpacity(0.2),
-                  _professionalSecondary.withOpacity(0.15),
+                  context.pro.primary.withOpacity(0.2),
+                  context.pro.secondary.withOpacity(0.15),
                   AppTheme.darkSurface,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _professionalPrimary.withOpacity(0.3),
+                color: context.pro.primary.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -5357,7 +6712,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [_professionalPrimary, _professionalSecondary],
+                          colors: [context.pro.primary, context.pro.secondary],
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -5443,14 +6798,14 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalTeal.withOpacity(0.2),
-                  _professionalAccent.withOpacity(0.15),
+                  context.pro.teal.withOpacity(0.2),
+                  context.pro.accent.withOpacity(0.15),
                   AppTheme.darkSurface,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _professionalTeal.withOpacity(0.3),
+                color: context.pro.teal.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -5463,7 +6818,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [_professionalTeal, _professionalAccent],
+                          colors: [context.pro.teal, context.pro.accent],
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -5949,7 +7304,7 @@ class _WorkSectionsState extends State<WorkSections> {
             color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: _professionalSecondary.withOpacity(0.3),
+              color: context.pro.secondary.withOpacity(0.3),
               width: 1,
             ),
           ),
@@ -5970,7 +7325,7 @@ class _WorkSectionsState extends State<WorkSections> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_professionalPrimary, _professionalSecondary],
+          colors: [context.pro.primary, context.pro.secondary],
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -6011,7 +7366,7 @@ class _WorkSectionsState extends State<WorkSections> {
         color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _professionalSecondary.withOpacity(0.2),
+          color: context.pro.secondary.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -6025,7 +7380,7 @@ class _WorkSectionsState extends State<WorkSections> {
         children: [
           TableRow(
             decoration: BoxDecoration(
-              color: _professionalPrimary.withOpacity(0.2),
+              color: context.pro.primary.withOpacity(0.2),
             ),
             children: [
               _buildTableCell('STT', isHeader: true),
@@ -6075,7 +7430,7 @@ class _WorkSectionsState extends State<WorkSections> {
         color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _professionalSecondary.withOpacity(0.2),
+          color: context.pro.secondary.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -6089,7 +7444,7 @@ class _WorkSectionsState extends State<WorkSections> {
         children: [
           TableRow(
             decoration: BoxDecoration(
-              color: _professionalPrimary.withOpacity(0.2),
+              color: context.pro.primary.withOpacity(0.2),
             ),
             children: [
               _buildTableCell('STT', isHeader: true),
@@ -6145,7 +7500,7 @@ class _WorkSectionsState extends State<WorkSections> {
           color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: _professionalSecondary.withOpacity(0.2),
+            color: context.pro.secondary.withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -6167,7 +7522,7 @@ class _WorkSectionsState extends State<WorkSections> {
           children: [
             TableRow(
               decoration: BoxDecoration(
-                color: _professionalPrimary.withOpacity(0.2),
+                color: context.pro.primary.withOpacity(0.2),
               ),
               children: [
                 _buildTableCell('POSITION', isHeader: true),
@@ -6232,7 +7587,7 @@ class _WorkSectionsState extends State<WorkSections> {
           color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: _professionalSecondary.withOpacity(0.2),
+            color: context.pro.secondary.withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -6252,7 +7607,7 @@ class _WorkSectionsState extends State<WorkSections> {
           children: [
             TableRow(
               decoration: BoxDecoration(
-                color: _professionalPrimary.withOpacity(0.2),
+                color: context.pro.primary.withOpacity(0.2),
               ),
               children: [
                 _buildTableCell('ELEMENT', isHeader: true),
@@ -6299,164 +7654,7 @@ class _WorkSectionsState extends State<WorkSections> {
     );
   }
 
-  Widget _buildPriorities() {
-    final priorityColors = [
-      _professionalIndigo,
-      _professionalTeal,
-      _professionalSecondary,
-      _professionalAccent,
-      _professionalSlate,
-    ];
-    
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header mejorado con paleta profesional
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _professionalPrimary,
-                  _professionalSecondary,
-                  _professionalAccent,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: _professionalSecondary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(Icons.priority_high, color: AppTheme.white, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Prioridades',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                      const Text(
-                        'Define y gestiona tus prioridades clave',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Formulario para agregar prioridad
-          if (_priorities.length < 5)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _priorityController,
-                      style: const TextStyle(color: AppTheme.white),
-                      decoration: InputDecoration(
-                        hintText: 'Escribe una nueva prioridad...',
-                        hintStyle: const TextStyle(color: AppTheme.white60),
-                        filled: true,
-                        fillColor: AppTheme.darkSurfaceVariant,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      onSubmitted: (_) => _addPriority(),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _addPriority,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _professionalAccent,
-                      foregroundColor: AppTheme.white,
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(12),
-                    ),
-                    child: const Icon(Icons.add),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 20),
-          
-          // Lista de prioridades
-          if (_priorities.isEmpty)
-            _buildEmptyState('No hay prioridades definidas\nEscribe una prioridad arriba y toca el botón +', Icons.priority_high)
-          else
-            ..._priorities.asMap().entries.map((entry) {
-              final index = entry.key;
-              final priority = entry.value;
-              return _buildPriorityCard(priority, index, priorityColors);
-            }),
-        ],
-      ),
-    );
-  }
-  
-  void _addPriority() {
-    if (_priorityController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa una prioridad')),
-      );
-      return;
-    }
-    
-    if (_priorities.length >= 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solo puedes tener 5 prioridades')),
-      );
-      return;
-    }
-    
-    setState(() {
-      _priorities.add({
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'text': _priorityController.text.trim(),
-        'completed': false,
-      });
-      _priorityController.clear();
-    });
-  }
-
-  Widget _buildPrioritiesFocusGoals() {
+  Widget _buildPrioritiesFocusGoals(BuildContext context) {
     return Column(
       children: [
         // Header mejorado con paleta profesional
@@ -6468,15 +7666,15 @@ class _WorkSectionsState extends State<WorkSections> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                _professionalPrimary,
-                _professionalSecondary,
-                _professionalAccent,
+                context.pro.primary,
+                context.pro.secondary,
+                context.pro.accent,
               ],
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: _professionalSecondary.withOpacity(0.3),
+                color: context.pro.secondary.withOpacity(0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -6573,7 +7771,7 @@ class _WorkSectionsState extends State<WorkSections> {
               ? LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [_professionalPrimary, _professionalSecondary],
+                  colors: [context.pro.primary, context.pro.secondary],
                 )
               : null,
           color: isActive ? null : Colors.transparent,
@@ -6605,11 +7803,11 @@ class _WorkSectionsState extends State<WorkSections> {
 
   Widget _buildPrioritiesContent() {
     final priorityColors = [
-      _professionalIndigo,
-      _professionalTeal,
-      _professionalSecondary,
-      _professionalAccent,
-      _professionalSlate,
+      context.pro.indigo,
+      context.pro.teal,
+      context.pro.secondary,
+      context.pro.accent,
+      context.pro.slate,
     ];
 
     return Column(
@@ -6618,40 +7816,102 @@ class _WorkSectionsState extends State<WorkSections> {
         // Formulario para agregar prioridad
         if (_priorities.length < 5)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  context.pro.primary.withOpacity(0.2),
+                  context.pro.secondary.withOpacity(0.15),
+                  AppTheme.darkSurface.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: context.pro.accent.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: context.pro.accent.withOpacity(0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _priorityController,
-                    style: const TextStyle(color: AppTheme.white),
+                    style: const TextStyle(
+                      color: AppTheme.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Escribe una nueva prioridad...',
-                      hintStyle: const TextStyle(color: AppTheme.white60),
-                      filled: true,
-                      fillColor: AppTheme.darkSurfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+                      hintStyle: TextStyle(
+                        color: AppTheme.white60,
+                        fontSize: 15,
                       ),
+                      filled: true,
+                      fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.pro.accent.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.pro.accent.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.pro.accent,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                     onSubmitted: (_) => _addPriority(),
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _addPriority,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _professionalAccent,
-                    foregroundColor: AppTheme.white,
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(12),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [context.pro.accent, context.pro.secondary],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: context.pro.accent.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.add),
+                  child: ElevatedButton(
+                    onPressed: _addPriority,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: AppTheme.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.all(14),
+                    ),
+                    child: const Icon(Icons.add_rounded, size: 24),
+                  ),
                 ),
               ],
             ),
@@ -6680,40 +7940,102 @@ class _WorkSectionsState extends State<WorkSections> {
         // Formulario para agregar enfoque
         if (_focus.length < 5)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.indigo.withOpacity(0.2),
+                  Colors.purple.withOpacity(0.15),
+                  AppTheme.darkSurface.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.indigo.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.indigo.withOpacity(0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _focusController,
-                    style: const TextStyle(color: AppTheme.white),
+                    style: const TextStyle(
+                      color: AppTheme.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Escribe un nuevo enfoque...',
-                      hintStyle: const TextStyle(color: AppTheme.white60),
-                      filled: true,
-                      fillColor: AppTheme.darkSurfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+                      hintStyle: TextStyle(
+                        color: AppTheme.white60,
+                        fontSize: 15,
                       ),
+                      filled: true,
+                      fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.indigo.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.indigo.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.indigo,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                     onSubmitted: (_) => _addFocus(),
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _addFocus,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _professionalAccent,
-                    foregroundColor: AppTheme.white,
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(12),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.indigo, Colors.purple],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.indigo.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.add),
+                  child: ElevatedButton(
+                    onPressed: _addFocus,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: AppTheme.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.all(14),
+                    ),
+                    child: const Icon(Icons.add_rounded, size: 24),
+                  ),
                 ),
               ],
             ),
@@ -6765,8 +8087,8 @@ class _WorkSectionsState extends State<WorkSections> {
                 icon: Icons.check_circle_outline,
                 value: '$completedGoals/$totalGoals',
                 label: 'Objetivos',
-                color: _professionalTeal,
-                gradientColors: [_professionalTeal, _professionalAccent],
+                color: context.pro.teal,
+                gradientColors: [context.pro.teal, context.pro.accent],
               ),
             ),
             const SizedBox(width: 12),
@@ -6776,58 +8098,120 @@ class _WorkSectionsState extends State<WorkSections> {
                 value: '$progressPercentage%',
                 label: 'Progreso',
                 subtitle: '$completedMilestones/$totalMilestones metas',
-                color: _professionalAccent,
-                gradientColors: [_professionalAccent, _professionalSecondary],
+                color: context.pro.accent,
+                gradientColors: [context.pro.accent, context.pro.secondary],
               ),
             ),
           ],
         ),
         const SizedBox(height: 20),
         
-        // Formulario para agregar objetivo
-        if (_goals.length < 5)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _goalController,
-                    style: const TextStyle(color: AppTheme.white),
-                    decoration: InputDecoration(
-                      hintText: 'Escribe un nuevo objetivo...',
-                      hintStyle: const TextStyle(color: AppTheme.white60),
-                      filled: true,
-                      fillColor: AppTheme.darkSurfaceVariant,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+          // Formulario para agregar objetivo
+          if (_goals.length < 5)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.pro.teal.withOpacity(0.2),
+                    context.pro.accent.withOpacity(0.15),
+                    AppTheme.darkSurface.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.pro.teal.withOpacity(0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.pro.teal.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _goalController,
+                      style: const TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
                       ),
+                      decoration: InputDecoration(
+                        hintText: 'Escribe un nuevo objetivo...',
+                        hintStyle: TextStyle(
+                          color: AppTheme.white60,
+                          fontSize: 15,
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.pro.teal.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.pro.teal.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.pro.teal,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                      onSubmitted: (_) => _addGoal(),
                     ),
-                    onSubmitted: (_) => _addGoal(),
                   ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _addGoal,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _professionalAccent,
-                    foregroundColor: AppTheme.white,
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(12),
+                  const SizedBox(width: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [context.pro.teal, context.pro.accent],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.pro.teal.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _addGoal,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: AppTheme.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.all(14),
+                      ),
+                      child: const Icon(Icons.add_rounded, size: 24),
+                    ),
                   ),
-                  child: const Icon(Icons.add),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        const SizedBox(height: 20),
-        
-        // Lista de objetivos
+          const SizedBox(height: 20),
+          
+          // Lista de objetivos
         if (_goals.isEmpty)
           _buildEmptyState('No hay objetivos definidos\nDefine tus objetivos para comenzar', Icons.flag)
         else
@@ -6856,15 +8240,15 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary,
-                  _professionalSecondary,
-                  _professionalAccent,
+                  context.pro.primary,
+                  context.pro.secondary,
+                  context.pro.accent,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: _professionalSecondary.withOpacity(0.3),
+                  color: context.pro.secondary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -6940,7 +8324,7 @@ class _WorkSectionsState extends State<WorkSections> {
                   ElevatedButton(
                     onPressed: _addFocus,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _professionalAccent,
+                      backgroundColor: context.pro.accent,
                       foregroundColor: AppTheme.white,
                       shape: const CircleBorder(),
                       padding: const EdgeInsets.all(12),
@@ -7025,15 +8409,15 @@ class _WorkSectionsState extends State<WorkSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _professionalPrimary,
-                  _professionalSecondary,
-                  _professionalAccent,
+                  context.pro.primary,
+                  context.pro.secondary,
+                  context.pro.accent,
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: _professionalSecondary.withOpacity(0.3),
+                  color: context.pro.secondary.withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -7086,8 +8470,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   icon: Icons.check_circle_outline,
                   value: '$completedGoals/$totalGoals',
                   label: 'Objetivos',
-                  color: _professionalTeal,
-                  gradientColors: [_professionalTeal, _professionalAccent],
+                  color: context.pro.teal,
+                  gradientColors: [context.pro.teal, context.pro.accent],
                 ),
               ),
               const SizedBox(width: 12),
@@ -7097,8 +8481,8 @@ class _WorkSectionsState extends State<WorkSections> {
                   value: '$progressPercentage%',
                   label: 'Progreso',
                   subtitle: '$completedMilestones/$totalMilestones metas',
-                  color: _professionalAccent,
-                  gradientColors: [_professionalAccent, _professionalSecondary],
+                  color: context.pro.accent,
+                  gradientColors: [context.pro.accent, context.pro.secondary],
                 ),
               ),
             ],
@@ -7108,40 +8492,102 @@ class _WorkSectionsState extends State<WorkSections> {
           // Formulario para agregar objetivo
           if (_goals.length < 5)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface,
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.pro.teal.withOpacity(0.2),
+                    context.pro.accent.withOpacity(0.15),
+                    AppTheme.darkSurface.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.pro.teal.withOpacity(0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.pro.teal.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _goalController,
-                      style: const TextStyle(color: AppTheme.white),
+                      style: const TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo objetivo...',
-                        hintStyle: const TextStyle(color: AppTheme.white60),
-                        filled: true,
-                        fillColor: AppTheme.darkSurfaceVariant,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                        hintStyle: TextStyle(
+                          color: AppTheme.white60,
+                          fontSize: 15,
                         ),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.pro.teal.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.pro.teal.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: context.pro.teal,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
                       onSubmitted: (_) => _addGoal(),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _addGoal,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _professionalAccent,
-                      foregroundColor: AppTheme.white,
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(12),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [context.pro.teal, context.pro.accent],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.pro.teal.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.add),
+                    child: ElevatedButton(
+                      onPressed: _addGoal,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: AppTheme.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.all(14),
+                      ),
+                      child: const Icon(Icons.add_rounded, size: 24),
+                    ),
                   ),
                 ],
               ),
@@ -7200,7 +8646,7 @@ class _WorkSectionsState extends State<WorkSections> {
     Color? buttonColor,
     List<Color>? gradientColors,
   ]) {
-    final colors = gradientColors ?? [buttonColor ?? _professionalAccent, buttonColor ?? _professionalAccent];
+    final colors = gradientColors ?? [buttonColor ?? context.pro.accent, buttonColor ?? context.pro.accent];
     
     return Center(
       child: Column(
@@ -7318,8 +8764,8 @@ class _WorkSectionsState extends State<WorkSections> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          _professionalAccent.withOpacity(0.2),
-                          _professionalSecondary.withOpacity(0.1),
+                          context.pro.accent.withOpacity(0.2),
+                          context.pro.secondary.withOpacity(0.1),
                         ],
                       )
                     : isUpcoming
@@ -7327,8 +8773,8 @@ class _WorkSectionsState extends State<WorkSections> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              _professionalTeal.withOpacity(0.1),
-                              _professionalTeal.withOpacity(0.05),
+                              context.pro.teal.withOpacity(0.1),
+                              context.pro.teal.withOpacity(0.05),
                             ],
                           )
                         : LinearGradient(
@@ -7346,8 +8792,8 @@ class _WorkSectionsState extends State<WorkSections> {
               : isOverdue
                   ? Colors.red.withOpacity(0.3)
                   : isToday
-                      ? _professionalAccent.withOpacity(0.4)
-                      : _professionalSecondary.withOpacity(0.2),
+                      ? context.pro.accent.withOpacity(0.4)
+                      : context.pro.secondary.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
@@ -7356,7 +8802,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     ? Colors.green
                     : isOverdue
                         ? Colors.red
-                        : _professionalSecondary)
+                        : context.pro.secondary)
                 .withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -7406,7 +8852,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             ? Colors.green
                             : isOverdue
                                 ? Colors.red
-                                : _professionalAccent,
+                                : context.pro.accent,
                         width: 2.5,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -7449,13 +8895,13 @@ class _WorkSectionsState extends State<WorkSections> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  _getPriorityColor(task.priority).withOpacity(0.3),
-                                  _getPriorityColor(task.priority).withOpacity(0.15),
+                                  _getPriorityColor(task.priority, context).withOpacity(0.3),
+                                  _getPriorityColor(task.priority, context).withOpacity(0.15),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: _getPriorityColor(task.priority).withOpacity(0.5),
+                                color: _getPriorityColor(task.priority, context).withOpacity(0.5),
                                 width: 1,
                               ),
                             ),
@@ -7465,7 +8911,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 Icon(
                                   _getPriorityIcon(task.priority),
                                   size: 14,
-                                  color: _getPriorityColor(task.priority),
+                                  color: _getPriorityColor(task.priority, context),
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
@@ -7473,7 +8919,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: _getPriorityColor(task.priority),
+                                    color: _getPriorityColor(task.priority, context),
                                   ),
                                 ),
                               ],
@@ -7493,16 +8939,16 @@ class _WorkSectionsState extends State<WorkSections> {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        _professionalAccent.withOpacity(0.3),
-                                        _professionalSecondary.withOpacity(0.2),
+                                        context.pro.accent.withOpacity(0.3),
+                                        context.pro.secondary.withOpacity(0.2),
                                       ],
                                     )
                                   : LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        _professionalSecondary.withOpacity(0.2),
-                                        _professionalAccent.withOpacity(0.15),
+                                        context.pro.secondary.withOpacity(0.2),
+                                        context.pro.accent.withOpacity(0.15),
                                       ],
                                     ),
                               borderRadius: BorderRadius.circular(8),
@@ -7513,7 +8959,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 Icon(
                                   isToday ? Icons.today : Icons.calendar_today,
                                   size: 14,
-                                  color: isToday ? _professionalAccent : AppTheme.white70,
+                                  color: isToday ? context.pro.accent : AppTheme.white70,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -7523,7 +8969,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: isToday ? _professionalAccent : AppTheme.white70,
+                                    color: isToday ? context.pro.accent : AppTheme.white70,
                                   ),
                                 ),
                               ],
@@ -7574,7 +9020,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: _professionalAccent.withOpacity(0.2),
+                                color: context.pro.accent.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -7582,7 +9028,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: _professionalAccent,
+                                  color: context.pro.accent,
                                 ),
                               ),
                             ),
@@ -7597,7 +9043,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 Container(
                   decoration: BoxDecoration(
                     color: (task.notes != null && task.notes!.isNotEmpty
-                        ? _professionalAccent
+                        ? context.pro.accent
                         : AppTheme.darkSurfaceVariant)
                         .withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -7609,7 +9055,7 @@ class _WorkSectionsState extends State<WorkSections> {
                           : Icons.note_outlined,
                       size: 20,
                       color: task.notes != null && task.notes!.isNotEmpty
-                          ? _professionalAccent
+                          ? context.pro.accent
                           : AppTheme.white60,
                     ),
                     onPressed: () {
@@ -7703,13 +9149,13 @@ class _WorkSectionsState extends State<WorkSections> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      _professionalAccent.withOpacity(0.15),
-                      _professionalAccent.withOpacity(0.05),
+                      context.pro.accent.withOpacity(0.15),
+                      context.pro.accent.withOpacity(0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _professionalAccent.withOpacity(0.3),
+                    color: context.pro.accent.withOpacity(0.3),
                     width: 1,
                   ),
                 ),
@@ -7719,7 +9165,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     Icon(
                       Icons.note,
                       size: 18,
-                      color: _professionalAccent,
+                      color: context.pro.accent,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -7758,8 +9204,8 @@ class _WorkSectionsState extends State<WorkSections> {
           end: Alignment.bottomRight,
           colors: isToday
               ? [
-                  _professionalPrimary.withOpacity(0.3),
-                  _professionalSecondary.withOpacity(0.2),
+                  context.pro.primary.withOpacity(0.3),
+                  context.pro.secondary.withOpacity(0.2),
                 ]
               : [
                   AppTheme.darkSurface,
@@ -7769,14 +9215,14 @@ class _WorkSectionsState extends State<WorkSections> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isToday
-              ? _professionalAccent.withOpacity(0.5)
-              : _professionalSecondary.withOpacity(0.2),
+              ? context.pro.accent.withOpacity(0.5)
+              : context.pro.secondary.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isToday
-                ? _professionalPrimary.withOpacity(0.2)
+                ? context.pro.primary.withOpacity(0.2)
                 : Colors.black.withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
@@ -7795,8 +9241,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        _professionalAccent.withOpacity(0.3),
-                        _professionalSecondary.withOpacity(0.2),
+                        context.pro.accent.withOpacity(0.3),
+                        context.pro.secondary.withOpacity(0.2),
                       ],
                     )
                   : null,
@@ -7814,8 +9260,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: isToday
-                          ? [_professionalPrimary, _professionalSecondary]
-                          : [_professionalSlate, _professionalIndigo],
+                          ? [context.pro.primary, context.pro.secondary]
+                          : [context.pro.slate, context.pro.indigo],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -7836,7 +9282,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: _professionalAccent.withOpacity(0.3),
+                                color: context.pro.accent.withOpacity(0.3),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Text(
@@ -7866,7 +9312,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         '${completedCount}/${totalCount} completadas',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -7875,7 +9321,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _professionalTeal.withOpacity(0.2),
+                    color: context.pro.teal.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -7883,7 +9329,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _professionalTeal,
+                      color: context.pro.teal,
                     ),
                   ),
                 ),
@@ -7920,9 +9366,9 @@ class _WorkSectionsState extends State<WorkSections> {
   Widget _buildDailyTaskItem(DailyTask task, DateTime date, int index, {bool isLast = false}) {
     final isOverdue = task.time.isBefore(DateTime.now()) && !task.completed;
     // Usar colores profesionales basados en el índice para crear variación
-    final professionalColor1 = index % 3 == 0 ? _professionalPrimary : (index % 3 == 1 ? _professionalSecondary : _professionalAccent);
-    final professionalColor2 = index % 3 == 1 ? _professionalAccent : (index % 3 == 2 ? _professionalTeal : _professionalSecondary);
-    final professionalColor3 = index % 3 == 2 ? _professionalTeal : (index % 3 == 0 ? _professionalIndigo : _professionalAccent);
+    final professionalColor1 = index % 3 == 0 ? context.pro.primary : (index % 3 == 1 ? context.pro.secondary : context.pro.accent);
+    final professionalColor2 = index % 3 == 1 ? context.pro.accent : (index % 3 == 2 ? context.pro.teal : context.pro.secondary);
+    final professionalColor3 = index % 3 == 2 ? context.pro.teal : (index % 3 == 0 ? context.pro.indigo : context.pro.accent);
     
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -8121,7 +9567,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                     Icon(
                                       _getPriorityIcon(task.priority!),
                                       size: 14,
-                                      color: _getPriorityColor(task.priority!),
+                                      color: _getPriorityColor(task.priority!, context),
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
@@ -8245,7 +9691,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               child: Icon(
                                 Icons.access_time,
                                 size: 16,
-                                color: professionalColor2,
+                                color: AppTheme.white,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -8257,7 +9703,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                     'Hora',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.white60,
+                                      color: AppTheme.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -8322,9 +9768,9 @@ class _WorkSectionsState extends State<WorkSections> {
     final isCompleted = totalGoals > 0 && completedGoals == totalGoals;
     
     // Colores profesionales basados en el índice para variación
-    final professionalColor1 = index % 3 == 0 ? _professionalPrimary : (index % 3 == 1 ? _professionalSecondary : _professionalAccent);
-    final professionalColor2 = index % 3 == 1 ? _professionalAccent : (index % 3 == 2 ? _professionalTeal : _professionalSecondary);
-    final professionalColor3 = index % 3 == 2 ? _professionalTeal : (index % 3 == 0 ? _professionalIndigo : _professionalAccent);
+    final professionalColor1 = index % 3 == 0 ? context.pro.primary : (index % 3 == 1 ? context.pro.secondary : context.pro.accent);
+    final professionalColor2 = index % 3 == 1 ? context.pro.accent : (index % 3 == 2 ? context.pro.teal : context.pro.secondary);
+    final professionalColor3 = index % 3 == 2 ? context.pro.teal : (index % 3 == 0 ? context.pro.indigo : context.pro.accent);
     
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -8510,7 +9956,8 @@ class _WorkSectionsState extends State<WorkSections> {
                                       ],
                                     ),
                                   ),
-                                ] else if (isOverdue) ...[
+                                ],
+                                if (isOverdue) ...[
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
@@ -8562,7 +10009,9 @@ class _WorkSectionsState extends State<WorkSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         onSelected: (value) {
-                          if (value == 'delete') {
+                          if (value == 'edit') {
+                            _editProject(project);
+                          } else if (value == 'delete') {
                             showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -8634,6 +10083,16 @@ class _WorkSectionsState extends State<WorkSections> {
                           }
                         },
                         itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18, color: AppTheme.white70),
+                                SizedBox(width: 8),
+                                Text('Editar', style: TextStyle(color: AppTheme.white70)),
+                              ],
+                            ),
+                          ),
                           const PopupMenuItem(
                             value: 'delete',
                             child: Row(
@@ -8853,6 +10312,169 @@ class _WorkSectionsState extends State<WorkSections> {
                             ],
                           ),
                         ],
+                        // Lista de metas individuales
+                        if (project.goals.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkBackground.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: professionalColor1.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.flag_rounded,
+                                      size: 16,
+                                      color: professionalColor3,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Metas del Proyecto',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                ...project.goals.asMap().entries.map((entry) {
+                                  final goal = entry.value;
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: goal.completed
+                                          ? Colors.green.withOpacity(0.1)
+                                          : AppTheme.darkSurface.withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: goal.completed
+                                            ? Colors.green.withOpacity(0.3)
+                                            : professionalColor1.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Checkbox(
+                                          value: goal.completed,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              final projectIndex = _projects.indexWhere((p) => p.id == project.id);
+                                              if (projectIndex != -1) {
+                                                final updatedGoals = project.goals.map((g) {
+                                                  if (g.id == goal.id) {
+                                                    return ProjectGoal(
+                                                      id: g.id,
+                                                      text: g.text,
+                                                      date: g.date,
+                                                      person: g.person,
+                                                      position: g.position,
+                                                      completed: value ?? false,
+                                                    );
+                                                  }
+                                                  return g;
+                                                }).toList();
+                                                
+                                                _projects[projectIndex] = WorkProject(
+                                                  id: project.id,
+                                                  title: project.title,
+                                                  aim: project.aim,
+                                                  startDate: project.startDate,
+                                                  deadline: project.deadline,
+                                                  teammates: project.teammates,
+                                                  achievements: project.achievements,
+                                                  works: project.works,
+                                                  funding: project.funding,
+                                                  goals: updatedGoals,
+                                                  overview: project.overview,
+                                                );
+                                              }
+                                            });
+                                          },
+                                          activeColor: Colors.green,
+                                          checkColor: AppTheme.white,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                goal.text,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: goal.completed
+                                                      ? AppTheme.white60
+                                                      : AppTheme.white,
+                                                  decoration: goal.completed
+                                                      ? TextDecoration.lineThrough
+                                                      : null,
+                                                  fontWeight: goal.completed
+                                                      ? FontWeight.normal
+                                                      : FontWeight.w500,
+                                                ),
+                                              ),
+                                              if (goal.person != null || goal.date != null) ...[
+                                                const SizedBox(height: 6),
+                                                Row(
+                                                  children: [
+                                                    if (goal.person != null) ...[
+                                                      Icon(
+                                                        Icons.person_rounded,
+                                                        size: 12,
+                                                        color: AppTheme.white60,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        goal.person!,
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          color: AppTheme.white60,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                    if (goal.person != null && goal.date != null)
+                                                      const SizedBox(width: 12),
+                                                    if (goal.date != null) ...[
+                                                      Icon(
+                                                        Icons.calendar_today_rounded,
+                                                        size: 12,
+                                                        color: AppTheme.white60,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        DateFormat('dd MMM yyyy', 'es').format(goal.date!),
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          color: AppTheme.white60,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -8869,26 +10491,67 @@ class _WorkSectionsState extends State<WorkSections> {
     final color = colors[index % colors.length];
     final isCompleted = priority['completed'] == true;
     
-    return Card(
-      color: AppTheme.darkSurface,
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: color,
-          width: 2,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isCompleted
+              ? [
+                  Colors.green.withOpacity(0.15),
+                  Colors.green.withOpacity(0.08),
+                  AppTheme.darkSurface,
+                ]
+              : [
+                  color.withOpacity(0.15),
+                  color.withOpacity(0.08),
+                  AppTheme.darkSurface,
+                ],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isCompleted
+              ? Colors.green.withOpacity(0.4)
+              : color.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isCompleted ? Colors.green : color).withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: color,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isCompleted
+                      ? [Colors.green, Colors.green.shade700]
+                      : [color, color.withOpacity(0.8)],
+                ),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
               child: Center(
                 child: Text(
@@ -8896,19 +10559,21 @@ class _WorkSectionsState extends State<WorkSections> {
                   style: const TextStyle(
                     color: AppTheme.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 18,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: TextField(
                 controller: TextEditingController(text: priority['text']),
                 style: TextStyle(
                   fontSize: 16,
-                  color: isCompleted ? AppTheme.white40 : AppTheme.white,
+                  fontWeight: FontWeight.w600,
+                  color: isCompleted ? AppTheme.white60 : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
+                  letterSpacing: 0.2,
                 ),
                 enabled: !isCompleted,
                 decoration: const InputDecoration(
@@ -8925,25 +10590,58 @@ class _WorkSectionsState extends State<WorkSections> {
                 },
               ),
             ),
-            Checkbox(
-              value: isCompleted,
-              onChanged: (value) {
-                setState(() {
-                  final idx = _priorities.indexWhere((p) => p['id'] == priority['id']);
-                  if (idx != -1) {
-                    _priorities[idx]['completed'] = value ?? false;
-                  }
-                });
-              },
-              activeColor: AppTheme.orangeAccent,
+            const SizedBox(width: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: isCompleted
+                    ? Colors.green.withOpacity(0.2)
+                    : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isCompleted
+                      ? Colors.green.withOpacity(0.4)
+                      : color.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Checkbox(
+                value: isCompleted,
+                onChanged: (value) {
+                  setState(() {
+                    final idx = _priorities.indexWhere((p) => p['id'] == priority['id']);
+                    if (idx != -1) {
+                      _priorities[idx]['completed'] = value ?? false;
+                    }
+                  });
+                },
+                activeColor: Colors.green,
+                checkColor: AppTheme.white,
+                side: BorderSide(
+                  color: isCompleted ? Colors.green : color.withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red, size: 20),
-              onPressed: () {
-                setState(() {
-                  _priorities.removeWhere((p) => p['id'] == priority['id']);
-                });
-              },
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: Colors.red.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.red, size: 20),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _priorities.removeWhere((p) => p['id'] == priority['id']);
+                  });
+                },
+              ),
             ),
           ],
         ),
@@ -8955,46 +10653,86 @@ class _WorkSectionsState extends State<WorkSections> {
     final color = colors[index % colors.length];
     final isCompleted = focus['completed'] == true;
     
-    return Card(
-      color: AppTheme.darkSurface,
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: color,
-          width: 2,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isCompleted
+              ? [
+                  Colors.green.withOpacity(0.15),
+                  Colors.green.withOpacity(0.08),
+                  AppTheme.darkSurface,
+                ]
+              : [
+                  color.withOpacity(0.15),
+                  color.withOpacity(0.08),
+                  AppTheme.darkSurface,
+                ],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isCompleted
+              ? Colors.green.withOpacity(0.4)
+              : color.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isCompleted ? Colors.green : color).withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: color,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isCompleted
+                      ? [Colors.green, Colors.green.shade700]
+                      : [color, color.withOpacity(0.8)],
+                ),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
               child: Center(
-                child: Text(
-                  '${index + 1}',
-                  style: const TextStyle(
-                    color: AppTheme.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                child: Icon(
+                  Icons.center_focus_strong_rounded,
+                  color: AppTheme.white,
+                  size: 24,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: TextField(
                 controller: TextEditingController(text: focus['text']),
                 style: TextStyle(
                   fontSize: 16,
-                  color: isCompleted ? AppTheme.white40 : AppTheme.white,
+                  fontWeight: FontWeight.w600,
+                  color: isCompleted ? AppTheme.white60 : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
+                  letterSpacing: 0.2,
                 ),
                 enabled: !isCompleted,
                 decoration: const InputDecoration(
@@ -9011,25 +10749,58 @@ class _WorkSectionsState extends State<WorkSections> {
                 },
               ),
             ),
-            Checkbox(
-              value: isCompleted,
-              onChanged: (value) {
-                setState(() {
-                  final idx = _focus.indexWhere((f) => f['id'] == focus['id']);
-                  if (idx != -1) {
-                    _focus[idx]['completed'] = value ?? false;
-                  }
-                });
-              },
-              activeColor: AppTheme.orangeAccent,
+            const SizedBox(width: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: isCompleted
+                    ? Colors.green.withOpacity(0.2)
+                    : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isCompleted
+                      ? Colors.green.withOpacity(0.4)
+                      : color.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Checkbox(
+                value: isCompleted,
+                onChanged: (value) {
+                  setState(() {
+                    final idx = _focus.indexWhere((f) => f['id'] == focus['id']);
+                    if (idx != -1) {
+                      _focus[idx]['completed'] = value ?? false;
+                    }
+                  });
+                },
+                activeColor: Colors.green,
+                checkColor: AppTheme.white,
+                side: BorderSide(
+                  color: isCompleted ? Colors.green : color.withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red, size: 20),
-              onPressed: () {
-                setState(() {
-                  _focus.removeWhere((f) => f['id'] == focus['id']);
-                });
-              },
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: Colors.red.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.red, size: 20),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _focus.removeWhere((f) => f['id'] == focus['id']);
+                  });
+                },
+              ),
             ),
           ],
         ),
@@ -9053,52 +10824,93 @@ class _WorkSectionsState extends State<WorkSections> {
     }
     final milestoneController = _goalMilestoneControllers[goal['id']]!;
     
-    return Card(
-      color: AppTheme.darkSurface,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: color,
+    // Capturar referencias para usar en closures
+    final goals = _goals;
+    final goalId = goal['id'];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isCompleted
+              ? [
+                  Colors.green.withOpacity(0.2),
+                  Colors.green.withOpacity(0.12),
+                  AppTheme.darkSurface,
+                ]
+              : [
+                  color.withOpacity(0.2),
+                  color.withOpacity(0.12),
+                  AppTheme.darkSurface,
+                ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isCompleted
+              ? Colors.green.withOpacity(0.5)
+              : color.withOpacity(0.5),
           width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: (isCompleted ? Colors.green : color).withOpacity(0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [color, color.withOpacity(0.7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isCompleted
+                          ? [Colors.green, Colors.green.shade700]
+                          : [color, color.withOpacity(0.8)],
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.5),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
                   child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        color: AppTheme.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                    child: Icon(
+                      Icons.flag_rounded,
+                      color: AppTheme.white,
+                      size: 28,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: TextEditingController(text: goal['text']),
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isCompleted ? AppTheme.white40 : AppTheme.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isCompleted ? AppTheme.white60 : AppTheme.white,
                       decoration: isCompleted ? TextDecoration.lineThrough : null,
+                      letterSpacing: 0.3,
                     ),
                     enabled: !isCompleted,
                     decoration: const InputDecoration(
@@ -9117,50 +10929,146 @@ class _WorkSectionsState extends State<WorkSections> {
                 ),
                 if (isCompleted)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [Colors.green, Colors.teal]),
+                      gradient: LinearGradient(
+                        colors: [Colors.green, Colors.green.shade700],
+                      ),
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle, color: AppTheme.white, size: 16),
-                        SizedBox(width: 4),
+                        Icon(Icons.check_circle_rounded, color: AppTheme.white, size: 16),
+                        SizedBox(width: 6),
                         Text(
                           'Completado',
                           style: TextStyle(
                             color: AppTheme.white,
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                   ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red, size: 20),
-                  onPressed: () {
-                    setState(() {
-                      final goalId = goal['id'];
-                      _goals.removeWhere((g) => g['id'] == goalId);
-                      _goalMilestoneControllers.remove(goalId)?.dispose();
-                    });
-                  },
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.red.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.red, size: 20),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      setState(() {
+                        final goalId = goal['id'];
+                        _goals.removeWhere((g) => g['id'] == goalId);
+                        _goalMilestoneControllers.remove(goalId)?.dispose();
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             
-            // Barra de progreso basada en metas
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 8,
+            // Barra de progreso mejorada
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.darkSurfaceVariant.withOpacity(0.4),
+                    AppTheme.darkSurface.withOpacity(0.6),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.track_changes_rounded,
+                            size: 16,
+                            color: color,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Progreso',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isCompleted
+                                ? [Colors.green, Colors.green.shade700]
+                                : [color, color.withOpacity(0.8)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '${(progressPercentage * 100).round()}%',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 10,
                     decoration: BoxDecoration(
                       color: AppTheme.darkSurfaceVariant,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: FractionallySizedBox(
                       alignment: Alignment.centerLeft,
@@ -9168,203 +11076,315 @@ class _WorkSectionsState extends State<WorkSections> {
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [color, color.withOpacity(0.7)],
+                            colors: isCompleted
+                                ? [Colors.green, Colors.green.shade700]
+                                : [color, color.withOpacity(0.8)],
                           ),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withOpacity(0.5),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  '${(progressPercentage * 100).round()}%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: color,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.checklist_rounded,
+                        size: 14,
+                        color: AppTheme.white60,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$completedMilestones/$totalMilestones metas completadas',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '$completedMilestones/$totalMilestones metas completadas',
-              style: TextStyle(
-                fontSize: 11,
-                color: AppTheme.white60,
-                fontWeight: FontWeight.w500,
+                ],
               ),
             ),
             const SizedBox(height: 16),
             
             // Lista de metas
             if (milestones.isNotEmpty) ...[
-              Text(
-                'Metas:',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [color.withOpacity(0.4), color.withOpacity(0.2)],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.flag_rounded,
+                      size: 16,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Metas:',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               ...milestones.asMap().entries.map((entry) {
                 final milestoneIndex = entry.key;
                 final milestone = entry.value;
                 final milestoneCompleted = milestone['completed'] == true;
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: milestoneCompleted
+                          ? [
+                              Colors.green.withOpacity(0.15),
+                              Colors.green.withOpacity(0.08),
+                              AppTheme.darkSurface.withOpacity(0.8),
+                            ]
+                          : [
+                              color.withOpacity(0.15),
+                              color.withOpacity(0.08),
+                              AppTheme.darkSurface.withOpacity(0.8),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: milestoneCompleted 
-                          ? Colors.green.withOpacity(0.3)
-                          : color.withOpacity(0.3),
-                      width: 1,
+                          ? Colors.green.withOpacity(0.4)
+                          : color.withOpacity(0.4),
+                      width: 1.5,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (milestoneCompleted ? Colors.green : color).withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
-                      Checkbox(
-                        value: milestoneCompleted,
-                        onChanged: (value) {
-                          setState(() {
-                            final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
-                            if (goalIdx != -1) {
-                              final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
-                              final milestoneIdx = milestonesList.indexWhere(
-                                (m) => m['id'] == milestone['id']
-                              );
-                              if (milestoneIdx != -1) {
-                                milestonesList[milestoneIdx]['completed'] = value ?? false;
+                      Container(
+                        decoration: BoxDecoration(
+                          color: milestoneCompleted
+                              ? Colors.green.withOpacity(0.2)
+                              : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: milestoneCompleted
+                                ? Colors.green.withOpacity(0.4)
+                                : color.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Checkbox(
+                          value: milestoneCompleted,
+                          onChanged: (value) {
+                            setState(() {
+                              final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
+                              if (goalIdx != -1) {
+                                final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
+                                final milestoneIdx = milestonesList.indexWhere(
+                                  (m) => m['id'] == milestone['id']
+                                );
+                                if (milestoneIdx != -1) {
+                                  milestonesList[milestoneIdx]['completed'] = value ?? false;
+                                }
                               }
-                            }
-                          });
-                        },
-                        activeColor: Colors.green,
+                            });
+                          },
+                          activeColor: Colors.green,
+                          checkColor: AppTheme.white,
+                          side: BorderSide(
+                            color: milestoneCompleted ? Colors.green : color.withOpacity(0.5),
+                            width: 2,
+                          ),
+                        ),
                       ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           milestone['text'] ?? '',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                             color: milestoneCompleted 
-                                ? AppTheme.white40 
+                                ? AppTheme.white60 
                                 : AppTheme.white,
                             decoration: milestoneCompleted 
                                 ? TextDecoration.lineThrough 
                                 : null,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 16, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
-                            if (goalIdx != -1) {
-                              final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
-                              milestonesList.removeWhere(
-                                (m) => m['id'] == milestone['id']
-                              );
-                            }
-                          });
-                        },
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.red.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 18, color: Colors.red),
+                          padding: const EdgeInsets.all(6),
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            setState(() {
+                              final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
+                              if (goalIdx != -1) {
+                                final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
+                                milestonesList.removeWhere(
+                                  (m) => m['id'] == milestone['id']
+                                );
+                              }
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
                 );
               }),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
             ],
             
             // Formulario para agregar meta
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: color.withOpacity(0.2),
-                  width: 1,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withOpacity(0.2),
+                    color.withOpacity(0.1),
+                    AppTheme.darkSurfaceVariant.withOpacity(0.4),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: color.withOpacity(0.4),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Expanded(
-                    flex: 4,
                     child: TextField(
                       controller: milestoneController,
-                      style: const TextStyle(color: AppTheme.white, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Agregar meta...',
-                        hintStyle: TextStyle(color: AppTheme.white40, fontSize: 13),
+                        hintStyle: TextStyle(
+                          color: AppTheme.white60,
+                          fontSize: 14,
+                        ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
                       ),
                       onSubmitted: (_) {
                         if (milestoneController.text.trim().isNotEmpty) {
-                          setState(() {
-                            final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
-                            if (goalIdx != -1) {
-                              final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
-                              milestonesList.add({
-                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                                'text': milestoneController.text.trim(),
-                                'completed': false,
-                              });
-                              milestoneController.clear();
-                            }
-                          });
+                          final goalIdx = goals.indexWhere((g) => g['id'] == goalId);
+                          if (goalIdx != -1) {
+                            final milestonesList = goals[goalIdx]['milestones'] as List<dynamic>;
+                            milestonesList.add({
+                              'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                              'text': milestoneController.text.trim(),
+                              'completed': false,
+                            });
+                            milestoneController.clear();
+                            setState(() {});
+                          }
                         }
                       },
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
-                        borderRadius: BorderRadius.circular(6),
+                  const SizedBox(width: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [color, color.withOpacity(0.8)],
                       ),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (milestoneController.text.trim().isNotEmpty) {
-                            setState(() {
-                              final goalIdx = _goals.indexWhere((g) => g['id'] == goal['id']);
-                              if (goalIdx != -1) {
-                                final milestonesList = _goals[goalIdx]['milestones'] as List<dynamic>;
-                                milestonesList.add({
-                                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                                  'text': milestoneController.text.trim(),
-                                  'completed': false,
-                                });
-                                milestoneController.clear();
-                              }
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (milestoneController.text.trim().isNotEmpty) {
+                          final goalIdx = goals.indexWhere((g) => g['id'] == goalId);
+                          if (goalIdx != -1) {
+                            final milestonesList = goals[goalIdx]['milestones'] as List<dynamic>;
+                            milestonesList.add({
+                              'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                              'text': milestoneController.text.trim(),
+                              'completed': false,
                             });
+                            milestoneController.clear();
+                            setState(() {});
                           }
-                        },
-                        icon: const Icon(Icons.add, color: AppTheme.white, size: 18),
-                        label: const Text(
-                          'Agregar',
-                          style: TextStyle(
-                            color: AppTheme.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        }
+                      },
+                      icon: const Icon(Icons.add_rounded, color: AppTheme.white, size: 20),
+                      label: const Text(
+                        'Agregar',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: AppTheme.white,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                     ),
                   ),
@@ -9376,6 +11396,163 @@ class _WorkSectionsState extends State<WorkSections> {
       ),
     );
   }
+
+  Widget _buildPriorities() {
+    final priorityColors = [
+      context.pro.indigo,
+      context.pro.teal,
+      context.pro.secondary,
+      context.pro.accent,
+      context.pro.slate,
+    ];
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header mejorado con paleta profesional
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  context.pro.primary,
+                  context.pro.secondary,
+                  context.pro.accent,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: context.pro.secondary.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Icon(Icons.priority_high, color: AppTheme.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Prioridades',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      const Text(
+                        'Define y gestiona tus prioridades clave',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Formulario para agregar prioridad
+          if (_priorities.length < 5)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _priorityController,
+                      style: const TextStyle(color: AppTheme.white),
+                      decoration: InputDecoration(
+                        hintText: 'Escribe una nueva prioridad...',
+                        hintStyle: const TextStyle(color: AppTheme.white60),
+                        filled: true,
+                        fillColor: AppTheme.darkSurfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onSubmitted: (_) => _addPriority(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _addPriority,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.pro.accent,
+                      foregroundColor: AppTheme.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(12),
+                    ),
+                    child: const Icon(Icons.add),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+          
+          // Lista de prioridades
+          if (_priorities.isEmpty)
+            _buildEmptyState('No hay prioridades definidas\nEscribe una prioridad arriba y toca el botón +', Icons.priority_high)
+          else
+            ..._priorities.asMap().entries.map((entry) {
+              final index = entry.key;
+              final priority = entry.value;
+              return _buildPriorityCard(priority, index, priorityColors);
+            }),
+        ],
+      ),
+    );
+  }
+  
+  void _addPriority() {
+    if (_priorityController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor ingresa una prioridad')),
+      );
+      return;
+    }
+    
+    if (_priorities.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solo puedes tener 5 prioridades')),
+      );
+      return;
+    }
+    
+    setState(() {
+      _priorities.add({
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'text': _priorityController.text.trim(),
+        'completed': false,
+      });
+      _priorityController.clear();
+    });
+  }
+
+
 }
-
-
