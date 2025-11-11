@@ -402,7 +402,7 @@ part of 'work_sections.dart';
   }
 
   Widget _buildGoalsContent() {
-    final goalsColors = [Colors.green, Colors.teal, Colors.amber, Colors.red, Colors.grey];
+    final goalsColors = [const Color(0xFF6366F1), Colors.teal, Colors.amber, Colors.red, Colors.grey];
     // Calcular progreso basado en metas completadas
     final totalMilestones = _goals.fold<int>(0, (sum, goal) {
       final milestones = goal['milestones'] as List<dynamic>? ?? [];
@@ -722,7 +722,7 @@ part of 'work_sections.dart';
   }
 
   Widget _buildGoals() {
-    final goalsColors = [Colors.green, Colors.teal, Colors.amber, Colors.red, Colors.grey];
+    final goalsColors = [const Color(0xFF6366F1), Colors.teal, Colors.amber, Colors.red, Colors.grey];
     // Calcular progreso basado en metas completadas
     final totalMilestones = _goals.fold<int>(0, (sum, goal) {
       final milestones = goal['milestones'] as List<dynamic>? ?? [];
@@ -2924,7 +2924,7 @@ part of 'work_sections.dart';
                 enabled: !isCompleted,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.only(left: 8),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -3083,7 +3083,7 @@ part of 'work_sections.dart';
                 enabled: !isCompleted,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.only(left: 8),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -3182,8 +3182,8 @@ part of 'work_sections.dart';
           end: Alignment.bottomRight,
           colors: isCompleted
               ? [
-                  Colors.green.withOpacity(0.2),
-                  Colors.green.withOpacity(0.12),
+                  const Color(0xFF6366F1).withOpacity(0.2),
+                  const Color(0xFF6366F1).withOpacity(0.12),
                   AppTheme.darkSurface,
                 ]
               : [
@@ -3195,13 +3195,13 @@ part of 'work_sections.dart';
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isCompleted
-              ? Colors.green.withOpacity(0.5)
+              ? const Color(0xFF6366F1).withOpacity(0.5)
               : color.withOpacity(0.5),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isCompleted ? Colors.green : color).withOpacity(0.25),
+            color: (isCompleted ? const Color(0xFF6366F1) : color).withOpacity(0.25),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -3227,7 +3227,7 @@ part of 'work_sections.dart';
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: isCompleted
-                          ? [Colors.green, Colors.green.shade700]
+                          ? [const Color(0xFF6366F1), const Color(0xFF4F46E5)]
                           : [color, color.withOpacity(0.8)],
                     ),
                     borderRadius: BorderRadius.circular(18),
@@ -3261,7 +3261,7 @@ part of 'work_sections.dart';
                     enabled: !isCompleted,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: EdgeInsets.only(left: 8),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -3279,12 +3279,12 @@ part of 'work_sections.dart';
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.green, Colors.green.shade700],
+                        colors: [const Color(0xFF6366F1), const Color(0xFF4F46E5)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.green.withOpacity(0.3),
+                          color: const Color(0xFF6366F1).withOpacity(0.3),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -3507,8 +3507,8 @@ part of 'work_sections.dart';
                       end: Alignment.bottomRight,
                       colors: milestoneCompleted
                           ? [
-                              Colors.green.withOpacity(0.15),
-                              Colors.green.withOpacity(0.08),
+                              const Color(0xFF6366F1).withOpacity(0.15),
+                              const Color(0xFF6366F1).withOpacity(0.08),
                               AppTheme.darkSurface.withOpacity(0.8),
                             ]
                           : [
@@ -3520,13 +3520,13 @@ part of 'work_sections.dart';
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: milestoneCompleted 
-                          ? Colors.green.withOpacity(0.4)
+                          ? const Color(0xFF6366F1).withOpacity(0.4)
                           : color.withOpacity(0.4),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (milestoneCompleted ? Colors.green : color).withOpacity(0.15),
+                        color: (milestoneCompleted ? const Color(0xFF6366F1) : color).withOpacity(0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -3563,10 +3563,10 @@ part of 'work_sections.dart';
                               }
                             });
                           },
-                          activeColor: Colors.green,
+                          activeColor: const Color(0xFF6366F1),
                           checkColor: AppTheme.white,
                           side: BorderSide(
-                            color: milestoneCompleted ? Colors.green : color.withOpacity(0.5),
+                            color: milestoneCompleted ? const Color(0xFF6366F1) : color.withOpacity(0.5),
                             width: 2,
                           ),
                         ),

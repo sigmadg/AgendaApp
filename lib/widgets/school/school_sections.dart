@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/school/class_schedule.dart';
 import '../../models/school/academic_task.dart';
 import '../../models/school/group_project.dart';
 import '../../models/school/exam_revision.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/context_ext.dart';
+import '../../theme/spacing.dart';
+import '../../theme/shadows.dart';
+import '../../theme/radius.dart';
+import '../../services/class_schedule_service.dart';
 import '../common/navigation_header.dart';
 
 class SchoolSections extends StatefulWidget {
@@ -21,8 +27,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
   String _activeSection = 'timetable';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
+  // Servicio para manejar las clases
+  final ClassScheduleService _classScheduleService = ClassScheduleService();
+  
   // Estados para datos
   List<ClassSchedule> _classes = [];
+  bool _isLoadingClasses = false;
+  bool _classesLoaded = false; // Bandera para evitar múltiples cargas
   List<AcademicTask> _academicTasks = [];
   List<GroupProject> _groupProjects = [];
   List<ExamRevision> _examRevisions = [];
@@ -58,7 +69,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
   final TextEditingController _classSubjectController = TextEditingController();
   final TextEditingController _classClassroomController = TextEditingController();
   final TextEditingController _classProfessorController = TextEditingController();
-  String _selectedClassDay = 'LUN';
+  final TextEditingController _classLinkController = TextEditingController();
+  List<String> _selectedClassDays = []; // Lista para selección múltiple de días
   String _selectedClassTime = '7:00 AM';
   String _selectedClassDuration = '60';
   
@@ -113,10 +125,44 @@ class _SchoolSectionsState extends State<SchoolSections> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadClasses();
+  }
+
+  // Cargar clases desde Supabase
+  Future<void> _loadClasses() async {
+    // Evitar múltiples cargas simultáneas
+    if (_isLoadingClasses || _classesLoaded) {
+      return;
+    }
+    
+    setState(() {
+      _isLoadingClasses = true;
+    });
+    
+    try {
+      final classes = await _classScheduleService.getClassSchedules();
+      setState(() {
+        _classes = classes;
+        _isLoadingClasses = false;
+        _classesLoaded = true; // Marcar como cargado
+      });
+    } catch (e) {
+      print('Error al cargar clases: $e');
+      setState(() {
+        _isLoadingClasses = false;
+        _classesLoaded = true; // Marcar como cargado incluso si hay error
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _classSubjectController.dispose();
     _classClassroomController.dispose();
     _classProfessorController.dispose();
+    _classLinkController.dispose();
     _taskController.dispose();
     _taskSubjectController.dispose();
     _taskNotesController.dispose();
@@ -513,13 +559,33 @@ class _SchoolSectionsState extends State<SchoolSections> {
         backgroundColor: Colors.purple,
       );
     } else if (_activeSection == 'todo') {
-      return FloatingActionButton.extended(
-        onPressed: () {
-          _showAddTaskDialog();
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva Tarea'),
-        backgroundColor: Colors.purple,
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              context.pro.primary,
+              context.pro.secondary,
+            ],
+          ),
+          borderRadius: AppRadius.circleAll,
+          boxShadow: AppShadows.elevated(context.pro.secondary),
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddTaskDialog(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add, color: AppTheme.white),
+          label: const Text(
+            'Nueva Tarea Académica',
+            style: TextStyle(
+              color: AppTheme.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          tooltip: 'Agregar tarea académica',
+        ),
       );
     } else if (_activeSection == 'projects') {
       return FloatingActionButton.extended(
@@ -637,6 +703,85 @@ class _SchoolSectionsState extends State<SchoolSections> {
     });
   }
 
+  void _showEditClassModal(ClassSchedule classItem) {
+    // Llenar los controladores con los datos de la clase
+    _classSubjectController.text = classItem.subject;
+    _classClassroomController.text = classItem.classroom ?? '';
+    _classProfessorController.text = classItem.professor ?? '';
+    _classLinkController.text = classItem.link ?? '';
+    _selectedClassTime = classItem.time;
+    _selectedClassDuration = classItem.duration.toString();
+    _selectedClassDays = [classItem.day];
+
+    showDialog(
+      context: context,
+      builder: (context) => _buildEditClassModal(classItem),
+    );
+  }
+
+  void _showDeleteClassDialog(ClassSchedule classItem) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text(
+          'Eliminar Clase',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar la clase "${classItem.subject}"?',
+          style: const TextStyle(color: AppTheme.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white70)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              
+              // Mostrar indicador de carga
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+
+              final result = await _classScheduleService.deleteClassSchedule(classItem.id);
+
+              if (context.mounted) {
+                Navigator.pop(context); // Cerrar indicador de carga
+
+                if (result['success'] == true) {
+                  // Recargar clases
+                  await _loadClasses();
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Clase eliminada exitosamente'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al eliminar la clase: ${result['error'] ?? 'Error desconocido'}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ==================== HORARIO SEMANAL ====================
   Widget _buildTimetable() {
     final currentDay = _weekDays[_selectedDayIndex];
@@ -651,185 +796,195 @@ class _SchoolSectionsState extends State<SchoolSections> {
     };
     final today = DateTime.now();
     final currentDate = DateFormat('EEEE, d \'de\' MMMM \'de\' y', 'es').format(today);
+    final todayWeekday = today.weekday; // 1 = Lunes, 7 = Domingo
+    final todayIndex = todayWeekday == 7 ? 6 : todayWeekday - 1;
+    
+    if (_isLoadingClasses) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header mejorado
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.purple.withOpacity(0.2),
+                  Colors.purple.withOpacity(0.3),
+                  Colors.deepPurple.withOpacity(0.2),
                   AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.purple.withOpacity(0.3),
-                  blurRadius: 20,
+                  color: Colors.purple.withOpacity(0.4),
+                  blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.calendar_today,
-                    size: 40,
-                    color: Colors.purple,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Horario de ${dayNames[currentDay]}',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  currentDate,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: AppTheme.white70,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.purple.withOpacity(0.4),
+                            Colors.deepPurple.withOpacity(0.3),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.purple.withOpacity(0.5),
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today,
+                        size: 32,
+                        color: Colors.purple,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Horario Semanal',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentDate,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           
-          // Navegación del calendario
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedDayIndex = _selectedDayIndex > 0 ? _selectedDayIndex - 1 : 6;
-                  });
-                },
-                icon: const Icon(Icons.chevron_left, color: Colors.purple),
+          // Selector de días mejorado
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.purple.withOpacity(0.2),
+                width: 1,
               ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final today = DateTime.now();
-                  final dayIndex = today.weekday; // 1 = Lunes, 7 = Domingo
-                  setState(() {
-                    _selectedDayIndex = dayIndex == 7 ? 6 : dayIndex - 1;
-                  });
-                },
-                icon: const Icon(Icons.today, size: 16),
-                label: const Text('Hoy'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: AppTheme.white,
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedDayIndex = _selectedDayIndex < 6 ? _selectedDayIndex + 1 : 0;
-                  });
-                },
-                icon: const Icon(Icons.chevron_right, color: Colors.purple),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Navegación de horas
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    if (_selectedHourIndex > 0) _selectedHourIndex--;
-                  });
-                },
-                icon: const Icon(Icons.keyboard_arrow_up, color: Colors.purple),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.purple, width: 2),
-                ),
-                child: Text(
-                  _timeSlots[_selectedHourIndex],
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.purple,
+            ),
+            child: Row(
+              children: _weekDays.asMap().entries.map((entry) {
+                final index = entry.key;
+                final day = entry.value;
+                final isSelected = index == _selectedDayIndex;
+                final isToday = index == todayIndex;
+                
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedDayIndex = index;
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? LinearGradient(
+                                colors: [
+                                  Colors.purple.withOpacity(0.4),
+                                  Colors.deepPurple.withOpacity(0.3),
+                                ],
+                              )
+                            : null,
+                        color: isToday && !isSelected
+                            ? Colors.purple.withOpacity(0.15)
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected
+                            ? Border.all(
+                                color: Colors.purple.withOpacity(0.6),
+                                width: 2,
+                              )
+                            : isToday
+                                ? Border.all(
+                                    color: Colors.purple.withOpacity(0.3),
+                                    width: 1,
+                                  )
+                                : null,
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            day,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.purple
+                                  : isToday
+                                      ? Colors.purple.withOpacity(0.8)
+                                      : AppTheme.white70,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          if (isToday && !isSelected)
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.purple,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    if (_selectedHourIndex < _timeSlots.length - 1) _selectedHourIndex++;
-                  });
-                },
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.purple),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final now = DateTime.now();
-                  final hour = now.hour;
-                  final index = _timeSlots.indexWhere((slot) {
-                    final parts = slot.split(' ');
-                    final time = parts[0];
-                    final period = parts[1];
-                    final slotHour = int.parse(time.split(':')[0]);
-                    final slotHour24 = period == 'PM' && slotHour != 12 
-                        ? slotHour + 12 
-                        : period == 'AM' && slotHour == 12 ? 0 : slotHour;
-                    return slotHour24 == hour;
-                  });
-                  if (index != -1) {
-                    setState(() {
-                      _selectedHourIndex = index;
-                    });
-                  }
-                },
-                icon: const Icon(Icons.access_time, size: 16),
-                label: const Text('Ahora'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: AppTheme.white,
-                ),
-              ),
-            ],
+                );
+              }).toList(),
+            ),
           ),
           const SizedBox(height: 24),
           
-          // Resumen del día
+          // Resumen del día mejorado
           Row(
             children: [
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.school,
-                  title: 'Clases Programadas',
-                  value: '${_classes.length} clases',
+                  title: 'Clases Hoy',
+                  value: '${_classes.where((c) => c.day == currentDay).length}',
                   color: Colors.purple,
                 ),
               ),
@@ -837,130 +992,186 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.access_time,
-                  title: 'Horas Libres',
-                  value: '${_timeSlots.length - _classes.length} horas',
+                  title: 'Horas Totales',
+                  value: '${_timeSlots.length}',
                   color: Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryCard(
+                  icon: Icons.event_available,
+                  title: 'Esta Semana',
+                  value: '${_classes.length}',
+                  color: Colors.green,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
           
-          // Horario
+          // Horario mejorado
           Container(
             decoration: BoxDecoration(
               color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.purple.withOpacity(0.3), width: 1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.purple.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withOpacity(0.2),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
-                // Header de la tabla
+                // Header de la tabla mejorado
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.purple,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.purple,
+                        Colors.deepPurple,
+                      ],
+                    ),
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.access_time, color: AppTheme.white, size: 20),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Horario',
-                          style: TextStyle(
-                            color: AppTheme.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.access_time,
+                          color: AppTheme.white,
+                          size: 24,
                         ),
                       ),
-                      Text(
-                        dayNames[currentDay]!.toUpperCase(),
-                        style: const TextStyle(
-                          color: AppTheme.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Horario',
+                              style: TextStyle(
+                                color: AppTheme.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              dayNames[currentDay]!,
+                              style: TextStyle(
+                                color: AppTheme.white.withOpacity(0.9),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${_classes.where((c) => c.day == currentDay).length} clases',
+                          style: const TextStyle(
+                            color: AppTheme.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Cuerpo del horario
+                // Cuerpo del horario mejorado
                 Container(
-                  constraints: const BoxConstraints(maxHeight: 400),
+                  constraints: const BoxConstraints(maxHeight: 500),
                   child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: 3, // Mostrar 3 horas: anterior, actual, siguiente
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _timeSlots.length,
                     itemBuilder: (context, index) {
-                      final startIndex = (_selectedHourIndex - 1).clamp(0, _timeSlots.length - 3);
-                      final actualIndex = startIndex + index;
-                      if (actualIndex >= _timeSlots.length) return const SizedBox.shrink();
-                      
-                      final time = _timeSlots[actualIndex];
+                      final time = _timeSlots[index];
                       final hasClass = _classes.any((c) => 
                         c.day == currentDay && c.time == time
                       );
-                      final isCurrentTime = actualIndex == _selectedHourIndex;
+                      final classItem = hasClass
+                          ? _classes.firstWhere((c) => 
+                              c.day == currentDay && c.time == time
+                            )
+                          : null;
                       
                       return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: AppTheme.darkSurfaceVariant,
-                              width: 1,
-                            ),
-                          ),
-                          color: hasClass 
-                              ? Colors.purple.withOpacity(0.1)
-                              : isCurrentTime
-                                  ? Colors.purple.withOpacity(0.05)
-                                  : Colors.transparent,
-                        ),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 80,
+                            // Columna de tiempo mejorada
+                            Container(
+                              width: 90,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Column(
                                 children: [
-                                  Icon(
-                                    isCurrentTime ? Icons.radio_button_checked : Icons.access_time,
-                                    color: hasClass 
-                                        ? Colors.purple 
-                                        : isCurrentTime
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: hasClass
+                                          ? Colors.purple.withOpacity(0.2)
+                                          : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: hasClass
+                                            ? Colors.purple.withOpacity(0.4)
+                                            : AppTheme.darkSurfaceVariant,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      time,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: hasClass
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        color: hasClass
                                             ? Colors.purple
-                                            : AppTheme.white60,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    time,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isCurrentTime ? FontWeight.bold : FontWeight.normal,
-                                      color: hasClass 
-                                          ? Colors.purple 
-                                          : isCurrentTime
-                                              ? Colors.purple
-                                              : AppTheme.white70,
+                                            : AppTheme.white70,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            const SizedBox(width: 12),
+                            // Contenido de la clase o slot vacío
                             Expanded(
-                              child: hasClass
-                                  ? _buildClassCardForTimetable(
-                                      _classes.firstWhere((c) => 
-                                        c.day == currentDay && c.time == time
-                                      ),
-                                    )
-                                  : _buildEmptySlot(isCurrentTime),
+                              child: hasClass && classItem != null
+                                  ? _buildClassCardForTimetable(classItem)
+                                  : _buildEmptySlot(false),
                             ),
                           ],
                         ),
@@ -978,19 +1189,31 @@ class _SchoolSectionsState extends State<SchoolSections> {
 
   Widget _buildClassCardForTimetable(ClassSchedule classItem) {
     final isCurrentTime = DateTime.now().hour == _convertTo24Hour(classItem.time);
+    final classColor = isCurrentTime ? Colors.orange : Colors.purple;
     
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isCurrentTime ? Colors.orange : Colors.purple,
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            classColor,
+            classColor.withOpacity(0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: (isCurrentTime ? Colors.orange : Colors.purple).withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: classColor.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -998,14 +1221,22 @@ class _SchoolSectionsState extends State<SchoolSections> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
-                child: const Icon(Icons.school, size: 16, color: AppTheme.white),
+                child: const Icon(
+                  Icons.school,
+                  size: 20,
+                  color: AppTheme.white,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1015,23 +1246,39 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       style: const TextStyle(
                         color: AppTheme.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 16,
+                        letterSpacing: 0.3,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'Activa',
-                        style: TextStyle(
-                          color: AppTheme.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'En curso',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -1039,47 +1286,76 @@ class _SchoolSectionsState extends State<SchoolSections> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              if (classItem.classroom != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.location_on, size: 14, color: AppTheme.white70),
-                    const SizedBox(width: 4),
-                    Text(
-                      classItem.classroom!,
-                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                if (classItem.classroom != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            classItem.classroom!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              if (classItem.professor != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.person, size: 14, color: AppTheme.white70),
-                    const SizedBox(width: 4),
-                    Text(
-                      classItem.professor!,
-                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
-                    ),
-                  ],
-                ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.book, size: 14, color: AppTheme.white70),
-                  const SizedBox(width: 4),
-                  Text(
-                    classItem.subject,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.white70),
                   ),
-                ],
-              ),
-            ],
+                if (classItem.professor != null)
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          classItem.professor!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -1087,26 +1363,62 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: TextButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Unirse a ${classItem.subject}')),
-                      );
+                    onPressed: () async {
+                      if (classItem.link != null && classItem.link!.isNotEmpty) {
+                        try {
+                          final uri = Uri.parse(classItem.link!);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('No se pudo abrir el link'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al abrir el link: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('No hay link disponible para esta clase'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                        }
+                      }
                     },
-                    icon: const Icon(Icons.videocam, size: 14, color: AppTheme.white),
+                    icon: const Icon(Icons.videocam, size: 16, color: AppTheme.white),
                     label: const Text(
                       'Unirse',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: AppTheme.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -1117,33 +1429,51 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: TextButton.icon(
                     onPressed: () {
-                      setState(() {
-                        _activeSection = 'materials';
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Ver materiales del curso')),
-                      );
+                      _showEditClassModal(classItem);
                     },
-                    icon: const Icon(Icons.description, size: 14, color: AppTheme.white),
+                    icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
                     label: const Text(
-                      'Material',
+                      'Editar',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: AppTheme.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.5),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    _showDeleteClassDialog(classItem);
+                  },
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.redAccent),
+                  padding: const EdgeInsets.all(10),
+                  constraints: const BoxConstraints(),
                 ),
               ),
             ],
@@ -1170,30 +1500,44 @@ class _SchoolSectionsState extends State<SchoolSections> {
 
   Widget _buildEmptySlot(bool isCurrentTime) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isCurrentTime 
-            ? Colors.purple.withOpacity(0.1)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: isCurrentTime 
-            ? Border.all(color: Colors.purple, width: 2)
-            : null,
+            ? Colors.purple.withOpacity(0.15)
+            : AppTheme.darkSurfaceVariant.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isCurrentTime 
+              ? Colors.purple.withOpacity(0.4)
+              : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            isCurrentTime ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-            color: isCurrentTime ? Colors.purple : AppTheme.white60,
-            size: 18,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isCurrentTime
+                  ? Colors.purple.withOpacity(0.2)
+                  : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isCurrentTime ? Icons.access_time : Icons.event_available,
+              color: isCurrentTime ? Colors.purple : AppTheme.white60,
+              size: 20,
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Text(
-            isCurrentTime ? 'Hora Actual' : 'Libre',
+            isCurrentTime ? 'Hora Actual' : 'Hora Libre',
             style: TextStyle(
               fontSize: 14,
-              color: isCurrentTime ? Colors.purple : AppTheme.white60,
-              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w500,
+              color: isCurrentTime ? Colors.purple : AppTheme.white70,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -1262,12 +1606,25 @@ class _SchoolSectionsState extends State<SchoolSections> {
       !t.completed && t.date.isBefore(DateTime.now().subtract(const Duration(days: 1)))
     ).length;
     
+    // Agrupar tareas por fecha (igual que en trabajo)
+    final Map<DateTime, List<AcademicTask>> tasksByDate = {};
+    for (var task in _academicTasks) {
+      final dateKey = DateTime(task.date.year, task.date.month, task.date.day);
+      if (!tasksByDate.containsKey(dateKey)) {
+        tasksByDate[dateKey] = [];
+      }
+      tasksByDate[dateKey]!.add(task);
+    }
+    
+    // Ordenar fechas
+    final sortedDates = tasksByDate.keys.toList()..sort();
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header mejorado
+          // Header mejorado con paleta profesional
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1275,19 +1632,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.purple,
-                  Colors.purple.withOpacity(0.8),
-                  Colors.purple.withOpacity(0.6),
+                  context.pro.primary,
+                  context.pro.secondary,
+                  context.pro.accent,
                 ],
               ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              borderRadius: AppRadius.xLargeAll,
+              boxShadow: AppShadows.elevated(context.pro.secondary),
             ),
             child: Row(
               children: [
@@ -1296,12 +1647,12 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   child: const Icon(
-                    Icons.check_circle_outline,
-                    size: 24,
+                    Icons.assignment,
                     color: AppTheme.white,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1312,7 +1663,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       const Text(
                         'Tareas Académicas',
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.white,
                         ),
@@ -1328,168 +1679,128 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ],
                   ),
                 ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.school_outlined,
-                    size: 16,
-                    color: Colors.purple,
-                  ),
-                ),
               ],
             ),
           ),
           const SizedBox(height: 20),
           
-          // Resumen de tareas
+          // Resumen de tareas mejorado
           Row(
             children: [
               Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.list,
+                child: _buildTaskSummaryCard(
+                  icon: Icons.assignment,
                   title: 'Total',
                   value: '$totalTasks',
-                  color: Colors.blue,
+                  color: context.pro.accent,
+                  gradient: LinearGradient(
+                    colors: [context.pro.accent, context.pro.secondary],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
-                child: _buildSummaryCard(
+                child: _buildTaskSummaryCard(
                   icon: Icons.check_circle,
                   title: 'Completadas',
                   value: '$completedTasks',
-                  color: Colors.green,
+                  color: context.pro.teal,
+                  gradient: LinearGradient(
+                    colors: [context.pro.teal, context.pro.accent],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.access_time,
+                child: _buildTaskSummaryCard(
+                  icon: Icons.pending_actions,
                   title: 'Pendientes',
                   value: '$pendingTasks',
-                  color: Colors.orange,
+                  color: context.pro.secondary,
+                  gradient: LinearGradient(
+                    colors: [context.pro.secondary, context.pro.primary],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.warning,
+                child: _buildTaskSummaryCard(
+                  icon: Icons.warning_rounded,
                   title: 'Urgentes',
                   value: '$overdueTasks',
                   color: Colors.red,
+                  gradient: LinearGradient(
+                    colors: [Colors.red, Colors.red.shade700],
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           
-          // Botón para agregar tarea
-          Container(
-            margin: const EdgeInsets.only(bottom: 20),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _showAddTaskModal = true;
-                });
-              },
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('Nueva Tarea Académica'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: AppTheme.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
-              ),
-            ),
-          ),
-          
-          // Lista de tareas
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.purple.withOpacity(0.2), width: 1),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Mis Tareas',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.filter_list, size: 16),
-                      label: const Text('Filtrar'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.purple,
-                        side: BorderSide(color: Colors.purple.withOpacity(0.5)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (_academicTasks.isEmpty)
-                  _buildEmptyState(
-                    icon: Icons.description,
-                    title: 'No hay tareas académicas',
-                    subtitle: 'Agrega tu primera tarea para comenzar a organizarte',
-                  )
-                else
-                  Column(
-                    children: _academicTasks.map((task) => _buildTaskCard(task)).toList(),
-                  ),
-              ],
-            ),
-          ),
+          // Lista de tareas (igual formato que trabajo)
+          if (_academicTasks.isEmpty)
+            _buildEmptyState(
+              'No hay tareas académicas',
+              Icons.description,
+              'Agrega tu primera tarea para comenzar a organizarte',
+              'Nueva Tarea Académica',
+              () => _showAddTaskDialog(),
+              context.pro.accent,
+              [context.pro.secondary, context.pro.accent],
+            )
+          else
+            ...sortedDates.map((date) => _buildAcademicTaskCard(date, tasksByDate[date]!)),
         ],
       ),
     );
   }
 
-  Widget _buildTaskCard(AcademicTask task) {
-    final isOverdue = !task.completed && task.date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
-    final isDueToday = !task.completed && 
-        task.date.year == DateTime.now().year &&
-        task.date.month == DateTime.now().month &&
-        task.date.day == DateTime.now().day;
+  String _getMonthName(int month) {
+    const months = [
+      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+    ];
+    return months[month - 1];
+  }
+
+  Widget _buildAcademicTaskCard(DateTime date, List<AcademicTask> tasks) {
+    final sortedTasks = List<AcademicTask>.from(tasks)..sort((a, b) => a.date.compareTo(b.date));
+    final isToday = date.year == DateTime.now().year &&
+                    date.month == DateTime.now().month &&
+                    date.day == DateTime.now().day;
+    final completedCount = sortedTasks.where((t) => t.completed).length;
+    final totalCount = sortedTasks.length;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isToday
+              ? [
+                  context.pro.primary.withOpacity(0.3),
+                  context.pro.secondary.withOpacity(0.2),
+                ]
+              : [
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isOverdue 
-              ? Colors.red.withOpacity(0.5)
-              : isDueToday
-                  ? Colors.orange.withOpacity(0.5)
-                  : task.completed
-                      ? Colors.green.withOpacity(0.5)
-                      : AppTheme.darkSurfaceVariant,
-          width: 1,
+          color: isToday
+              ? context.pro.accent.withOpacity(0.5)
+              : context.pro.secondary.withOpacity(0.2),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
+            color: isToday
+                ? context.pro.primary.withOpacity(0.2)
+                : Colors.black.withOpacity(0.3),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -1497,235 +1808,755 @@ class _SchoolSectionsState extends State<SchoolSections> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _academicTasks = _academicTasks.map((t) {
-                      if (t.id == task.id) {
-                        return AcademicTask(
-                          id: t.id,
-                          task: t.task,
-                          date: t.date,
-                          completed: !t.completed,
-                          notes: t.notes,
-                          priority: t.priority,
-                          subject: t.subject,
-                          estimatedTime: t.estimatedTime,
-                        );
-                      }
-                      return t;
-                    }).toList();
-                  });
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: task.completed ? Colors.green : Colors.transparent,
-                    border: Border.all(
-                      color: task.completed ? Colors.green : AppTheme.white60,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: task.completed
-                      ? const Icon(Icons.check, size: 16, color: AppTheme.white)
-                      : null,
-                ),
+          // Header de fecha mejorado
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              gradient: isToday
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        context.pro.accent.withOpacity(0.3),
+                        context.pro.secondary.withOpacity(0.2),
+                      ],
+                    )
+                  : null,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.task,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: task.completed ? AppTheme.white40 : AppTheme.white,
-                        decoration: task.completed ? TextDecoration.lineThrough : null,
-                      ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isToday
+                          ? [context.pro.primary, context.pro.secondary]
+                          : [context.pro.slate, context.pro.indigo],
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      children: [
-                        if (task.subject != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.book, size: 14, color: AppTheme.white60),
-                              const SizedBox(width: 4),
-                              Text(
-                                task.subject!,
-                                style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isToday ? Icons.today : Icons.calendar_today,
+                    size: 20,
+                    color: AppTheme.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (isToday) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: context.pro.accent.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ],
-                          ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
-                            const SizedBox(width: 4),
-                            Text(
-                              DateFormat('dd/MM/yyyy').format(task.date),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isOverdue ? Colors.red : AppTheme.white70,
-                                fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                              child: const Text(
+                                'HOY',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.white,
+                                  letterSpacing: 1,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                           ],
+                          Text(
+                            '${date.day} ${_getMonthName(date.month)} ${date.year}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${completedCount}/${totalCount} completadas',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.white,
                         ),
-                        if (task.estimatedTime != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.access_time, size: 14, color: AppTheme.white60),
-                              const SizedBox(width: 4),
-                              Text(
-                                task.estimatedTime!,
-                                style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: context.pro.teal.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$totalCount',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: context.pro.teal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Lista de tareas mejorada
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: sortedTasks.asMap().entries.map((entry) {
+                final index = entry.key;
+                final task = entry.value;
+                final isLast = index == sortedTasks.length - 1;
+                
+                return _buildAcademicTaskItem(task, date, index, isLast: !isLast);
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildAcademicTaskItem(AcademicTask task, DateTime date, int index, {bool isLast = false}) {
+    final isOverdue = !task.completed && task.date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+    // Usar colores profesionales basados en el índice para crear variación
+    final professionalColor1 = index % 3 == 0 ? context.pro.primary : (index % 3 == 1 ? context.pro.secondary : context.pro.accent);
+    final professionalColor2 = index % 3 == 1 ? context.pro.accent : (index % 3 == 2 ? context.pro.teal : context.pro.secondary);
+    final professionalColor3 = index % 3 == 2 ? context.pro.teal : (index % 3 == 0 ? context.pro.indigo : context.pro.accent);
+    
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + (index * 50)),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              professionalColor1.withOpacity(0.15),
+              professionalColor2.withOpacity(0.1),
+              professionalColor3.withOpacity(0.05),
+              AppTheme.darkSurface,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: professionalColor1.withOpacity(0.4),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: professionalColor1.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: professionalColor2.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Barra lateral con gradiente profesional
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 6,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      professionalColor1,
+                      professionalColor2,
+                      professionalColor3,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Checkbox mejorado (igual que trabajo)
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _academicTasks = _academicTasks.map((t) {
+                              if (t.id == task.id) {
+                                return AcademicTask(
+                                  id: t.id,
+                                  task: t.task,
+                                  date: t.date,
+                                  completed: !t.completed,
+                                  notes: t.notes,
+                                  priority: t.priority,
+                                  subject: t.subject,
+                                  estimatedTime: t.estimatedTime,
+                                );
+                              }
+                              return t;
+                            }).toList();
+                          });
+                        },
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: task.completed
+                                  ? [
+                                      Colors.green.withOpacity(0.4),
+                                      Colors.green.withOpacity(0.2),
+                                    ]
+                                  : [
+                                      professionalColor1.withOpacity(0.4),
+                                      professionalColor2.withOpacity(0.3),
+                                      professionalColor3.withOpacity(0.2),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: task.completed
+                                  ? Colors.green.withOpacity(0.6)
+                                  : professionalColor1.withOpacity(0.5),
+                              width: 2,
+                            ),
+                            boxShadow: task.completed ? null : [
+                              BoxShadow(
+                                color: professionalColor1.withOpacity(0.3),
+                                blurRadius: 8,
+                                spreadRadius: 1,
                               ),
                             ],
                           ),
+                          child: Center(
+                            child: task.completed
+                                ? const Icon(Icons.check, color: Colors.green, size: 28)
+                                : Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          professionalColor1.withOpacity(0.3),
+                                          professionalColor2.withOpacity(0.2),
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: professionalColor1,
+                                        width: 2.5,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              task.task,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: task.completed ? AppTheme.white40 : AppTheme.white,
+                                decoration: task.completed ? TextDecoration.lineThrough : null,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Prioridad con gradiente profesional
+                            if (task.priority != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      professionalColor1.withOpacity(0.25),
+                                      professionalColor2.withOpacity(0.15),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: professionalColor1.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getPriorityIcon(task.priority),
+                                      size: 14,
+                                      color: _getPriorityColor(task.priority),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _getPriorityLabel(task.priority),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: professionalColor1,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      // Botón de opciones (igual que trabajo)
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
+                        color: AppTheme.darkSurface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        onSelected: (value) {
+                          if (value == 'delete') {
+                            showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: AppTheme.darkSurface,
+                                title: const Text(
+                                  'Eliminar tarea',
+                                  style: TextStyle(color: AppTheme.white),
+                                ),
+                                content: Text(
+                                  '¿Estás seguro de que quieres eliminar "${task.task}"?',
+                                  style: const TextStyle(color: AppTheme.white60),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text(
+                                      'Cancelar',
+                                      style: TextStyle(color: AppTheme.white60),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            ).then((confirmed) {
+                              if (confirmed == true) {
+                                setState(() {
+                                  _academicTasks = _academicTasks.where((t) => t.id != task.id).toList();
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Tarea eliminada exitosamente'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            });
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 18, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Eliminar', style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Información de la tarea (estilo igual que trabajo)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBackground.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        if (task.subject != null) ...[
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      professionalColor2.withOpacity(0.3),
+                                      professionalColor3.withOpacity(0.2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: professionalColor2.withOpacity(0.4),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.book,
+                                  size: 16,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Materia',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      task.subject!,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: AppTheme.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    professionalColor2.withOpacity(0.3),
+                                    professionalColor3.withOpacity(0.2),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: professionalColor2.withOpacity(0.4),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Fecha',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    DateFormat('dd/MM/yyyy').format(task.date),
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: isOverdue ? Colors.red : AppTheme.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (task.estimatedTime != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      professionalColor2.withOpacity(0.3),
+                                      professionalColor3.withOpacity(0.2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: professionalColor2.withOpacity(0.4),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Tiempo',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      task.estimatedTime!,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: AppTheme.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (isOverdue && !task.completed)
+                              Container(
+                                margin: const EdgeInsets.only(left: 12),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.red.withOpacity(0.3),
+                                      Colors.red.withOpacity(0.2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.4),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Atrasada',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Información adicional
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getPriorityColor(task.priority).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      size: 8,
-                      color: _getPriorityColor(task.priority),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _getPriorityLabel(task.priority),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: _getPriorityColor(task.priority),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: task.completed 
-                      ? Colors.green.withOpacity(0.2)
-                      : isOverdue
-                          ? Colors.red.withOpacity(0.2)
-                          : isDueToday
-                              ? Colors.orange.withOpacity(0.2)
-                              : Colors.blue.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      task.completed 
-                          ? Icons.check_circle
-                          : isOverdue
-                              ? Icons.error
-                              : isDueToday
-                                  ? Icons.warning
-                                  : Icons.pending,
-                      size: 12,
-                      color: task.completed 
-                          ? Colors.green
-                          : isOverdue
-                              ? Colors.red
-                              : isDueToday
-                                  ? Colors.orange
-                                  : Colors.blue,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      task.completed 
-                          ? 'Completada'
-                          : isOverdue
-                              ? 'Vencida'
-                              : isDueToday
-                                  ? 'Hoy'
-                                  : 'Pendiente',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: task.completed 
-                            ? Colors.green
-                            : isOverdue
-                                ? Colors.red
-                                : isDueToday
-                                    ? Colors.orange
-                                    : Colors.blue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _academicTasks = _academicTasks.where((t) => t.id != task.id).toList();
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tarea eliminada')),
-                  );
-                },
-                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-              ),
-            ],
-          ),
-          // Notas
-          if (task.notes != null && task.notes!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.note, size: 16, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      task.notes!,
-                      style: const TextStyle(fontSize: 12, color: AppTheme.white70),
-                    ),
                   ),
+                  // Notas
+                  if (task.notes != null && task.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            professionalColor3.withOpacity(0.2),
+                            professionalColor3.withOpacity(0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: professionalColor3.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [professionalColor3, professionalColor2],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.note, size: 16, color: AppTheme.white),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              task.notes!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.white70,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getPriorityIcon(String priority) {
+    switch (priority) {
+      case 'high':
+        return Icons.priority_high;
+      case 'medium':
+        return Icons.flag;
+      case 'low':
+        return Icons.arrow_downward;
+      default:
+        return Icons.flag;
+    }
+  }
+
+  Widget _buildTaskSummaryCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+    required LinearGradient gradient,
+  }) {
+    final colors = [gradient.colors[0], gradient.colors.length > 1 ? gradient.colors[1] : gradient.colors[0]];
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colors[0].withOpacity(0.15),
+            colors.length > 1 ? colors[1].withOpacity(0.1) : colors[0].withOpacity(0.05),
+            AppTheme.darkSurface,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors.map((c) => c.withOpacity(0.3)).toList(),
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: color.withOpacity(0.4),
+                width: 1,
+              ),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.white,
+            ),
+          ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.white60,
+            ),
+          ),
         ],
       ),
     );
@@ -3285,39 +4116,94 @@ class _SchoolSectionsState extends State<SchoolSections> {
     );
   }
 
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildEmptyState(
+    String message,
+    IconData icon, [
+    String? subtitle,
+    String? buttonText,
+    VoidCallback? onButtonPressed,
+    Color? buttonColor,
+    List<Color>? gradientColors,
+  ]) {
+    final colors = gradientColors ?? [buttonColor ?? context.pro.accent, buttonColor ?? context.pro.accent];
+    
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: AppTheme.white40),
-          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors.map((c) => c.withOpacity(0.2)).toList(),
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 64, color: colors[0].withOpacity(0.6)),
+          ),
+          const SizedBox(height: 24),
           Text(
-            title,
+            message,
             style: const TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
               color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppTheme.white60,
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.white60,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
+          ],
+          if (buttonText != null && onButtonPressed != null) ...[
+            const SizedBox(height: 32),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: colors,
+                ),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors[0].withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: onButtonPressed,
+                icon: const Icon(Icons.add, color: AppTheme.white),
+                label: Text(
+                  buttonText,
+                  style: const TextStyle(
+                    color: AppTheme.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -3326,320 +4212,1729 @@ class _SchoolSectionsState extends State<SchoolSections> {
   // ==================== MODALES ====================
   
   Widget _buildAddClassModal() {
-    return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text('Agregar Nueva Clase', style: TextStyle(color: AppTheme.white)),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _classSubjectController,
-              decoration: const InputDecoration(
-                labelText: 'Materia *',
-                labelStyle: TextStyle(color: AppTheme.white70),
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            // Selector de día
-            const Text('Día de la semana *', style: TextStyle(color: AppTheme.white70)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: _weekDays.map((day) {
-                final isSelected = _selectedClassDay == day;
-                return ChoiceChip(
-                  label: Text(day),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) setState(() => _selectedClassDay = day);
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            // Selector de hora
-            const Text('Hora *', style: TextStyle(color: AppTheme.white70)),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 120,
-              child: ListView.builder(
-                itemCount: _timeSlots.length,
-                itemBuilder: (context, index) {
-                  final time = _timeSlots[index];
-                  final isSelected = _selectedClassTime == time;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: ChoiceChip(
-                      label: Text(time),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) setState(() => _selectedClassTime = time);
-                      },
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header mejorado
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple,
+                      Colors.deepPurple,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.add_circle_outline,
+                        color: AppTheme.white,
+                        size: 28,
+                      ),
                     ),
-                  );
-                },
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Agregar Nueva Clase',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Completa los datos de tu clase',
+                            style: TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _classClassroomController,
-              decoration: const InputDecoration(
-                labelText: 'Aula',
-                labelStyle: TextStyle(color: AppTheme.white70),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Campo Materia
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _classSubjectController,
+                          decoration: InputDecoration(
+                            labelText: 'Materia *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(
+                              Icons.school,
+                              color: Colors.purple,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          style: const TextStyle(color: AppTheme.white, fontSize: 16),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Selector de días (múltiple)
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 18, color: Colors.purple),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Días de la semana *',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (_selectedClassDays.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${_selectedClassDays.length} seleccionado${_selectedClassDays.length > 1 ? 's' : ''}',
+                                style: const TextStyle(
+                                  color: Colors.purple,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _weekDays.map((day) {
+                            final isSelected = _selectedClassDays.contains(day);
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  if (isSelected) {
+                                    _selectedClassDays.remove(day);
+                                  } else {
+                                    _selectedClassDays.add(day);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  gradient: isSelected
+                                      ? LinearGradient(
+                                          colors: [
+                                            Colors.purple,
+                                            Colors.deepPurple,
+                                          ],
+                                        )
+                                      : null,
+                                  color: isSelected
+                                      ? null
+                                      : AppTheme.darkSurface.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.purple.withOpacity(0.5)
+                                        : Colors.purple.withOpacity(0.2),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        size: 16,
+                                        color: AppTheme.white,
+                                      )
+                                    else
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: AppTheme.white70,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      day,
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? AppTheme.white
+                                            : AppTheme.white70,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Selector de hora
+                      const Row(
+                        children: [
+                          Icon(Icons.access_time, size: 18, color: Colors.purple),
+                          SizedBox(width: 8),
+                          Text(
+                            'Hora *',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 140,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 2.5,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                          itemCount: _timeSlots.length,
+                          itemBuilder: (context, index) {
+                            final time = _timeSlots[index];
+                            final isSelected = _selectedClassTime == time;
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _selectedClassTime = time;
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: isSelected
+                                      ? LinearGradient(
+                                          colors: [
+                                            Colors.purple,
+                                            Colors.deepPurple,
+                                          ],
+                                        )
+                                      : null,
+                                  color: isSelected
+                                      ? null
+                                      : AppTheme.darkSurface.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.purple.withOpacity(0.5)
+                                        : Colors.purple.withOpacity(0.2),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    time,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? AppTheme.white
+                                          : AppTheme.white70,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Campos opcionales
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.purple.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _classClassroomController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Aula',
+                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  prefixIcon: Icon(
+                                    Icons.location_on,
+                                    color: Colors.purple,
+                                    size: 20,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                ),
+                                style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.purple.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _classProfessorController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Profesor',
+                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  prefixIcon: Icon(
+                                    Icons.person,
+                                    color: Colors.purple,
+                                    size: 20,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                ),
+                                style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Campo de link
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _classLinkController,
+                          decoration: const InputDecoration(
+                            labelText: 'Link para unirse (Zoom, Meet, etc.)',
+                            labelStyle: TextStyle(color: AppTheme.white70),
+                            hintText: 'https://meet.google.com/...',
+                            hintStyle: TextStyle(color: AppTheme.white60),
+                            prefixIcon: Icon(
+                              Icons.link,
+                              color: Colors.purple,
+                              size: 20,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                          keyboardType: TextInputType.url,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Selector de duración
+                      const Row(
+                        children: [
+                          Icon(Icons.timer, size: 18, color: Colors.purple),
+                          SizedBox(width: 8),
+                          Text(
+                            'Duración',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: ['30', '60', '90', '120'].map((duration) {
+                            final isSelected = _selectedClassDuration == duration;
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setModalState(() {
+                                      _selectedClassDuration = duration;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient: isSelected
+                                          ? LinearGradient(
+                                              colors: [
+                                                Colors.purple,
+                                                Colors.deepPurple,
+                                              ],
+                                            )
+                                          : null,
+                                      color: isSelected
+                                          ? null
+                                          : AppTheme.darkSurface.withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Colors.purple.withOpacity(0.5)
+                                            : Colors.purple.withOpacity(0.2),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '$duration min',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? AppTheme.white
+                                              : AppTheme.white70,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _classProfessorController,
-              decoration: const InputDecoration(
-                labelText: 'Profesor',
-                labelStyle: TextStyle(color: AppTheme.white70),
+              // Botones
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        _classSubjectController.clear();
+                        _classClassroomController.clear();
+                        _classProfessorController.clear();
+                        _selectedClassDays.clear();
+                        _selectedClassTime = '7:00 AM';
+                        _selectedClassDuration = '60';
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          color: AppTheme.white70,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          // Validar campos obligatorios
+                          if (_classSubjectController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Por favor completa todos los campos obligatorios'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (_selectedClassDays.isEmpty || _selectedClassTime.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Por favor selecciona al menos un día y la hora'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Mostrar indicador de carga
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (loadingContext) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+
+                          // Guardar el número de días antes de limpiar
+                          final totalDays = _selectedClassDays.length;
+                          
+                          // Crear una clase por cada día seleccionado
+                          int successCount = 0;
+                          int errorCount = 0;
+                          String? lastError;
+                          final List<ClassSchedule> newClasses = [];
+
+                          for (int i = 0; i < _selectedClassDays.length; i++) {
+                            try {
+                              final day = _selectedClassDays[i];
+                              final newClass = ClassSchedule(
+                                id: '${DateTime.now().millisecondsSinceEpoch}_$i',
+                                subject: _classSubjectController.text.trim(),
+                                day: day,
+                                time: _selectedClassTime,
+                                classroom: _classClassroomController.text.trim().isNotEmpty 
+                                    ? _classClassroomController.text.trim() 
+                                    : null,
+                                professor: _classProfessorController.text.trim().isNotEmpty
+                                    ? _classProfessorController.text.trim()
+                                    : null,
+                                duration: int.parse(_selectedClassDuration),
+                                link: _classLinkController.text.trim().isNotEmpty
+                                    ? _classLinkController.text.trim()
+                                    : null,
+                              );
+
+                              // Guardar en Supabase
+                              final result = await _classScheduleService.addClassSchedule(newClass);
+
+                              if (result['success'] == true) {
+                                successCount++;
+                                newClasses.add(newClass);
+                              } else {
+                                errorCount++;
+                                lastError = result['error'] ?? 'Error desconocido';
+                                print('Error al agregar clase para $day: $lastError');
+                              }
+                            } catch (e) {
+                              errorCount++;
+                              lastError = e.toString();
+                              print('Excepción al agregar clase: $e');
+                            }
+                          }
+
+                          // Cerrar indicador de carga
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+
+                          // Recargar clases desde Supabase si hubo al menos un éxito
+                          if (successCount > 0) {
+                            try {
+                              final loadedClasses = await _classScheduleService.getClassSchedules();
+                              if (context.mounted) {
+                                setState(() {
+                                  _classes = loadedClasses;
+                                });
+                              }
+                            } catch (e) {
+                              print('Error al recargar clases: $e');
+                              // Agregar clases exitosas localmente como fallback
+                              if (context.mounted) {
+                                setState(() {
+                                  _classes.addAll(newClasses);
+                                });
+                              }
+                            }
+                          }
+
+                          // Limpiar formulario usando setModalState
+                          setModalState(() {
+                            _classSubjectController.clear();
+                            _classClassroomController.clear();
+                            _classProfessorController.clear();
+                            _classLinkController.clear();
+                            _selectedClassDays.clear();
+                            _selectedClassTime = '7:00 AM';
+                            _selectedClassDuration = '60';
+                          });
+
+                          // Cerrar modal y mostrar mensaje
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            
+                            if (successCount == totalDays) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    successCount == 1
+                                        ? 'Clase agregada exitosamente'
+                                        : '$successCount clases agregadas exitosamente',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else if (successCount > 0) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '$successCount de $totalDays clases agregadas. $errorCount errores.${lastError != null ? "\nÚltimo error: ${lastError.length > 50 ? lastError.substring(0, 50) + "..." : lastError}" : ""}',
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                  duration: const Duration(seconds: 5),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Error al agregar las clases.${lastError != null ? "\nError: ${lastError.length > 80 ? lastError.substring(0, 80) + "..." : lastError}" : ""}',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 5),
+                                ),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          print('Error general al agregar clase: $e');
+                          
+                          // Asegurar que se cierren los diálogos
+                          if (context.mounted) {
+                            try {
+                              Navigator.pop(context); // Cerrar indicador de carga si existe
+                            } catch (_) {}
+                            try {
+                              Navigator.pop(context); // Cerrar modal si existe
+                            } catch (_) {}
+                            
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Error inesperado: ${e.toString().length > 100 ? e.toString().substring(0, 100) + "..." : e.toString()}',
+                                ),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Agregar Clase',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            // Selector de duración
-            const Text('Duración (minutos)', style: TextStyle(color: AppTheme.white70)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: ['30', '60', '90', '120'].map((duration) {
-                final isSelected = _selectedClassDuration == duration;
-                return ChoiceChip(
-                  label: Text('$duration min'),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) setState(() => _selectedClassDuration = duration);
-                  },
-                );
-              }).toList(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _showAddClassModal = false;
-              _classSubjectController.clear();
-              _classClassroomController.clear();
-              _classProfessorController.clear();
-            });
-            Navigator.pop(context);
-          },
-          child: const Text('Cancelar'),
+    );
+  }
+
+  Widget _buildEditClassModal(ClassSchedule classItem) {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple,
+                      Colors.deepPurple,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        color: AppTheme.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Editar Clase',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Modifica los datos de tu clase',
+                            style: TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido - reutilizando la misma estructura del modal de agregar
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Campo Materia
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _classSubjectController,
+                          decoration: const InputDecoration(
+                            labelText: 'Materia *',
+                            labelStyle: TextStyle(color: AppTheme.white70),
+                            prefixIcon: Icon(
+                              Icons.school,
+                              color: Colors.purple,
+                              size: 20,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Selector de día (solo uno para edición)
+                      const Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 18, color: Colors.purple),
+                          SizedBox(width: 8),
+                          Text(
+                            'Día',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _weekDays.map((day) {
+                          final isSelected = _selectedClassDays.contains(day);
+                          return ChoiceChip(
+                            label: Text(day),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(() {
+                                if (selected) {
+                                  _selectedClassDays = [day];
+                                } else {
+                                  _selectedClassDays = [];
+                                }
+                              });
+                            },
+                            selectedColor: Colors.purple,
+                            labelStyle: TextStyle(
+                              color: isSelected ? AppTheme.white : AppTheme.white70,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                            backgroundColor: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+                      // Selector de hora
+                      const Row(
+                        children: [
+                          Icon(Icons.access_time, size: 18, color: Colors.purple),
+                          SizedBox(width: 8),
+                          Text(
+                            'Hora',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                            childAspectRatio: 2.5,
+                          ),
+                          itemCount: _timeSlots.length,
+                          itemBuilder: (context, index) {
+                            final time = _timeSlots[index];
+                            final isSelected = _selectedClassTime == time;
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _selectedClassTime = time;
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: isSelected
+                                      ? LinearGradient(
+                                          colors: [
+                                            Colors.purple,
+                                            Colors.deepPurple,
+                                          ],
+                                        )
+                                      : null,
+                                  color: isSelected
+                                      ? null
+                                      : AppTheme.darkSurface.withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.purple.withOpacity(0.5)
+                                        : Colors.purple.withOpacity(0.2),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    time,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? AppTheme.white
+                                          : AppTheme.white70,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Campos opcionales
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.purple.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _classClassroomController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Aula',
+                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  prefixIcon: Icon(
+                                    Icons.location_on,
+                                    color: Colors.purple,
+                                    size: 20,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                ),
+                                style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.purple.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _classProfessorController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Profesor',
+                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  prefixIcon: Icon(
+                                    Icons.person,
+                                    color: Colors.purple,
+                                    size: 20,
+                                  ),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                ),
+                                style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // Campo de link
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _classLinkController,
+                          decoration: const InputDecoration(
+                            labelText: 'Link para unirse (Zoom, Meet, etc.)',
+                            labelStyle: TextStyle(color: AppTheme.white70),
+                            hintText: 'https://meet.google.com/...',
+                            hintStyle: TextStyle(color: AppTheme.white60),
+                            prefixIcon: Icon(
+                              Icons.link,
+                              color: Colors.purple,
+                              size: 20,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                          keyboardType: TextInputType.url,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Selector de duración
+                      const Row(
+                        children: [
+                          Icon(Icons.timer, size: 18, color: Colors.purple),
+                          SizedBox(width: 8),
+                          Text(
+                            'Duración',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: ['30', '60', '90', '120'].map((duration) {
+                            final isSelected = _selectedClassDuration == duration;
+                            return Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    _selectedClassDuration = duration;
+                                  });
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? LinearGradient(
+                                            colors: [
+                                              Colors.purple,
+                                              Colors.deepPurple,
+                                            ],
+                                          )
+                                        : null,
+                                    color: isSelected
+                                        ? null
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.purple.withOpacity(0.5)
+                                          : Colors.purple.withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$duration min',
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? AppTheme.white
+                                            : AppTheme.white70,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Botones
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: Colors.purple.withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  color: AppTheme.white70,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  if (_classSubjectController.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Por favor completa todos los campos obligatorios'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  if (_selectedClassDays.isEmpty || _selectedClassTime.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Por favor selecciona el día y la hora'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (loadingContext) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+
+                                  final updatedClass = ClassSchedule(
+                                    id: classItem.id,
+                                    subject: _classSubjectController.text.trim(),
+                                    day: _selectedClassDays.first,
+                                    time: _selectedClassTime,
+                                    classroom: _classClassroomController.text.trim().isNotEmpty 
+                                        ? _classClassroomController.text.trim() 
+                                        : null,
+                                    professor: _classProfessorController.text.trim().isNotEmpty
+                                        ? _classProfessorController.text.trim()
+                                        : null,
+                                    duration: int.parse(_selectedClassDuration),
+                                    link: _classLinkController.text.trim().isNotEmpty
+                                        ? _classLinkController.text.trim()
+                                        : null,
+                                  );
+
+                                  final result = await _classScheduleService.updateClassSchedule(updatedClass);
+
+                                  if (context.mounted) {
+                                    try {
+                                      Navigator.pop(context); // Cerrar indicador de carga
+                                    } catch (_) {}
+
+                                    if (result['success'] == true) {
+                                      // Recargar clases
+                                      try {
+                                        await _loadClasses();
+                                      } catch (e) {
+                                        print('Error al recargar clases después de actualizar: $e');
+                                      }
+                                      
+                                      if (context.mounted) {
+                                        try {
+                                          Navigator.pop(context); // Cerrar modal
+                                        } catch (_) {}
+                                        
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Clase actualizada exitosamente'),
+                                            backgroundColor: Colors.green,
+                                            duration: Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    } else {
+                                      // Mostrar error específico
+                                      final errorMessage = result['error'] ?? 'Error desconocido';
+                                      print('Error al actualizar clase: $errorMessage');
+                                      
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Error al actualizar la clase:\n$errorMessage',
+                                            maxLines: 3,
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          duration: const Duration(seconds: 5),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  print('Excepción al actualizar clase: $e');
+                                  
+                                  if (context.mounted) {
+                                    try {
+                                      Navigator.pop(context); // Cerrar indicador de carga
+                                    } catch (_) {}
+                                    
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Error inesperado: ${e.toString().length > 150 ? e.toString().substring(0, 150) + "..." : e.toString()}',
+                                          maxLines: 3,
+                                        ),
+                                        backgroundColor: Colors.red,
+                                        duration: const Duration(seconds: 5),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 4,
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.save, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Guardar Cambios',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        ElevatedButton(
-          onPressed: () {
-            if (_classSubjectController.text.isNotEmpty) {
-              setState(() {
-                _classes.add(ClassSchedule(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  subject: _classSubjectController.text,
-                  day: _selectedClassDay,
-                  time: _selectedClassTime,
-                  classroom: _classClassroomController.text.isNotEmpty 
-                      ? _classClassroomController.text 
-                      : null,
-                  professor: _classProfessorController.text.isNotEmpty
-                      ? _classProfessorController.text
-                      : null,
-                  duration: int.parse(_selectedClassDuration),
-                ));
-                _showAddClassModal = false;
-                _classSubjectController.clear();
-                _classClassroomController.clear();
-                _classProfessorController.clear();
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Clase agregada')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Por favor completa todos los campos obligatorios')),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-          child: const Text('Agregar Clase'),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildAddTaskModal() {
-    return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text('Nueva Tarea Académica', style: TextStyle(color: AppTheme.white)),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _taskController,
-              decoration: const InputDecoration(
-                labelText: 'Tarea *',
-                labelStyle: TextStyle(color: AppTheme.white70),
-              ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _taskSubjectController,
-              decoration: const InputDecoration(
-                labelText: 'Materia',
-                labelStyle: TextStyle(color: AppTheme.white70),
-              ),
-              style: const TextStyle(color: AppTheme.white),
-            ),
-            const SizedBox(height: 16),
-            // Selector de fecha
-            ListTile(
-              title: const Text('Fecha de entrega *', style: TextStyle(color: AppTheme.white70)),
-              subtitle: Text(
-                _selectedTaskDate != null 
-                    ? DateFormat('dd/MM/yyyy').format(_selectedTaskDate!)
-                    : 'Seleccionar fecha',
-                style: const TextStyle(color: AppTheme.white),
-              ),
-              trailing: const Icon(Icons.calendar_today, color: Colors.purple),
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                );
-                if (date != null) {
-                  setState(() => _selectedTaskDate = date);
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-            // Selector de prioridad
-            const Text('Prioridad', style: TextStyle(color: AppTheme.white70)),
-            const SizedBox(height: 8),
-            Row(
+    String? errorMessage;
+    bool isSaving = false;
+    
+    return StatefulBuilder(
+      builder: (BuildContext dialogContext, StateSetter setDialogState) {
+        return AlertDialog(
+          backgroundColor: AppTheme.darkSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text(
+            'Agregar Tarea Académica',
+            style: TextStyle(color: AppTheme.white),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Baja'),
-                    selected: _selectedTaskPriority == 'low',
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedTaskPriority = 'low');
-                    },
-                    selectedColor: Colors.green.withOpacity(0.3),
+                // Mensaje de error visible
+                if (errorMessage != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.red,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                          onPressed: () {
+                            setDialogState(() {
+                              errorMessage = null;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                TextField(
+                  controller: _taskController,
+                  style: const TextStyle(color: AppTheme.white),
+                  decoration: InputDecoration(
+                    labelText: 'Tarea *',
+                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: context.pro.accent),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Media'),
-                    selected: _selectedTaskPriority == 'medium',
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedTaskPriority = 'medium');
-                    },
-                    selectedColor: Colors.orange.withOpacity(0.3),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _taskSubjectController,
+                  style: const TextStyle(color: AppTheme.white),
+                  decoration: InputDecoration(
+                    labelText: 'Materia',
+                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: context.pro.accent),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Alta'),
-                    selected: _selectedTaskPriority == 'high',
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedTaskPriority = 'high');
-                    },
-                    selectedColor: Colors.red.withOpacity(0.3),
+                const SizedBox(height: 16),
+                // Selector de fecha
+                TextField(
+                  readOnly: true,
+                  style: const TextStyle(color: AppTheme.white),
+                  decoration: InputDecoration(
+                    labelText: 'Fecha de entrega *',
+                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    hintText: _selectedTaskDate != null 
+                        ? DateFormat('dd/MM/yyyy').format(_selectedTaskDate!)
+                        : 'Seleccionar fecha',
+                    hintStyle: TextStyle(
+                      color: _selectedTaskDate != null ? AppTheme.white : AppTheme.white60,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: context.pro.accent),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white60),
+                  ),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedTaskDate ?? DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: ThemeData.dark().copyWith(
+                            colorScheme: ColorScheme.dark(
+                              primary: context.pro.accent,
+                              onPrimary: AppTheme.white,
+                              surface: AppTheme.darkSurface,
+                              onSurface: AppTheme.white,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (date != null) {
+                      setDialogState(() {
+                        _selectedTaskDate = date;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Selector de prioridad
+                DropdownButtonFormField<String>(
+                  value: _selectedTaskPriority,
+                  decoration: InputDecoration(
+                    labelText: 'Prioridad',
+                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: context.pro.accent),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  dropdownColor: AppTheme.darkSurface,
+                  style: const TextStyle(color: AppTheme.white),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'high',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getPriorityIcon('high'),
+                            size: 16,
+                            color: _getPriorityColor('high'),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getPriorityLabel('high'),
+                            style: const TextStyle(color: AppTheme.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'medium',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getPriorityIcon('medium'),
+                            size: 16,
+                            color: _getPriorityColor('medium'),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getPriorityLabel('medium'),
+                            style: const TextStyle(color: AppTheme.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'low',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getPriorityIcon('low'),
+                            size: 16,
+                            color: _getPriorityColor('low'),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getPriorityLabel('low'),
+                            style: const TextStyle(color: AppTheme.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      _selectedTaskPriority = value ?? 'medium';
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Tiempo estimado
+                TextField(
+                  readOnly: true,
+                  style: const TextStyle(color: AppTheme.white),
+                  decoration: InputDecoration(
+                    labelText: 'Tiempo estimado',
+                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    hintText: _selectedTaskTime ?? 'Seleccionar tiempo',
+                    hintStyle: TextStyle(
+                      color: _selectedTaskTime != null ? AppTheme.white : AppTheme.white60,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: context.pro.accent),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: AppTheme.darkSurface,
+                        title: const Text('Tiempo estimado', style: TextStyle(color: AppTheme.white)),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: ['30 min', '1 hora', '2 horas', '3 horas', '4+ horas'].map((time) {
+                            return ListTile(
+                              title: Text(time, style: const TextStyle(color: AppTheme.white)),
+                              selected: _selectedTaskTime == time,
+                              onTap: () {
+                                setDialogState(() {
+                                  _selectedTaskTime = time;
+                                });
+                                Navigator.pop(context);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _taskNotesController,
+                  style: const TextStyle(color: AppTheme.white),
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Notas adicionales',
+                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: context.pro.accent),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Tiempo estimado
-            const Text('Tiempo estimado', style: TextStyle(color: AppTheme.white70)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: ['30 min', '1 hora', '2 horas', '3 horas', '4+ horas'].map((time) {
-                final isSelected = _selectedTaskTime == time;
-                return ChoiceChip(
-                  label: Text(time),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) setState(() => _selectedTaskTime = time);
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _taskNotesController,
-              decoration: const InputDecoration(
-                labelText: 'Notas adicionales',
-                labelStyle: TextStyle(color: AppTheme.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: AppTheme.white60),
               ),
-              style: const TextStyle(color: AppTheme.white),
-              maxLines: 3,
+            ),
+            ElevatedButton(
+              onPressed: isSaving ? null : () async {
+                // Limpiar error anterior
+                setDialogState(() {
+                  errorMessage = null;
+                  isSaving = true;
+                });
+
+                if (_taskController.text.trim().isEmpty) {
+                  setDialogState(() {
+                    errorMessage = 'Por favor ingresa la descripción de la tarea';
+                    isSaving = false;
+                  });
+                  return;
+                }
+
+                if (_selectedTaskDate == null) {
+                  setDialogState(() {
+                    errorMessage = 'Por favor selecciona una fecha de entrega';
+                    isSaving = false;
+                  });
+                  return;
+                }
+
+                setState(() {
+                  _academicTasks.add(AcademicTask(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    task: _taskController.text.trim(),
+                    date: _selectedTaskDate!,
+                    completed: false,
+                    notes: _taskNotesController.text.trim().isNotEmpty ? _taskNotesController.text.trim() : null,
+                    priority: _selectedTaskPriority,
+                    subject: _taskSubjectController.text.trim().isNotEmpty ? _taskSubjectController.text.trim() : null,
+                    estimatedTime: _selectedTaskTime,
+                  ));
+                  _taskController.clear();
+                  _taskSubjectController.clear();
+                  _taskNotesController.clear();
+                  _selectedTaskDate = null;
+                  _selectedTaskTime = null;
+                });
+
+                Navigator.of(dialogContext).pop();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Tarea agregada exitosamente'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.pro.accent,
+              ),
+              child: isSaving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                      ),
+                    )
+                  : const Text('Agregar'),
             ),
           ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _showAddTaskModal = false;
-              _taskController.clear();
-              _taskSubjectController.clear();
-              _taskNotesController.clear();
-              _selectedTaskDate = null;
-            });
-            Navigator.pop(context);
-          },
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_taskController.text.isNotEmpty && _selectedTaskDate != null) {
-              setState(() {
-                _academicTasks.add(AcademicTask(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  task: _taskController.text,
-                  date: _selectedTaskDate!,
-                  completed: false,
-                  notes: _taskNotesController.text.isNotEmpty ? _taskNotesController.text : null,
-                  priority: _selectedTaskPriority,
-                  subject: _taskSubjectController.text.isNotEmpty ? _taskSubjectController.text : null,
-                  estimatedTime: _selectedTaskTime,
-                ));
-                _showAddTaskModal = false;
-                _taskController.clear();
-                _taskSubjectController.clear();
-                _taskNotesController.clear();
-                _selectedTaskDate = null;
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tarea agregada')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Por favor completa los campos obligatorios')),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-          child: const Text('Agregar Tarea'),
-        ),
-      ],
+        );
+      },
     );
   }
 

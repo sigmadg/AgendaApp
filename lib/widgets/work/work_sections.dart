@@ -104,8 +104,8 @@ class _WorkSectionsState extends State<WorkSections> {
     {'id': 'weekly', 'name': 'Sesiones', 'icon': Icons.event},
     {'id': 'daily', 'name': 'Tareas', 'icon': Icons.today},
     {'id': 'projects', 'name': 'Proyectos', 'icon': Icons.folder},
-    {'id': 'strategy', 'name': 'Estrategia y Planificación', 'icon': Icons.track_changes},
-    {'id': 'priorities-focus-goals', 'name': 'Prioridades, Enfoque y Objetivos', 'icon': Icons.dashboard},
+    {'id': 'strategy', 'name': 'Estrategia', 'icon': Icons.track_changes},
+    {'id': 'priorities-focus-goals', 'name': 'Prioridades', 'icon': Icons.dashboard},
   ];
 
   String _activeSubSection = 'priorities'; // Para la subsección agrupada
@@ -8056,7 +8056,7 @@ class _WorkSectionsState extends State<WorkSections> {
   }
 
   Widget _buildGoalsContent() {
-    final goalsColors = [Colors.green, Colors.teal, Colors.amber, Colors.red, Colors.grey];
+    final goalsColors = [const Color(0xFF6366F1), Colors.teal, Colors.amber, Colors.red, Colors.grey];
     // Calcular progreso basado en metas completadas
     final totalMilestones = _goals.fold<int>(0, (sum, goal) {
       final milestones = goal['milestones'] as List<dynamic>? ?? [];
@@ -8376,7 +8376,7 @@ class _WorkSectionsState extends State<WorkSections> {
   }
 
   Widget _buildGoals() {
-    final goalsColors = [Colors.green, Colors.teal, Colors.amber, Colors.red, Colors.grey];
+    final goalsColors = [const Color(0xFF6366F1), Colors.teal, Colors.amber, Colors.red, Colors.grey];
     // Calcular progreso basado en metas completadas
     final totalMilestones = _goals.fold<int>(0, (sum, goal) {
       final milestones = goal['milestones'] as List<dynamic>? ?? [];
@@ -10578,7 +10578,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 enabled: !isCompleted,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.only(left: 8),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -10737,7 +10737,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 enabled: !isCompleted,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: EdgeInsets.only(left: 8),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -10836,8 +10836,8 @@ class _WorkSectionsState extends State<WorkSections> {
           end: Alignment.bottomRight,
           colors: isCompleted
               ? [
-                  Colors.green.withOpacity(0.2),
-                  Colors.green.withOpacity(0.12),
+                  const Color(0xFF6366F1).withOpacity(0.2),
+                  const Color(0xFF6366F1).withOpacity(0.12),
                   AppTheme.darkSurface,
                 ]
               : [
@@ -10849,13 +10849,13 @@ class _WorkSectionsState extends State<WorkSections> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isCompleted
-              ? Colors.green.withOpacity(0.5)
+              ? const Color(0xFF6366F1).withOpacity(0.5)
               : color.withOpacity(0.5),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isCompleted ? Colors.green : color).withOpacity(0.25),
+            color: (isCompleted ? const Color(0xFF6366F1) : color).withOpacity(0.25),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -10881,7 +10881,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: isCompleted
-                          ? [Colors.green, Colors.green.shade700]
+                          ? [const Color(0xFF6366F1), const Color(0xFF4F46E5)]
                           : [color, color.withOpacity(0.8)],
                     ),
                     borderRadius: BorderRadius.circular(18),
@@ -10915,7 +10915,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     enabled: !isCompleted,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: EdgeInsets.only(left: 8),
                     ),
                     onChanged: (value) {
                       setState(() {
@@ -11161,8 +11161,8 @@ class _WorkSectionsState extends State<WorkSections> {
                       end: Alignment.bottomRight,
                       colors: milestoneCompleted
                           ? [
-                              Colors.green.withOpacity(0.15),
-                              Colors.green.withOpacity(0.08),
+                              const Color(0xFF6366F1).withOpacity(0.15),
+                              const Color(0xFF6366F1).withOpacity(0.08),
                               AppTheme.darkSurface.withOpacity(0.8),
                             ]
                           : [
@@ -11174,13 +11174,13 @@ class _WorkSectionsState extends State<WorkSections> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: milestoneCompleted 
-                          ? Colors.green.withOpacity(0.4)
+                          ? const Color(0xFF6366F1).withOpacity(0.4)
                           : color.withOpacity(0.4),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (milestoneCompleted ? Colors.green : color).withOpacity(0.15),
+                        color: (milestoneCompleted ? const Color(0xFF6366F1) : color).withOpacity(0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -11191,12 +11191,12 @@ class _WorkSectionsState extends State<WorkSections> {
                       Container(
                         decoration: BoxDecoration(
                           color: milestoneCompleted
-                              ? Colors.green.withOpacity(0.2)
+                              ? const Color(0xFF6366F1).withOpacity(0.2)
                               : AppTheme.darkSurfaceVariant.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: milestoneCompleted
-                                ? Colors.green.withOpacity(0.4)
+                                ? const Color(0xFF6366F1).withOpacity(0.4)
                                 : color.withOpacity(0.3),
                             width: 1.5,
                           ),
@@ -11217,10 +11217,10 @@ class _WorkSectionsState extends State<WorkSections> {
                               }
                             });
                           },
-                          activeColor: Colors.green,
+                          activeColor: const Color(0xFF6366F1),
                           checkColor: AppTheme.white,
                           side: BorderSide(
-                            color: milestoneCompleted ? Colors.green : color.withOpacity(0.5),
+                            color: milestoneCompleted ? const Color(0xFF6366F1) : color.withOpacity(0.5),
                             width: 2,
                           ),
                         ),

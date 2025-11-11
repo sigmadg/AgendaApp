@@ -164,6 +164,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  // Limpiar credenciales guardadas cuando se desmarca el checkbox
+  Future<void> _clearRememberedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('remembered_password');
+      await prefs.setBool('remember_me', false);
+      print('LoginPage: Credenciales recordadas eliminadas');
+    } catch (e) {
+      print('Error clearing remembered credentials: $e');
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -524,14 +536,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       children: [
                         // Remember Me Checkbox with Animation
                         GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        final newRememberMe = !_rememberMe;
                         setState(() {
-                          _rememberMe = !_rememberMe;
+                          _rememberMe = newRememberMe;
                         });
-                        if (_rememberMe) {
+                        
+                        if (newRememberMe) {
                           _checkboxAnimationController.forward().then((_) {
                             _checkboxAnimationController.reverse();
                           });
+                        } else {
+                          // Si se desmarca, limpiar credenciales guardadas
+                          await _clearRememberedCredentials();
                         }
                       },
                       child: Row(

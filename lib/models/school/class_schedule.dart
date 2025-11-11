@@ -6,6 +6,7 @@ class ClassSchedule {
   final String? classroom;
   final String? professor;
   final int duration; // en minutos
+  final String? link; // link para unirse a la clase (Zoom, Meet, etc.)
 
   ClassSchedule({
     required this.id,
@@ -15,6 +16,7 @@ class ClassSchedule {
     this.classroom,
     this.professor,
     this.duration = 60,
+    this.link,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,6 +28,7 @@ class ClassSchedule {
       'classroom': classroom,
       'professor': professor,
       'duration': duration,
+      'link': link,
     };
   }
 
@@ -38,6 +41,7 @@ class ClassSchedule {
       classroom: json['classroom'],
       professor: json['professor'],
       duration: json['duration'] ?? 60,
+      link: json['link'],
     );
   }
 }

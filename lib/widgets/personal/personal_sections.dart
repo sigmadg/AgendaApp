@@ -27,6 +27,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
   DateTime _selectedDate = DateTime.now();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late ScrollController _dateScrollController;
+  String _viewMode = 'day'; // 'day', 'week', 'month'
   
   List<CalendarTask> _tasks = [];
   List<EventOrganization> _events = [];
@@ -218,11 +219,74 @@ class _PersonalSectionsState extends State<PersonalSections> {
     }).toList();
   }
 
+  // Obtener eventos para una semana
+  List<EventOrganization> _getEventsForWeek(DateTime startDate) {
+    final endDate = startDate.add(const Duration(days: 6));
+    return _events.where((event) {
+      try {
+        final eventDate = DateFormat('yyyy-MM-dd').parse(event.date);
+        return eventDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
+               eventDate.isBefore(endDate.add(const Duration(days: 1)));
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
+  // Obtener eventos para un mes
+  List<EventOrganization> _getEventsForMonth(DateTime date) {
+    final firstDay = DateTime(date.year, date.month, 1);
+    final lastDay = DateTime(date.year, date.month + 1, 0);
+    return _events.where((event) {
+      try {
+        final eventDate = DateFormat('yyyy-MM-dd').parse(event.date);
+        return eventDate.isAfter(firstDay.subtract(const Duration(days: 1))) &&
+               eventDate.isBefore(lastDay.add(const Duration(days: 1)));
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
+  // Obtener el inicio de la semana (lunes)
+  DateTime _getWeekStart(DateTime date) {
+    final weekday = date.weekday;
+    return date.subtract(Duration(days: weekday - 1));
+  }
+
+  // Obtener el número de semana del año (1-52/53)
+  int _getWeekNumber(DateTime date) {
+    final weekStart = _getWeekStart(date);
+    final yearStart = DateTime(date.year, 1, 1);
+    final firstWeekStart = _getWeekStart(yearStart);
+    final daysDifference = weekStart.difference(firstWeekStart).inDays;
+    return (daysDifference ~/ 7) + 1;
+  }
+
   List<CalendarTask> _getTasksForDate(DateTime date) {
     return _tasks.where((task) {
       return task.date.year == date.year &&
              task.date.month == date.month &&
              task.date.day == date.day;
+    }).toList();
+  }
+
+  // Obtener tareas para una semana
+  List<CalendarTask> _getTasksForWeek(DateTime startDate) {
+    final endDate = startDate.add(const Duration(days: 6));
+    return _tasks.where((task) {
+      return task.date.isAfter(startDate.subtract(const Duration(days: 1))) &&
+             task.date.isBefore(endDate.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  // Obtener tareas para un mes
+  List<CalendarTask> _getTasksForMonth(DateTime date) {
+    final firstDay = DateTime(date.year, date.month, 1);
+    final lastDay = DateTime(date.year, date.month + 1, 0);
+    return _tasks.where((task) {
+      return task.date.isAfter(firstDay.subtract(const Duration(days: 1))) &&
+             task.date.isBefore(lastDay.add(const Duration(days: 1)));
     }).toList();
   }
 
@@ -906,14 +970,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
   }
 
   Widget _buildEvents() {
-    final todayEvents = _getEventsForDate(_selectedDate);
-    final isToday = _selectedDate.year == DateTime.now().year &&
-                    _selectedDate.month == DateTime.now().month &&
-                    _selectedDate.day == DateTime.now().day;
-
     return Column(
       children: [
-        // Header mejorado con selector de fecha y gradiente arcoíris
+        // Header mejorado con selector de vista y fecha
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -928,121 +987,530 @@ class _PersonalSectionsState extends State<PersonalSections> {
             ),
           ),
           child: Padding(
-          padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.red.withOpacity(0.3),
-                                    _carminePastel.withOpacity(0.25),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: _carminePastel.withOpacity(0.5),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.calendar_today, size: 16, color: Colors.amber),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedDate),
-                style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _carminePastel,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Eventos - ${DateFormat('EEEE', 'es').format(_selectedDate)}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.white,
-                ),
-              ),
-                        if (todayEvents.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '${todayEvents.length} ${todayEvents.length == 1 ? 'evento' : 'eventos'}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppTheme.white60,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Selector de fecha con desplazamiento horizontal
-                SizedBox(
-                  height: 60,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    controller: _dateScrollController,
-                    itemCount: 30, // 15 días antes y 15 días después
-                    itemBuilder: (context, index) {
-                      final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
-                      final dateIsSelected = _selectedDate.year == date.year &&
-                                           _selectedDate.month == date.month &&
-                                           _selectedDate.day == date.day;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: _buildDateSelector(date, dateIsSelected),
-                      );
-                    },
+                // Selector de vista (Día, Semana, Mes)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildViewModeButton('day', 'Día', Icons.calendar_today),
+                      const SizedBox(width: 8),
+                      _buildViewModeButton('week', 'Semana', Icons.view_week),
+                      const SizedBox(width: 8),
+                      _buildViewModeButton('month', 'Mes', Icons.calendar_month),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Información de la fecha/vista seleccionada
+                _buildViewHeader(),
+                const SizedBox(height: 16),
+                // Selector de fecha (solo para vista día)
+                if (_viewMode == 'day')
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      controller: _dateScrollController,
+                      itemCount: 30,
+                      itemBuilder: (context, index) {
+                        final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
+                        final dateIsSelected = _selectedDate.year == date.year &&
+                                             _selectedDate.month == date.month &&
+                                             _selectedDate.day == date.day;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: _buildDateSelector(date, dateIsSelected),
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
           ),
         ),
         Expanded(
-          child: todayEvents.isEmpty
-              ? _buildEmptyState(
-                  isToday 
-                      ? 'No hay eventos programados para hoy' 
-                      : 'No hay eventos para esta fecha',
-                  Icons.event_busy,
-                  'Agrega un nuevo evento usando el botón +',
-                  'Agregar Evento',
-                  () => _showAddEventDialog(context),
-                  Colors.red,
-                  gradientColors: [Colors.red, _carminePastel],
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: todayEvents.length,
-                  itemBuilder: (context, index) => _buildEventCard(todayEvents[index], index),
-                ),
+          child: _buildEventsContent(),
         ),
       ],
+    );
+  }
+
+
+  Widget _buildViewModeButton(String mode, String label, IconData icon) {
+    final isSelected = _viewMode == mode;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _viewMode = mode;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.red.withOpacity(0.4),
+                    _carminePastel.withOpacity(0.3),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? _carminePastel.withOpacity(0.6) : AppTheme.white60.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: _carminePastel.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: isSelected ? _carminePastel : AppTheme.white70),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? _carminePastel : AppTheme.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewHeader() {
+    final isToday = _selectedDate.year == DateTime.now().year &&
+                    _selectedDate.month == DateTime.now().month &&
+                    _selectedDate.day == DateTime.now().day;
+    
+    String title;
+    String subtitle;
+    int eventCount = 0;
+
+    switch (_viewMode) {
+      case 'day':
+        final dayEvents = _getEventsForDate(_selectedDate);
+        eventCount = dayEvents.length;
+        title = isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedDate);
+        subtitle = 'Eventos del ${DateFormat('EEEE', 'es').format(_selectedDate).toLowerCase()}';
+        break;
+      case 'week':
+        final weekStart = _getWeekStart(_selectedDate);
+        final weekEnd = weekStart.add(const Duration(days: 6));
+        final weekEvents = _getEventsForWeek(weekStart);
+        eventCount = weekEvents.length;
+        title = '${DateFormat('d MMM', 'es').format(weekStart)} - ${DateFormat('d MMM yyyy', 'es').format(weekEnd)}';
+        // Calcular número de semana
+        final weekNumber = _getWeekNumber(weekStart);
+        subtitle = 'Eventos de la semana $weekNumber';
+        break;
+      case 'month':
+        final monthEvents = _getEventsForMonth(_selectedDate);
+        eventCount = monthEvents.length;
+        title = DateFormat('MMMM yyyy', 'es').format(_selectedDate);
+        subtitle = 'Eventos de ${DateFormat('MMMM', 'es').format(_selectedDate).toLowerCase()}';
+        break;
+      default:
+        title = '';
+        subtitle = '';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.red.withOpacity(0.3),
+                    _carminePastel.withOpacity(0.25),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _carminePastel.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.calendar_today, size: 16, color: Colors.amber),
+                  const SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _carminePastel,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Botones de navegación para semana y mes
+            if (_viewMode == 'week' || _viewMode == 'month')
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: AppTheme.white70),
+                    onPressed: () {
+                      setState(() {
+                        if (_viewMode == 'week') {
+                          _selectedDate = _selectedDate.subtract(const Duration(days: 7));
+                        } else if (_viewMode == 'month') {
+                          _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, _selectedDate.day);
+                        }
+                      });
+                    },
+                    tooltip: _viewMode == 'week' ? 'Semana anterior' : 'Mes anterior',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.today, color: AppTheme.white70),
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = DateTime.now();
+                      });
+                    },
+                    tooltip: 'Hoy',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: AppTheme.white70),
+                    onPressed: () {
+                      setState(() {
+                        if (_viewMode == 'week') {
+                          _selectedDate = _selectedDate.add(const Duration(days: 7));
+                        } else if (_viewMode == 'month') {
+                          _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day);
+                        }
+                      });
+                    },
+                    tooltip: _viewMode == 'week' ? 'Semana siguiente' : 'Mes siguiente',
+                  ),
+                ],
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.white,
+          ),
+        ),
+        if (eventCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '$eventCount ${eventCount == 1 ? 'evento' : 'eventos'}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.white60,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEventsContent() {
+    switch (_viewMode) {
+      case 'day':
+        return _buildDayView();
+      case 'week':
+        return _buildWeekView();
+      case 'month':
+        return _buildMonthView();
+      default:
+        return _buildDayView();
+    }
+  }
+
+  Widget _buildDayView() {
+    final todayEvents = _getEventsForDate(_selectedDate);
+    final isToday = _selectedDate.year == DateTime.now().year &&
+                    _selectedDate.month == DateTime.now().month &&
+                    _selectedDate.day == DateTime.now().day;
+
+    if (todayEvents.isEmpty) {
+      return _buildEmptyState(
+        isToday 
+            ? 'No hay eventos programados para hoy' 
+            : 'No hay eventos para esta fecha',
+        Icons.event_busy,
+        'Agrega un nuevo evento usando el botón +',
+        'Agregar Evento',
+        () => _showAddEventDialog(context),
+        Colors.red,
+        gradientColors: [Colors.red, _carminePastel],
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: todayEvents.length,
+      itemBuilder: (context, index) => _buildEventCard(todayEvents[index], index),
+    );
+  }
+
+  Widget _buildWeekView() {
+    final weekStart = _getWeekStart(_selectedDate);
+    final weekEvents = _getEventsForWeek(weekStart);
+
+    if (weekEvents.isEmpty) {
+      return _buildEmptyState(
+        'No hay eventos esta semana',
+        Icons.event_busy,
+        'Agrega un nuevo evento usando el botón +',
+        'Agregar Evento',
+        () => _showAddEventDialog(context),
+        Colors.red,
+        gradientColors: [Colors.red, _carminePastel],
+      );
+    }
+
+    // Agrupar eventos por día
+    final eventsByDay = <DateTime, List<EventOrganization>>{};
+    for (var i = 0; i < 7; i++) {
+      final day = weekStart.add(Duration(days: i));
+      eventsByDay[day] = _getEventsForDate(day);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 7,
+      itemBuilder: (context, index) {
+        final day = weekStart.add(Duration(days: index));
+        final dayEvents = eventsByDay[day] ?? [];
+        final isToday = day.year == DateTime.now().year &&
+                        day.month == DateTime.now().month &&
+                        day.day == DateTime.now().day;
+        final isSelected = day.year == _selectedDate.year &&
+                          day.month == _selectedDate.month &&
+                          day.day == _selectedDate.day;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDate = day;
+              _viewMode = 'day';
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _carminePastel.withOpacity(0.15),
+                        _carminePastel.withOpacity(0.08),
+                        AppTheme.darkSurface,
+                      ],
+                    )
+                  : null,
+              color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? _carminePastel.withOpacity(0.4) : Colors.transparent,
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isToday
+                              ? Colors.red.withOpacity(0.3)
+                              : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          DateFormat('EEE', 'es').format(day).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isToday ? Colors.red : AppTheme.white70,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        DateFormat('d MMM', 'es').format(day),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isToday ? Colors.red : AppTheme.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (dayEvents.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _carminePastel.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${dayEvents.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _carminePastel,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (dayEvents.isNotEmpty)
+                  ...dayEvents.map((event) => Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+                    child: _buildEventCard(event, dayEvents.indexOf(event)),
+                  )),
+            ],
+          ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMonthView() {
+    final monthEvents = _getEventsForMonth(_selectedDate);
+    final firstDay = DateTime(_selectedDate.year, _selectedDate.month, 1);
+    final lastDay = DateTime(_selectedDate.year, _selectedDate.month + 1, 0);
+
+    if (monthEvents.isEmpty) {
+      return _buildEmptyState(
+        'No hay eventos este mes',
+        Icons.event_busy,
+        'Agrega un nuevo evento usando el botón +',
+        'Agregar Evento',
+        () => _showAddEventDialog(context),
+        Colors.red,
+        gradientColors: [Colors.red, _carminePastel],
+      );
+    }
+
+    // Agrupar eventos por día
+    final eventsByDay = <DateTime, List<EventOrganization>>{};
+    for (var i = 0; i <= lastDay.difference(firstDay).inDays; i++) {
+      final day = firstDay.add(Duration(days: i));
+      final dayEvents = _getEventsForDate(day);
+      if (dayEvents.isNotEmpty) {
+        eventsByDay[day] = dayEvents;
+      }
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: eventsByDay.length,
+      itemBuilder: (context, index) {
+        final day = eventsByDay.keys.elementAt(index);
+        final dayEvents = eventsByDay[day]!;
+        final isToday = day.year == DateTime.now().year &&
+                        day.month == DateTime.now().month &&
+                        day.day == DateTime.now().day;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDate = day;
+              _viewMode = 'day';
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isToday ? Colors.red.withOpacity(0.4) : Colors.transparent,
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Text(
+                        DateFormat('EEEE, d MMMM', 'es').format(day),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isToday ? Colors.red : AppTheme.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _carminePastel.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${dayEvents.length}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _carminePastel,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ...dayEvents.map((event) => Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+                  child: _buildEventCard(event, dayEvents.indexOf(event)),
+                )),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1135,16 +1603,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
   }
 
   Widget _buildTasks() {
-    final todayTasks = _getTasksForDate(_selectedDate);
-    final isToday = _selectedDate.year == DateTime.now().year &&
-                    _selectedDate.month == DateTime.now().month &&
-                    _selectedDate.day == DateTime.now().day;
-    final completedTasks = todayTasks.where((t) => t.completed).length;
-    final pendingTasks = todayTasks.where((t) => !t.completed).length;
-
     return Column(
       children: [
-        // Header mejorado con selector de fecha y gradiente arcoíris
+        // Header mejorado con selector de vista y fecha
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -1159,141 +1620,549 @@ class _PersonalSectionsState extends State<PersonalSections> {
             ),
           ),
           child: Padding(
-          padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _carminePastel.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.check_circle, size: 16, color: _carminePastel),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedDate),
-                style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _carminePastel,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Tareas - ${DateFormat('EEEE', 'es').format(_selectedDate)}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.white,
-                ),
-              ),
-                        if (todayTasks.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Row(
-                              children: [
-                                if (pendingTasks > 0) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: _carminePastel.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '$pendingTasks pendiente${pendingTasks == 1 ? '' : 's'}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: _carminePastel,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  if (completedTasks > 0) const SizedBox(width: 8),
-                                ],
-                                if (completedTasks > 0)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '$completedTasks completada${completedTasks == 1 ? '' : 's'}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Selector de fecha con desplazamiento horizontal
-                SizedBox(
-                  height: 60,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    controller: _dateScrollController,
-                    itemCount: 30, // 15 días antes y 15 días después
-                    itemBuilder: (context, index) {
-                      final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
-                      final dateIsSelected = _selectedDate.year == date.year &&
-                                           _selectedDate.month == date.month &&
-                                           _selectedDate.day == date.day;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: _buildDateSelector(date, dateIsSelected),
-                      );
-                    },
+                // Selector de vista (Día, Semana, Mes)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildViewModeButton('day', 'Día', Icons.calendar_today),
+                      const SizedBox(width: 8),
+                      _buildViewModeButton('week', 'Semana', Icons.view_week),
+                      const SizedBox(width: 8),
+                      _buildViewModeButton('month', 'Mes', Icons.calendar_month),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Información de la fecha/vista seleccionada
+                _buildTasksViewHeader(),
+                const SizedBox(height: 16),
+                // Selector de fecha (solo para vista día)
+                if (_viewMode == 'day')
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      controller: _dateScrollController,
+                      itemCount: 30,
+                      itemBuilder: (context, index) {
+                        final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
+                        final dateIsSelected = _selectedDate.year == date.year &&
+                                             _selectedDate.month == date.month &&
+                                             _selectedDate.day == date.day;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: _buildDateSelector(date, dateIsSelected),
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
           ),
         ),
         Expanded(
-          child: todayTasks.isEmpty
-              ? _buildEmptyState(
-                  isToday 
-                      ? 'No hay tareas pendientes para hoy' 
-                      : 'No hay tareas para esta fecha',
-                  Icons.check_circle,
-                  'Agrega una nueva tarea usando el botón +',
-                  'Agregar Tarea',
-                  () => _showAddTaskDialog(context),
-                  Colors.blue,
-                  gradientColors: [Colors.blue, Colors.indigo],
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: todayTasks.length,
-                  itemBuilder: (context, index) => _buildTaskCard(todayTasks[index], index),
-                ),
+          child: _buildTasksContent(),
         ),
       ],
+    );
+  }
+
+  Widget _buildTasksViewHeader() {
+    final isToday = _selectedDate.year == DateTime.now().year &&
+                    _selectedDate.month == DateTime.now().month &&
+                    _selectedDate.day == DateTime.now().day;
+    
+    String title;
+    String subtitle;
+    int totalTasks = 0;
+    int completedTasks = 0;
+    int pendingTasks = 0;
+
+    switch (_viewMode) {
+      case 'day':
+        final dayTasks = _getTasksForDate(_selectedDate);
+        totalTasks = dayTasks.length;
+        completedTasks = dayTasks.where((t) => t.completed).length;
+        pendingTasks = dayTasks.where((t) => !t.completed).length;
+        title = isToday ? 'Hoy' : DateFormat('EEEE, d MMMM', 'es').format(_selectedDate);
+        subtitle = 'Tareas del ${DateFormat('EEEE', 'es').format(_selectedDate).toLowerCase()}';
+        break;
+      case 'week':
+        final weekStart = _getWeekStart(_selectedDate);
+        final weekEnd = weekStart.add(const Duration(days: 6));
+        final weekTasks = _getTasksForWeek(weekStart);
+        totalTasks = weekTasks.length;
+        completedTasks = weekTasks.where((t) => t.completed).length;
+        pendingTasks = weekTasks.where((t) => !t.completed).length;
+        title = '${DateFormat('d MMM', 'es').format(weekStart)} - ${DateFormat('d MMM yyyy', 'es').format(weekEnd)}';
+        // Calcular número de semana
+        final weekNumber = _getWeekNumber(weekStart);
+        subtitle = 'Tareas de la semana $weekNumber';
+        break;
+      case 'month':
+        final monthTasks = _getTasksForMonth(_selectedDate);
+        totalTasks = monthTasks.length;
+        completedTasks = monthTasks.where((t) => t.completed).length;
+        pendingTasks = monthTasks.where((t) => !t.completed).length;
+        title = DateFormat('MMMM yyyy', 'es').format(_selectedDate);
+        subtitle = 'Tareas de ${DateFormat('MMMM', 'es').format(_selectedDate).toLowerCase()}';
+        break;
+      default:
+        title = '';
+        subtitle = '';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _carminePastel.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check_circle, size: 16, color: _carminePastel),
+                  const SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _carminePastel,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Botones de navegación para semana y mes
+            if (_viewMode == 'week' || _viewMode == 'month')
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: AppTheme.white70),
+                    onPressed: () {
+                      setState(() {
+                        if (_viewMode == 'week') {
+                          _selectedDate = _selectedDate.subtract(const Duration(days: 7));
+                        } else if (_viewMode == 'month') {
+                          _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, _selectedDate.day);
+                        }
+                      });
+                    },
+                    tooltip: _viewMode == 'week' ? 'Semana anterior' : 'Mes anterior',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.today, color: AppTheme.white70),
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = DateTime.now();
+                      });
+                    },
+                    tooltip: 'Hoy',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: AppTheme.white70),
+                    onPressed: () {
+                      setState(() {
+                        if (_viewMode == 'week') {
+                          _selectedDate = _selectedDate.add(const Duration(days: 7));
+                        } else if (_viewMode == 'month') {
+                          _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day);
+                        }
+                      });
+                    },
+                    tooltip: _viewMode == 'week' ? 'Semana siguiente' : 'Mes siguiente',
+                  ),
+                ],
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.white,
+          ),
+        ),
+        if (totalTasks > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                if (pendingTasks > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _carminePastel.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$pendingTasks pendiente${pendingTasks == 1 ? '' : 's'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _carminePastel,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (completedTasks > 0) const SizedBox(width: 8),
+                ],
+                if (completedTasks > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$completedTasks completada${completedTasks == 1 ? '' : 's'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTasksContent() {
+    switch (_viewMode) {
+      case 'day':
+        return _buildTasksDayView();
+      case 'week':
+        return _buildTasksWeekView();
+      case 'month':
+        return _buildTasksMonthView();
+      default:
+        return _buildTasksDayView();
+    }
+  }
+
+  Widget _buildTasksDayView() {
+    final todayTasks = _getTasksForDate(_selectedDate);
+    final isToday = _selectedDate.year == DateTime.now().year &&
+                    _selectedDate.month == DateTime.now().month &&
+                    _selectedDate.day == DateTime.now().day;
+
+    if (todayTasks.isEmpty) {
+      return _buildEmptyState(
+        isToday 
+            ? 'No hay tareas pendientes para hoy' 
+            : 'No hay tareas para esta fecha',
+        Icons.check_circle,
+        'Agrega una nueva tarea usando el botón +',
+        'Agregar Tarea',
+        () => _showAddTaskDialog(context),
+        Colors.blue,
+        gradientColors: [Colors.blue, Colors.indigo],
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: todayTasks.length,
+      itemBuilder: (context, index) => _buildTaskCard(todayTasks[index], index),
+    );
+  }
+
+  Widget _buildTasksWeekView() {
+    final weekStart = _getWeekStart(_selectedDate);
+    final weekTasks = _getTasksForWeek(weekStart);
+
+    if (weekTasks.isEmpty) {
+      return _buildEmptyState(
+        'No hay tareas esta semana',
+        Icons.check_circle,
+        'Agrega una nueva tarea usando el botón +',
+        'Agregar Tarea',
+        () => _showAddTaskDialog(context),
+        Colors.blue,
+        gradientColors: [Colors.blue, Colors.indigo],
+      );
+    }
+
+    // Agrupar tareas por día
+    final tasksByDay = <DateTime, List<CalendarTask>>{};
+    for (var i = 0; i < 7; i++) {
+      final day = weekStart.add(Duration(days: i));
+      tasksByDay[day] = _getTasksForDate(day);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 7,
+      itemBuilder: (context, index) {
+        final day = weekStart.add(Duration(days: index));
+        final dayTasks = tasksByDay[day] ?? [];
+        final isToday = day.year == DateTime.now().year &&
+                        day.month == DateTime.now().month &&
+                        day.day == DateTime.now().day;
+        final isSelected = day.year == _selectedDate.year &&
+                          day.month == _selectedDate.month &&
+                          day.day == _selectedDate.day;
+        final completedTasks = dayTasks.where((t) => t.completed).length;
+        final pendingTasks = dayTasks.where((t) => !t.completed).length;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDate = day;
+              _viewMode = 'day';
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue.withOpacity(0.15),
+                        Colors.indigo.withOpacity(0.08),
+                        AppTheme.darkSurface,
+                      ],
+                    )
+                  : null,
+              color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? Colors.blue.withOpacity(0.4) : Colors.transparent,
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isToday
+                              ? Colors.blue.withOpacity(0.3)
+                              : AppTheme.darkSurfaceVariant.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          DateFormat('EEE', 'es').format(day).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isToday ? Colors.blue : AppTheme.white70,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        DateFormat('d MMM', 'es').format(day),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isToday ? Colors.blue : AppTheme.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (dayTasks.isNotEmpty)
+                        Row(
+                          children: [
+                            if (pendingTasks > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _carminePastel.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '$pendingTasks',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _carminePastel,
+                                  ),
+                                ),
+                              ),
+                            if (pendingTasks > 0 && completedTasks > 0) const SizedBox(width: 6),
+                            if (completedTasks > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '$completedTasks',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                if (dayTasks.isNotEmpty)
+                  ...dayTasks.map((task) => Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+                    child: _buildTaskCard(task, dayTasks.indexOf(task)),
+                  )),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTasksMonthView() {
+    final monthTasks = _getTasksForMonth(_selectedDate);
+    final firstDay = DateTime(_selectedDate.year, _selectedDate.month, 1);
+    final lastDay = DateTime(_selectedDate.year, _selectedDate.month + 1, 0);
+
+    if (monthTasks.isEmpty) {
+      return _buildEmptyState(
+        'No hay tareas este mes',
+        Icons.check_circle,
+        'Agrega una nueva tarea usando el botón +',
+        'Agregar Tarea',
+        () => _showAddTaskDialog(context),
+        Colors.blue,
+        gradientColors: [Colors.blue, Colors.indigo],
+      );
+    }
+
+    // Agrupar tareas por día
+    final tasksByDay = <DateTime, List<CalendarTask>>{};
+    for (var i = 0; i <= lastDay.difference(firstDay).inDays; i++) {
+      final day = firstDay.add(Duration(days: i));
+      final dayTasks = _getTasksForDate(day);
+      if (dayTasks.isNotEmpty) {
+        tasksByDay[day] = dayTasks;
+      }
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: tasksByDay.length,
+      itemBuilder: (context, index) {
+        final day = tasksByDay.keys.elementAt(index);
+        final dayTasks = tasksByDay[day]!;
+        final isToday = day.year == DateTime.now().year &&
+                        day.month == DateTime.now().month &&
+                        day.day == DateTime.now().day;
+        final completedTasks = dayTasks.where((t) => t.completed).length;
+        final pendingTasks = dayTasks.where((t) => !t.completed).length;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDate = day;
+              _viewMode = 'day';
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isToday ? Colors.blue.withOpacity(0.4) : Colors.transparent,
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Text(
+                        DateFormat('EEEE, d MMMM', 'es').format(day),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isToday ? Colors.blue : AppTheme.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          if (pendingTasks > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _carminePastel.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$pendingTasks',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: _carminePastel,
+                                ),
+                              ),
+                            ),
+                          if (pendingTasks > 0 && completedTasks > 0) const SizedBox(width: 6),
+                          if (completedTasks > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$completedTasks',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                ...dayTasks.map((task) => Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
+                  child: _buildTaskCard(task, dayTasks.indexOf(task)),
+                )),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
