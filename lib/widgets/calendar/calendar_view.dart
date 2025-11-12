@@ -33,8 +33,10 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void initState() {
     super.initState();
-    _focusedDay = widget.selectedDate;
-    _selectedDay = widget.selectedDate;
+    // Inicializar con la fecha actual si no se proporciona una fecha seleccionada
+    final now = DateTime.now();
+    _focusedDay = widget.selectedDate.year == 1970 ? now : widget.selectedDate;
+    _selectedDay = widget.selectedDate.year == 1970 ? now : widget.selectedDate;
     _calendarFormat = CalendarFormat.month;
   }
 

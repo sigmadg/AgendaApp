@@ -123,8 +123,9 @@ class AuthService {
       
       if (error.toString().contains('Connection reset')) {
         errorMessage = 'Conexión interrumpida. Por favor, verifica tu conexión a internet y vuelve a intentar.';
-      } else if (error.toString().contains('Failed host lookup')) {
-        errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión a internet.';
+      } else if (error.toString().contains('Failed host lookup') || 
+                 error.toString().contains('No address associated with hostname')) {
+        errorMessage = 'Error de conexión DNS. Si estás usando un emulador, intenta:\n\n1. Reiniciar el emulador\n2. Verificar conexión Wi-Fi en el emulador\n3. Usar Chrome (flutter run -d chrome)\n4. Usar un dispositivo físico';
       }
       
       return AuthResponse(

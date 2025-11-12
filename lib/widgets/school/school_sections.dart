@@ -14,6 +14,11 @@ import '../../theme/spacing.dart';
 import '../../theme/shadows.dart';
 import '../../theme/radius.dart';
 import '../../services/class_schedule_service.dart';
+import '../../services/event_service.dart';
+import '../../services/task_service.dart';
+import '../../models/event/event_organization.dart';
+import '../../models/calendar/calendar_task.dart';
+import '../../models/school/academic_task.dart';
 import '../common/navigation_header.dart';
 
 class SchoolSections extends StatefulWidget {
@@ -27,8 +32,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
   String _activeSection = 'timetable';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
-  // Servicio para manejar las clases
+  // Servicios
   final ClassScheduleService _classScheduleService = ClassScheduleService();
+  final EventService _eventService = EventService();
+  final TaskService _taskService = TaskService();
   
   // Estados para datos
   List<ClassSchedule> _classes = [];
@@ -79,7 +86,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
   final TextEditingController _taskNotesController = TextEditingController();
   DateTime? _selectedTaskDate;
   String _selectedTaskPriority = 'medium';
-  String _selectedTaskTime = '1 hora';
+  String? _selectedTaskTime = '1 hora';
   
   final TextEditingController _projectTitleController = TextEditingController();
   final TextEditingController _projectObjectiveController = TextEditingController();
@@ -128,6 +135,121 @@ class _SchoolSectionsState extends State<SchoolSections> {
   void initState() {
     super.initState();
     _loadClasses();
+    _syncPersonalTasksToAcademicTasks(); // Sincronizar tareas personales de escuela
+  }
+
+  // Función helper para convertir día de la semana a fecha (próxima ocurrencia)
+  String _convertDayToDate(String day) {
+    final dayMap = {
+      'LUN': 1,
+      'MAR': 2,
+      'MIÉ': 3,
+      'JUE': 4,
+      'VIE': 5,
+      'SÁB': 6,
+      'DOM': 7,
+    };
+    
+    final targetWeekday = dayMap[day] ?? 1;
+    final now = DateTime.now();
+    final currentWeekday = now.weekday;
+    
+    int daysToAdd = targetWeekday - currentWeekday;
+    if (daysToAdd <= 0) {
+      daysToAdd += 7; // Si ya pasó este día, ir a la próxima semana
+    }
+    
+    final targetDate = now.add(Duration(days: daysToAdd));
+    return DateFormat('yyyy-MM-dd').format(targetDate);
+  }
+
+  // Función helper para convertir CalendarTask a AcademicTask
+  AcademicTask? _calendarTaskToAcademicTask(CalendarTask calendarTask) {
+    if (calendarTask.category != 'Escuela' && calendarTask.category != 'school') {
+      return null;
+    }
+
+    return AcademicTask(
+      id: calendarTask.id.endsWith('_task') 
+          ? calendarTask.id.replaceAll('_task', '')
+          : calendarTask.id,
+      task: calendarTask.title,
+      date: calendarTask.date,
+      completed: calendarTask.completed,
+      notes: null,
+      priority: calendarTask.priority ?? 'medium',
+      subject: null,
+      estimatedTime: calendarTask.time,
+    );
+  }
+
+  // Sincronizar tareas personales de escuela como tareas académicas
+  Future<void> _syncPersonalTasksToAcademicTasks() async {
+    try {
+      final allTasks = await _taskService.getAllTasks();
+      final schoolTasks = allTasks.where((t) => t.category == 'Escuela' || t.category == 'school').toList();
+      
+      // Convertir tareas personales de escuela a tareas académicas
+      for (final task in schoolTasks) {
+        // Solo agregar si no existe ya en _academicTasks
+        final taskId = task.id.endsWith('_task') 
+            ? task.id.replaceAll('_task', '')
+            : task.id;
+        
+        final exists = _academicTasks.any((at) => at.id == taskId || at.id == task.id);
+        
+        if (!exists) {
+          final academicTask = _calendarTaskToAcademicTask(task);
+          if (academicTask != null) {
+            setState(() {
+              _academicTasks.add(academicTask);
+            });
+            print('Tarea académica sincronizada desde personal: ${academicTask.task}');
+          }
+        }
+      }
+    } catch (e) {
+      print('Error al sincronizar tareas personales: $e');
+    }
+  }
+
+  // Función helper para convertir AcademicTask a CalendarTask
+  CalendarTask _academicTaskToCalendarTask(AcademicTask academicTask) {
+    return CalendarTask(
+      id: '${academicTask.id}_task',
+      title: academicTask.task,
+      date: academicTask.date,
+      completed: academicTask.completed,
+      time: academicTask.estimatedTime,
+      category: 'Escuela',
+      priority: academicTask.priority,
+    );
+  }
+
+  // Función helper para convertir ClassSchedule a EventOrganization
+  EventOrganization _classToEvent(ClassSchedule classSchedule) {
+    final date = _convertDayToDate(classSchedule.day);
+    final notes = <String>[];
+    if (classSchedule.professor != null && classSchedule.professor!.isNotEmpty) {
+      notes.add('Profesor: ${classSchedule.professor}');
+    }
+    if (classSchedule.classroom != null && classSchedule.classroom!.isNotEmpty) {
+      notes.add('Aula: ${classSchedule.classroom}');
+    }
+    if (classSchedule.link != null && classSchedule.link!.isNotEmpty) {
+      notes.add('Link: ${classSchedule.link}');
+    }
+    
+    return EventOrganization(
+      id: '${classSchedule.id}_event',
+      eventName: classSchedule.subject,
+      date: date,
+      time: classSchedule.time,
+      location: classSchedule.classroom,
+      category: 'school',
+      type: 'class',
+      notes: notes.isNotEmpty ? notes.join('\n') : null,
+    );
   }
 
   // Cargar clases desde Supabase
@@ -559,6 +681,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
         backgroundColor: Colors.purple,
       );
     } else if (_activeSection == 'todo') {
+      // Solo mostrar el botón si hay tareas académicas
+      if (_academicTasks.isEmpty) {
+        return const SizedBox.shrink();
+      }
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -612,15 +738,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
         backgroundColor: Colors.purple,
       );
     } else if (_activeSection == 'materials') {
-      return FloatingActionButton(
-        onPressed: () {
-          _showAddMaterialDialog();
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.purple,
-      );
+      return const SizedBox.shrink();
     } else if (_activeSection == 'class') {
-      return FloatingActionButton(
+      return FloatingActionButton.extended(
         onPressed: () {
           setState(() {
             _courseNameController.text = _classOverview['course'] ?? '';
@@ -630,7 +750,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
           });
           _showAddClassOverviewDialog();
         },
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Resumen de Clase'),
         backgroundColor: Colors.purple,
       );
     }
@@ -751,6 +872,17 @@ class _SchoolSectionsState extends State<SchoolSections> {
               );
 
               final result = await _classScheduleService.deleteClassSchedule(classItem.id);
+
+              // Eliminar evento en personal si existe
+              if (result['success'] == true) {
+                try {
+                  await _eventService.deleteEvent('${classItem.id}_event');
+                  print('Evento eliminado automáticamente para clase: ${classItem.subject}');
+                } catch (e) {
+                  print('Error al eliminar evento para clase: $e');
+                  // No fallar si no se puede eliminar el evento
+                }
+              }
 
               if (context.mounted) {
                 Navigator.pop(context); // Cerrar indicador de carga
@@ -2018,11 +2150,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     children: [
                       // Checkbox mejorado (igual que trabajo)
                       GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           setState(() {
                             _academicTasks = _academicTasks.map((t) {
                               if (t.id == task.id) {
-                                return AcademicTask(
+                                final updatedTask = AcademicTask(
                                   id: t.id,
                                   task: t.task,
                                   date: t.date,
@@ -2032,6 +2164,15 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                   subject: t.subject,
                                   estimatedTime: t.estimatedTime,
                                 );
+                                
+                                // Actualizar tarea en personal
+                                _taskService.updateTask(_academicTaskToCalendarTask(updatedTask)).then((_) {
+                                  print('Tarea personal actualizada automáticamente: ${updatedTask.task}');
+                                }).catchError((e) {
+                                  print('Error al actualizar tarea personal: $e');
+                                });
+                                
+                                return updatedTask;
                               }
                               return t;
                             }).toList();
@@ -2110,6 +2251,46 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               ),
                             ),
                             const SizedBox(height: 8),
+                            // Badge de completada
+                            if (task.completed)
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.green.withOpacity(0.3),
+                                      Colors.green.withOpacity(0.2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.green.withOpacity(0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      size: 14,
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      'Completada',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             // Prioridad con gradiente profesional
                             if (task.priority != null)
                               Container(
@@ -2119,13 +2300,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
-                                      professionalColor1.withOpacity(0.25),
-                                      professionalColor2.withOpacity(0.15),
+                                      _getPriorityColor(task.priority).withOpacity(0.25),
+                                      _getPriorityColor(task.priority).withOpacity(0.15),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: professionalColor1.withOpacity(0.3),
+                                    color: _getPriorityColor(task.priority).withOpacity(0.4),
                                     width: 1,
                                   ),
                                 ),
@@ -2142,7 +2323,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       _getPriorityLabel(task.priority),
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: professionalColor1,
+                                        color: _getPriorityColor(task.priority),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -2190,8 +2371,17 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                   ),
                                 ],
                               ),
-                            ).then((confirmed) {
+                            ).then((confirmed) async {
                               if (confirmed == true) {
+                                // Eliminar tarea personal asociada
+                                try {
+                                  await _taskService.deleteTask('${task.id}_task');
+                                  print('Tarea personal eliminada automáticamente para tarea académica: ${task.task}');
+                                } catch (e) {
+                                  print('Error al eliminar tarea personal: $e');
+                                  // Continuar con la eliminación aunque falle
+                                }
+                                
                                 setState(() {
                                   _academicTasks = _academicTasks.where((t) => t.id != task.id).toList();
                                 });
@@ -2689,9 +2879,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
           // Lista de proyectos
           if (_groupProjects.isEmpty)
             _buildEmptyState(
-              icon: Icons.folder_open,
-              title: 'No hay proyectos',
-              subtitle: 'Crea tu primer proyecto escolar',
+              'No hay proyectos',
+              Icons.folder_open,
+              'Crea tu primer proyecto escolar',
             )
           else
             Column(
@@ -3083,9 +3273,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
           // Lista de exámenes
           if (_examRevisions.isEmpty)
             _buildEmptyState(
-              icon: Icons.school_outlined,
-              title: 'No hay exámenes',
-              subtitle: 'Agrega tu primer examen para planificar',
+              'No hay exámenes',
+              Icons.school_outlined,
+              'Agrega tu primer examen para planificar',
             )
           else
             Column(
@@ -3448,8 +3638,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onAdd: () {
               setState(() {
                 _currentModalType = 'textbook';
-                _showAddMaterialModal = true;
               });
+              _showAddMaterialDialog();
             },
             onDelete: (index) {
               setState(() {
@@ -3468,8 +3658,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onAdd: () {
               setState(() {
                 _currentModalType = 'online';
-                _showAddMaterialModal = true;
               });
+              _showAddMaterialDialog();
             },
             onDelete: (index) {
               setState(() {
@@ -3488,8 +3678,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onAdd: () {
               setState(() {
                 _currentModalType = 'reference';
-                _showAddMaterialModal = true;
               });
+              _showAddMaterialDialog();
             },
             onDelete: (index) {
               setState(() {
@@ -3552,9 +3742,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
           const SizedBox(height: 16),
           if (items.isEmpty)
             _buildEmptyState(
-              icon: icon,
-              title: 'No hay $title',
-              subtitle: 'Agrega tus materiales para organizarlos',
+              'No hay $title',
+              icon,
+              'Agrega tus materiales para organizarlos',
             )
           else
             Column(
@@ -3594,6 +3784,46 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                   fontSize: 12, 
                                   color: AppTheme.white70,
                                   fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                            if (item['className'] != null) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.blue.withOpacity(0.3),
+                                      Colors.blue.withOpacity(0.2),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.4),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.school,
+                                      size: 14,
+                                      color: Colors.blue,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      item['className'] as String,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -3778,9 +4008,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
           // Lista de clases
           if (_classOverview['course'] == null)
             _buildEmptyState(
-              icon: Icons.school_outlined,
-              title: 'No hay clases registradas',
-              subtitle: 'Agrega tu primera clase para comenzar',
+              'No hay clases registradas',
+              Icons.school_outlined,
+              'Agrega tu primera clase para comenzar',
             )
           else
             _buildClassOverviewCard(),
@@ -4827,6 +5057,16 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               if (result['success'] == true) {
                                 successCount++;
                                 newClasses.add(newClass);
+                                
+                                // Crear evento en personal automáticamente
+                                try {
+                                  final event = _classToEvent(newClass);
+                                  await _eventService.addEvent(event);
+                                  print('Evento creado automáticamente para clase: ${newClass.subject}');
+                                } catch (e) {
+                                  print('Error al crear evento para clase: $e');
+                                  // No fallar si no se puede crear el evento
+                                }
                               } else {
                                 errorCount++;
                                 lastError = result['error'] ?? 'Error desconocido';
@@ -5470,9 +5710,42 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         : null,
                                   );
 
-                                  final result = await _classScheduleService.updateClassSchedule(updatedClass);
+                                    final result = await _classScheduleService.updateClassSchedule(updatedClass);
 
-                                  if (context.mounted) {
+                                    // Actualizar evento en personal si existe
+                                    if (result['success'] == true) {
+                                      try {
+                                        final event = _classToEvent(updatedClass);
+                                        // Buscar y actualizar el evento existente
+                                        final allEvents = await _eventService.getAllEvents();
+                                        final existingEvent = allEvents.firstWhere(
+                                          (e) => e.id == '${updatedClass.id}_event',
+                                          orElse: () => event,
+                                        );
+                                        
+                                        if (existingEvent.id == '${updatedClass.id}_event') {
+                                          final updatedEvent = EventOrganization(
+                                            id: existingEvent.id,
+                                            eventName: event.eventName,
+                                            date: event.date,
+                                            time: event.time,
+                                            location: event.location,
+                                            category: 'school',
+                                            type: 'class',
+                                            notes: event.notes,
+                                          );
+                                          await _eventService.updateEvent(updatedEvent);
+                                        } else {
+                                          // Si no existe, crearlo
+                                          await _eventService.addEvent(event);
+                                        }
+                                      } catch (e) {
+                                        print('Error al actualizar evento para clase: $e');
+                                        // No fallar si no se puede actualizar el evento
+                                      }
+                                    }
+
+                                    if (context.mounted) {
                                     try {
                                       Navigator.pop(context); // Cerrar indicador de carga
                                     } catch (_) {}
@@ -5579,17 +5852,98 @@ class _SchoolSectionsState extends State<SchoolSections> {
     
     return StatefulBuilder(
       builder: (BuildContext dialogContext, StateSetter setDialogState) {
-        return AlertDialog(
-          backgroundColor: AppTheme.darkSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text(
-            'Agregar Tarea Académica',
-            style: TextStyle(color: AppTheme.white),
-          ),
-          content: SingleChildScrollView(
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withOpacity(0.3),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Header mejorado
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.purple,
+                        Colors.deepPurple,
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(28),
+                      topRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.assignment,
+                          color: AppTheme.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Agregar Tarea Académica',
+                              style: TextStyle(
+                                color: AppTheme.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Organiza tus tareas académicas',
+                              style: TextStyle(
+                                color: AppTheme.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: const Icon(Icons.close, color: AppTheme.white),
+                      ),
+                    ],
+                  ),
+                ),
+                // Contenido
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                 // Mensaje de error visible
                 if (errorMessage != null) ...[
                   Container(
@@ -5628,19 +5982,50 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ),
                   ),
                 ],
+                // Información Básica
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.purple, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Información Básica',
+                        style: TextStyle(
+                          color: Colors.purple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _taskController,
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Tarea *',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    prefixIcon: const Icon(Icons.assignment, color: Colors.purple),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.pro.accent),
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.purple, width: 2),
                     ),
                   ),
                 ),
@@ -5650,15 +6035,46 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Materia',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    prefixIcon: const Icon(Icons.school, color: Colors.purple),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.pro.accent),
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.purple, width: 2),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Fecha y Prioridad
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.schedule, color: Colors.blue, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Fecha y Prioridad',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -5668,22 +6084,28 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Fecha de entrega *',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white70),
                     hintText: _selectedTaskDate != null 
                         ? DateFormat('dd/MM/yyyy').format(_selectedTaskDate!)
                         : 'Seleccionar fecha',
                     hintStyle: TextStyle(
                       color: _selectedTaskDate != null ? AppTheme.white : AppTheme.white60,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                    prefixIcon: const Icon(Icons.calendar_today, color: Colors.blue),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.pro.accent),
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.blue, width: 2),
                     ),
-                    suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white60),
                   ),
                   onTap: () async {
                     final date = await showDatePicker(
@@ -5718,14 +6140,24 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   value: _selectedTaskPriority,
                   decoration: InputDecoration(
                     labelText: 'Prioridad',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    prefixIcon: Icon(
+                      _getPriorityIcon(_selectedTaskPriority),
+                      color: _getPriorityColor(_selectedTaskPriority),
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.pro.accent),
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.blue, width: 2),
                     ),
                   ),
                   dropdownColor: AppTheme.darkSurface,
@@ -5789,6 +6221,30 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     });
                   },
                 ),
+                const SizedBox(height: 24),
+                // Tiempo y Notas
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.access_time, color: Colors.orange, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Tiempo y Notas',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
                 // Tiempo estimado
                 TextField(
@@ -5796,20 +6252,26 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Tiempo estimado',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white70),
                     hintText: _selectedTaskTime ?? 'Seleccionar tiempo',
                     hintStyle: TextStyle(
                       color: _selectedTaskTime != null ? AppTheme.white : AppTheme.white60,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                    prefixIcon: const Icon(Icons.access_time, color: Colors.orange),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.pro.accent),
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.orange, width: 2),
                     ),
-                    suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
                   ),
                   onTap: () {
                     showDialog(
@@ -5843,30 +6305,51 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: 'Notas adicionales',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    prefixIcon: const Icon(Icons.note_add, color: Colors.orange),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: context.pro.accent),
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.orange, width: 2),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(color: AppTheme.white60),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: isSaving ? null : () async {
+                      ],
+                    ),
+                  ),
+                ),
+                // Botones de acción
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBackground.withOpacity(0.3),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: isSaving ? null : () async {
                 // Limpiar error anterior
                 setDialogState(() {
                   errorMessage = null;
@@ -5889,23 +6372,37 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   return;
                 }
 
+                final newAcademicTask = AcademicTask(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  task: _taskController.text.trim(),
+                  date: _selectedTaskDate!,
+                  completed: false,
+                  notes: _taskNotesController.text.trim().isNotEmpty ? _taskNotesController.text.trim() : null,
+                  priority: _selectedTaskPriority,
+                  subject: _taskSubjectController.text.trim().isNotEmpty ? _taskSubjectController.text.trim() : null,
+                  estimatedTime: _selectedTaskTime,
+                );
+
+                // Crear tarea en personal automáticamente
+                try {
+                  final calendarTask = _academicTaskToCalendarTask(newAcademicTask);
+                  await _taskService.addTask(calendarTask);
+                  print('Tarea personal creada automáticamente para tarea académica: ${newAcademicTask.task}');
+                } catch (e) {
+                  print('Error al crear tarea personal para tarea académica: $e');
+                  // No fallar si no se puede crear la tarea personal
+                }
+
+                // Actualizar el estado principal fuera del modal
                 setState(() {
-                  _academicTasks.add(AcademicTask(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    task: _taskController.text.trim(),
-                    date: _selectedTaskDate!,
-                    completed: false,
-                    notes: _taskNotesController.text.trim().isNotEmpty ? _taskNotesController.text.trim() : null,
-                    priority: _selectedTaskPriority,
-                    subject: _taskSubjectController.text.trim().isNotEmpty ? _taskSubjectController.text.trim() : null,
-                    estimatedTime: _selectedTaskTime,
-                  ));
-                  _taskController.clear();
-                  _taskSubjectController.clear();
-                  _taskNotesController.clear();
-                  _selectedTaskDate = null;
-                  _selectedTaskTime = null;
+                  _academicTasks.add(newAcademicTask);
                 });
+
+                _taskController.clear();
+                _taskSubjectController.clear();
+                _taskNotesController.clear();
+                _selectedTaskDate = null;
+                _selectedTaskTime = null;
 
                 Navigator.of(dialogContext).pop();
                 if (context.mounted) {
@@ -5917,22 +6414,35 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ),
                   );
                 }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.pro.accent,
-              ),
-              child: isSaving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    )
-                  : const Text('Agregar'),
-            ),
-          ],
+                      child: isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                              ),
+                            )
+                          : const Text(
+                              'Agregar',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
         );
       },
     );
@@ -5940,389 +6450,1099 @@ class _SchoolSectionsState extends State<SchoolSections> {
 
   Widget _buildAddProjectModal() {
     return StatefulBuilder(
-      builder: (context, setModalState) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Nuevo Proyecto Grupal', style: TextStyle(color: AppTheme.white)),
-        content: SingleChildScrollView(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: _projectTitleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título del Proyecto *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
+              // Header mejorado
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple,
+                      Colors.deepPurple,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
                 ),
-                style: const TextStyle(color: AppTheme.white),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _projectObjectiveController,
-                decoration: const InputDecoration(
-                  labelText: 'Objetivo *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                title: const Text('Fecha de inicio *', style: TextStyle(color: AppTheme.white70)),
-                subtitle: Text(
-                  _selectedProjectStartDate != null 
-                      ? DateFormat('dd/MM/yyyy').format(_selectedProjectStartDate!)
-                      : 'Seleccionar fecha',
-                  style: const TextStyle(color: AppTheme.white),
-                ),
-                trailing: const Icon(Icons.calendar_today, color: Colors.purple),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                    lastDate: DateTime.now().add(const Duration(days: 730)),
-                  );
-                  if (date != null) {
-                    setModalState(() => _selectedProjectStartDate = date);
-                  }
-                },
-              ),
-              ListTile(
-                title: const Text('Fecha de finalización *', style: TextStyle(color: AppTheme.white70)),
-                subtitle: Text(
-                  _selectedProjectEndDate != null 
-                      ? DateFormat('dd/MM/yyyy').format(_selectedProjectEndDate!)
-                      : 'Seleccionar fecha',
-                  style: const TextStyle(color: AppTheme.white),
-                ),
-                trailing: const Icon(Icons.calendar_today, color: Colors.purple),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedProjectStartDate ?? DateTime.now(),
-                    firstDate: _selectedProjectStartDate ?? DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 730)),
-                  );
-                  if (date != null) {
-                    setModalState(() => _selectedProjectEndDate = date);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _projectResourcesController,
-                decoration: const InputDecoration(
-                  labelText: 'Recursos',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _projectIdeasController,
-                decoration: const InputDecoration(
-                  labelText: 'Ideas',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              // Pasos de acción
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Pasos de Acción', style: TextStyle(color: AppTheme.white70)),
-                  IconButton(
-                    onPressed: () {
-                      if (_projectStepController.text.isNotEmpty) {
-                        setModalState(() {
-                          _projectActionSteps.add({
-                            'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                            'text': _projectStepController.text,
-                            'completed': false,
-                          });
-                          _projectStepController.clear();
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.people, color: AppTheme.white, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Nuevo Proyecto Grupal',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Crea un proyecto colaborativo',
+                            style: TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAddProjectModal = false;
+                          _projectTitleController.clear();
+                          _projectObjectiveController.clear();
+                          _projectResourcesController.clear();
+                          _projectIdeasController.clear();
+                          _projectActionSteps = [];
+                          _selectedProjectStartDate = null;
+                          _selectedProjectEndDate = null;
                         });
-                      }
-                    },
-                    icon: const Icon(Icons.add_circle, color: Colors.purple),
-                  ),
-                ],
-              ),
-              TextField(
-                controller: _projectStepController,
-                decoration: const InputDecoration(
-                  hintText: 'Agregar paso de acción',
-                  hintStyle: TextStyle(color: AppTheme.white40),
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
                 ),
-                style: const TextStyle(color: AppTheme.white),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty) {
-                    setModalState(() {
-                      _projectActionSteps.add({
-                        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                        'text': value,
-                        'completed': false,
-                      });
-                      _projectStepController.clear();
-                    });
-                  }
-                },
               ),
-              if (_projectActionSteps.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                ..._projectActionSteps.map((step) => ListTile(
-                  leading: IconButton(
-                    onPressed: () {
-                      setModalState(() {
-                        _projectActionSteps = _projectActionSteps.where((s) => s['id'] != step['id']).toList();
-                      });
-                    },
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Información Básica
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.purple, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Información Básica',
+                              style: TextStyle(
+                                color: Colors.purple,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _projectTitleController,
+                        decoration: InputDecoration(
+                          labelText: 'Título del Proyecto *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.title, color: Colors.purple),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.purple, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _projectObjectiveController,
+                        decoration: InputDecoration(
+                          labelText: 'Objetivo *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.track_changes, color: Colors.purple),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.purple, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 24),
+                      // Fechas
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.blue, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Fechas del Proyecto',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(const Duration(days: 730)),
+                          );
+                          if (date != null) {
+                            setModalState(() => _selectedProjectStartDate = date);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.play_arrow, color: Colors.blue, size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Fecha de inicio *',
+                                      style: TextStyle(
+                                        color: AppTheme.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _selectedProjectStartDate != null 
+                                          ? DateFormat('dd/MM/yyyy').format(_selectedProjectStartDate!)
+                                          : 'Seleccionar fecha',
+                                      style: TextStyle(
+                                        color: _selectedProjectStartDate != null 
+                                            ? AppTheme.white 
+                                            : AppTheme.white40,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.calendar_today, color: Colors.blue),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedProjectStartDate ?? DateTime.now(),
+                            firstDate: _selectedProjectStartDate ?? DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 730)),
+                          );
+                          if (date != null) {
+                            setModalState(() => _selectedProjectEndDate = date);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.stop, color: Colors.blue, size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Fecha de finalización *',
+                                      style: TextStyle(
+                                        color: AppTheme.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _selectedProjectEndDate != null 
+                                          ? DateFormat('dd/MM/yyyy').format(_selectedProjectEndDate!)
+                                          : 'Seleccionar fecha',
+                                      style: TextStyle(
+                                        color: _selectedProjectEndDate != null 
+                                            ? AppTheme.white 
+                                            : AppTheme.white40,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.calendar_today, color: Colors.blue),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Recursos e Ideas
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.library_books, color: Colors.green, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Recursos e Ideas',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _projectResourcesController,
+                        decoration: InputDecoration(
+                          labelText: 'Recursos',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.library_books, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _projectIdeasController,
+                        decoration: InputDecoration(
+                          labelText: 'Ideas',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.lightbulb, color: Colors.orange),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.orange, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 24),
+                      // Pasos de acción
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.list, color: Colors.orange, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Pasos de Acción',
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                if (_projectStepController.text.isNotEmpty) {
+                                  setModalState(() {
+                                    _projectActionSteps.add({
+                                      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                      'text': _projectStepController.text,
+                                      'completed': false,
+                                    });
+                                    _projectStepController.clear();
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.add_circle, color: Colors.orange, size: 28),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _projectStepController,
+                        decoration: InputDecoration(
+                          hintText: 'Agregar paso de acción',
+                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          prefixIcon: const Icon(Icons.add_task, color: Colors.orange),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.orange, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        onSubmitted: (value) {
+                          if (value.isNotEmpty) {
+                            setModalState(() {
+                              _projectActionSteps.add({
+                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                'text': value,
+                                'completed': false,
+                              });
+                              _projectStepController.clear();
+                            });
+                          }
+                        },
+                      ),
+                      if (_projectActionSteps.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        ..._projectActionSteps.map((step) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, color: Colors.orange, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  step['text'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    _projectActionSteps = _projectActionSteps.where((s) => s['id'] != step['id']).toList();
+                                  });
+                                },
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ],
                   ),
-                  title: Text(
-                    step['text'] as String,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.white),
+                ),
+              ),
+              // Botones de acción
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground.withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
                   ),
-                )),
-              ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAddProjectModal = false;
+                          _projectTitleController.clear();
+                          _projectObjectiveController.clear();
+                          _projectResourcesController.clear();
+                          _projectIdeasController.clear();
+                          _projectActionSteps = [];
+                          _selectedProjectStartDate = null;
+                          _selectedProjectEndDate = null;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_projectTitleController.text.isNotEmpty && 
+                            _projectObjectiveController.text.isNotEmpty &&
+                            _selectedProjectStartDate != null &&
+                            _selectedProjectEndDate != null) {
+                          setState(() {
+                            _groupProjects.add(GroupProject(
+                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              title: _projectTitleController.text,
+                              objective: _projectObjectiveController.text,
+                              startDate: _selectedProjectStartDate!,
+                              endDate: _selectedProjectEndDate!,
+                              resources: _projectResourcesController.text.isNotEmpty 
+                                  ? _projectResourcesController.text 
+                                  : null,
+                              ideas: _projectIdeasController.text.isNotEmpty
+                                  ? _projectIdeasController.text
+                                  : null,
+                              actionSteps: _projectActionSteps.map((step) => ActionStep(
+                                id: step['id'] as String,
+                                text: step['text'] as String,
+                                completed: step['completed'] as bool,
+                              )).toList(),
+                            ));
+                            _showAddProjectModal = false;
+                            _projectTitleController.clear();
+                            _projectObjectiveController.clear();
+                            _projectResourcesController.clear();
+                            _projectIdeasController.clear();
+                            _projectActionSteps = [];
+                            _selectedProjectStartDate = null;
+                            _selectedProjectEndDate = null;
+                          });
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Proyecto agregado exitosamente'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Por favor completa todos los campos obligatorios'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Agregar Proyecto',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _showAddProjectModal = false;
-                _projectTitleController.clear();
-                _projectObjectiveController.clear();
-                _projectResourcesController.clear();
-                _projectIdeasController.clear();
-                _projectActionSteps = [];
-                _selectedProjectStartDate = null;
-                _selectedProjectEndDate = null;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_projectTitleController.text.isNotEmpty && 
-                  _projectObjectiveController.text.isNotEmpty &&
-                  _selectedProjectStartDate != null &&
-                  _selectedProjectEndDate != null) {
-                setState(() {
-                  _groupProjects.add(GroupProject(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    title: _projectTitleController.text,
-                    objective: _projectObjectiveController.text,
-                    startDate: _selectedProjectStartDate!,
-                    endDate: _selectedProjectEndDate!,
-                    resources: _projectResourcesController.text.isNotEmpty 
-                        ? _projectResourcesController.text 
-                        : null,
-                    ideas: _projectIdeasController.text.isNotEmpty
-                        ? _projectIdeasController.text
-                        : null,
-                    actionSteps: _projectActionSteps.map((step) => ActionStep(
-                      id: step['id'] as String,
-                      text: step['text'] as String,
-                      completed: step['completed'] as bool,
-                    )).toList(),
-                  ));
-                  _showAddProjectModal = false;
-                  _projectTitleController.clear();
-                  _projectObjectiveController.clear();
-                  _projectResourcesController.clear();
-                  _projectIdeasController.clear();
-                  _projectActionSteps = [];
-                  _selectedProjectStartDate = null;
-                  _selectedProjectEndDate = null;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Proyecto agregado')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Por favor completa todos los campos obligatorios')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-            child: const Text('Agregar Proyecto'),
-          ),
-        ],
       ),
     );
   }
 
   Widget _buildAddExamModal() {
     return StatefulBuilder(
-      builder: (context, setModalState) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Nuevo Examen', style: TextStyle(color: AppTheme.white)),
-        content: SingleChildScrollView(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: _examTopicController,
-                decoration: const InputDecoration(
-                  labelText: 'Tema del Examen *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
+              // Header mejorado
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple,
+                      Colors.deepPurple,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
                 ),
-                style: const TextStyle(color: AppTheme.white),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                title: const Text('Fecha del Examen *', style: TextStyle(color: AppTheme.white70)),
-                subtitle: Text(
-                  _selectedExamDate != null 
-                      ? DateFormat('dd/MM/yyyy').format(_selectedExamDate!)
-                      : 'Seleccionar fecha',
-                  style: const TextStyle(color: AppTheme.white),
-                ),
-                trailing: const Icon(Icons.calendar_today, color: Colors.purple),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (date != null) {
-                    setModalState(() => _selectedExamDate = date);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              // Tareas de preparación
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Tareas de Preparación', style: TextStyle(color: AppTheme.white70)),
-                  IconButton(
-                    onPressed: () {
-                      if (_examTodoController.text.isNotEmpty) {
-                        setModalState(() {
-                          _examTodos.add({
-                            'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                            'text': _examTodoController.text,
-                            'completed': false,
-                          });
-                          _examTodoController.clear();
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.school, color: AppTheme.white, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Nuevo Examen',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Planifica y prepara tu examen',
+                            style: TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAddExamModal = false;
+                          _examTopicController.clear();
+                          _examNotesController.clear();
+                          _examTodos = [];
+                          _selectedExamDate = null;
                         });
-                      }
-                    },
-                    icon: const Icon(Icons.add_circle, color: Colors.purple),
-                  ),
-                ],
-              ),
-              TextField(
-                controller: _examTodoController,
-                decoration: const InputDecoration(
-                  hintText: 'Agregar tarea de preparación',
-                  hintStyle: TextStyle(color: AppTheme.white40),
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
                 ),
-                style: const TextStyle(color: AppTheme.white),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty) {
-                    setModalState(() {
-                      _examTodos.add({
-                        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                        'text': value,
-                        'completed': false,
-                      });
-                      _examTodoController.clear();
-                    });
-                  }
-                },
               ),
-              if (_examTodos.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                ..._examTodos.map((todo) => ListTile(
-                  leading: IconButton(
-                    onPressed: () {
-                      setModalState(() {
-                        _examTodos = _examTodos.where((t) => t['id'] != todo['id']).toList();
-                      });
-                    },
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Información Básica
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.purple, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Información Básica',
+                              style: TextStyle(
+                                color: Colors.purple,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _examTopicController,
+                        decoration: InputDecoration(
+                          labelText: 'Tema del Examen *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.topic, color: Colors.purple),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.purple, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 24),
+                      // Fecha del Examen
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.blue, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Fecha del Examen',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (date != null) {
+                            setModalState(() => _selectedExamDate = date);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.event, color: Colors.blue, size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Fecha del Examen *',
+                                      style: TextStyle(
+                                        color: AppTheme.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _selectedExamDate != null 
+                                          ? DateFormat('dd/MM/yyyy').format(_selectedExamDate!)
+                                          : 'Seleccionar fecha',
+                                      style: TextStyle(
+                                        color: _selectedExamDate != null 
+                                            ? AppTheme.white 
+                                            : AppTheme.white40,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.calendar_today, color: Colors.blue),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Tareas de Preparación
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.checklist, color: Colors.green, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Tareas de Preparación',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                if (_examTodoController.text.isNotEmpty) {
+                                  setModalState(() {
+                                    _examTodos.add({
+                                      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                      'text': _examTodoController.text,
+                                      'completed': false,
+                                    });
+                                    _examTodoController.clear();
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.add_circle, color: Colors.green, size: 28),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _examTodoController,
+                        decoration: InputDecoration(
+                          hintText: 'Agregar tarea de preparación',
+                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          prefixIcon: const Icon(Icons.add_task, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        onSubmitted: (value) {
+                          if (value.isNotEmpty) {
+                            setModalState(() {
+                              _examTodos.add({
+                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                'text': value,
+                                'completed': false,
+                              });
+                              _examTodoController.clear();
+                            });
+                          }
+                        },
+                      ),
+                      if (_examTodos.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        ..._examTodos.map((todo) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  todo['text'] as String,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    _examTodos = _examTodos.where((t) => t['id'] != todo['id']).toList();
+                                  });
+                                },
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                      const SizedBox(height: 24),
+                      // Notas de Estudio
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.note, color: Colors.orange, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Notas de Estudio',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _examNotesController,
+                        decoration: InputDecoration(
+                          labelText: 'Notas de Estudio',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.note_add, color: Colors.orange),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.orange, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 3,
+                      ),
+                    ],
                   ),
-                  title: Text(
-                    todo['text'] as String,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.white),
-                  ),
-                )),
-              ],
-              const SizedBox(height: 16),
-              TextField(
-                controller: _examNotesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notas de Estudio',
-                  labelStyle: TextStyle(color: AppTheme.white70),
                 ),
-                style: const TextStyle(color: AppTheme.white),
-                maxLines: 3,
+              ),
+              // Botones de acción
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground.withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAddExamModal = false;
+                          _examTopicController.clear();
+                          _examNotesController.clear();
+                          _examTodos = [];
+                          _selectedExamDate = null;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_examTopicController.text.isNotEmpty && _selectedExamDate != null) {
+                          setState(() {
+                            _examRevisions.add(ExamRevision(
+                              id: DateTime.now().millisecondsSinceEpoch.toString(),
+                              topic: _examTopicController.text,
+                              date: _selectedExamDate!,
+                              todos: _examTodos.map((todo) => ExamTodo(
+                                id: todo['id'] as String,
+                                text: todo['text'] as String,
+                                completed: todo['completed'] as bool,
+                              )).toList(),
+                              notes: _examNotesController.text.isNotEmpty ? _examNotesController.text : null,
+                            ));
+                            _showAddExamModal = false;
+                            _examTopicController.clear();
+                            _examNotesController.clear();
+                            _examTodos = [];
+                            _selectedExamDate = null;
+                          });
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Examen agregado exitosamente'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Por favor completa todos los campos obligatorios'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Agregar Examen',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _showAddExamModal = false;
-                _examTopicController.clear();
-                _examNotesController.clear();
-                _examTodos = [];
-                _selectedExamDate = null;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_examTopicController.text.isNotEmpty && _selectedExamDate != null) {
-                setState(() {
-                  _examRevisions.add(ExamRevision(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    topic: _examTopicController.text,
-                    date: _selectedExamDate!,
-                    todos: _examTodos.map((todo) => ExamTodo(
-                      id: todo['id'] as String,
-                      text: todo['text'] as String,
-                      completed: todo['completed'] as bool,
-                    )).toList(),
-                    notes: _examNotesController.text.isNotEmpty ? _examNotesController.text : null,
-                  ));
-                  _showAddExamModal = false;
-                  _examTopicController.clear();
-                  _examNotesController.clear();
-                  _examTodos = [];
-                  _selectedExamDate = null;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Examen agregado')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Por favor completa todos los campos obligatorios')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-            child: const Text('Agregar Examen'),
-          ),
-        ],
       ),
     );
   }
@@ -6331,163 +7551,743 @@ class _SchoolSectionsState extends State<SchoolSections> {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController authorController = TextEditingController();
     final TextEditingController notesController = TextEditingController();
+    String? selectedClassId;
     
-    return AlertDialog(
-      backgroundColor: AppTheme.darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Text(
-        _currentModalType == 'textbook' 
-            ? 'Agregar Libro de Texto'
-            : _currentModalType == 'online'
-                ? 'Agregar Recurso Online'
-                : 'Agregar Referencia',
-        style: const TextStyle(color: AppTheme.white),
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_currentModalType == 'textbook') ...[
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título del Libro *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: authorController,
-                decoration: const InputDecoration(
-                  labelText: 'Autor',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-              ),
-            ] else if (_currentModalType == 'online') ...[
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Sitio Web *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: authorController,
-                decoration: const InputDecoration(
-                  labelText: 'Usuario/Login',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-              ),
-            ] else ...[
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Cita/Referencia *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: authorController,
-                decoration: const InputDecoration(
-                  labelText: 'Libro/Autor',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                ),
-                style: const TextStyle(color: AppTheme.white),
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
             ],
-            const SizedBox(height: 16),
-            TextField(
-              controller: notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notas',
-                labelStyle: TextStyle(color: AppTheme.white70),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header mejorado
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple,
+                      Colors.deepPurple,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        _currentModalType == 'textbook' 
+                            ? Icons.book
+                            : _currentModalType == 'online'
+                                ? Icons.language
+                                : Icons.library_books,
+                        color: AppTheme.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _currentModalType == 'textbook' 
+                                ? 'Agregar Libro de Texto'
+                                : _currentModalType == 'online'
+                                    ? 'Agregar Recurso Online'
+                                    : 'Agregar Referencia',
+                            style: const TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _currentModalType == 'textbook' 
+                                ? 'Organiza tus libros de texto'
+                                : _currentModalType == 'online'
+                                    ? 'Guarda recursos en línea'
+                                    : 'Agrega referencias bibliográficas',
+                            style: const TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        titleController.dispose();
+                        authorController.dispose();
+                        notesController.dispose();
+                        setState(() => _showAddMaterialModal = false);
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
               ),
-              style: const TextStyle(color: AppTheme.white),
-              maxLines: 2,
-            ),
-          ],
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Información Básica
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.purple, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Información Básica',
+                              style: TextStyle(
+                                color: Colors.purple,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_currentModalType == 'textbook') ...[
+                        TextField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            labelText: 'Título del Libro *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.book, color: Colors.purple),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.purple, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: authorController,
+                          decoration: InputDecoration(
+                            labelText: 'Autor',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.person, color: Colors.purple),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.purple, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                      ] else if (_currentModalType == 'online') ...[
+                        TextField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            labelText: 'Sitio Web *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.language, color: Colors.green),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.green, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: authorController,
+                          decoration: InputDecoration(
+                            labelText: 'Usuario/Login',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.person, color: Colors.green),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.green, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                      ] else ...[
+                        TextField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            labelText: 'Cita/Referencia *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.format_quote, color: Colors.orange),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.orange, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: authorController,
+                          decoration: InputDecoration(
+                            labelText: 'Libro/Autor',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.book, color: Colors.orange),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.orange, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      // Relación con Clase
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.school, color: Colors.blue, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Relación con Clase',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_classes.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'No hay clases registradas. Ve a "Horario" para agregar clases.',
+                                  style: TextStyle(
+                                    color: AppTheme.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: AppTheme.darkSurface,
+                                title: const Text(
+                                  'Seleccionar Clase',
+                                  style: TextStyle(color: AppTheme.white),
+                                ),
+                                content: SizedBox(
+                                  width: double.maxFinite,
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: _classes.length,
+                                    itemBuilder: (context, index) {
+                                      final classItem = _classes[index];
+                                      final isSelected = selectedClassId == classItem.id;
+                                      return ListTile(
+                                        leading: Icon(
+                                          Icons.school,
+                                          color: isSelected ? Colors.blue : AppTheme.white70,
+                                        ),
+                                        title: Text(
+                                          classItem.subject,
+                                          style: TextStyle(
+                                            color: isSelected ? Colors.blue : AppTheme.white,
+                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          '${classItem.day} - ${classItem.time}',
+                                          style: const TextStyle(color: AppTheme.white60),
+                                        ),
+                                        trailing: isSelected
+                                            ? const Icon(Icons.check_circle, color: Colors.blue)
+                                            : null,
+                                        onTap: () {
+                                          setModalState(() {
+                                            selectedClassId = classItem.id;
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  if (selectedClassId != null)
+                                    TextButton(
+                                      onPressed: () {
+                                        setModalState(() {
+                                          selectedClassId = null;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Limpiar'),
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkBackground.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.school, color: Colors.blue, size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Clase relacionada',
+                                        style: TextStyle(
+                                          color: AppTheme.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        selectedClassId != null
+                                            ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                            : 'Seleccionar clase (opcional)',
+                                        style: TextStyle(
+                                          color: selectedClassId != null 
+                                              ? AppTheme.white 
+                                              : AppTheme.white40,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (selectedClassId != null) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${_classes.firstWhere((c) => c.id == selectedClassId).day} - ${_classes.firstWhere((c) => c.id == selectedClassId).time}',
+                                          style: const TextStyle(
+                                            color: AppTheme.white60,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  selectedClassId != null ? Icons.check_circle : Icons.arrow_forward_ios,
+                                  color: selectedClassId != null ? Colors.blue : AppTheme.white60,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      // Notas
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.note, color: Colors.orange, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Notas',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: notesController,
+                        decoration: InputDecoration(
+                          labelText: 'Notas',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.note_add, color: Colors.orange),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.orange, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Botones de acción
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground.withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        titleController.dispose();
+                        authorController.dispose();
+                        notesController.dispose();
+                        setState(() => _showAddMaterialModal = false);
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (titleController.text.isNotEmpty) {
+                          setState(() {
+                            Map<String, dynamic> material;
+                            
+                            if (_currentModalType == 'textbook') {
+                              material = {
+                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                'title': titleController.text,
+                                'author': authorController.text.isNotEmpty ? authorController.text : null,
+                                'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                                'classId': selectedClassId,
+                                'className': selectedClassId != null 
+                                    ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                    : null,
+                              };
+                              _textbooks.add(material);
+                            } else if (_currentModalType == 'online') {
+                              material = {
+                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                'website': titleController.text,
+                                'login': authorController.text.isNotEmpty ? authorController.text : null,
+                                'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                                'classId': selectedClassId,
+                                'className': selectedClassId != null 
+                                    ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                    : null,
+                              };
+                              _onlineResources.add(material);
+                            } else {
+                              material = {
+                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                'quote': titleController.text,
+                                'book': authorController.text.isNotEmpty ? authorController.text : null,
+                                'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                                'classId': selectedClassId,
+                                'className': selectedClassId != null 
+                                    ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                    : null,
+                              };
+                              _references.add(material);
+                            }
+                            
+                            _showAddMaterialModal = false;
+                          });
+                          titleController.dispose();
+                          authorController.dispose();
+                          notesController.dispose();
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Material agregado exitosamente'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Por favor completa el título'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Agregar',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            titleController.dispose();
-            authorController.dispose();
-            notesController.dispose();
-            setState(() => _showAddMaterialModal = false);
-            Navigator.pop(context);
-          },
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (titleController.text.isNotEmpty) {
-              setState(() {
-                Map<String, dynamic> material;
-                
-                if (_currentModalType == 'textbook') {
-                  material = {
-                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                    'title': titleController.text,
-                    'author': authorController.text.isNotEmpty ? authorController.text : null,
-                    'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                  };
-                  _textbooks.add(material);
-                } else if (_currentModalType == 'online') {
-                  material = {
-                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                    'website': titleController.text,
-                    'login': authorController.text.isNotEmpty ? authorController.text : null,
-                    'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                  };
-                  _onlineResources.add(material);
-                } else {
-                  material = {
-                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                    'quote': titleController.text,
-                    'book': authorController.text.isNotEmpty ? authorController.text : null,
-                    'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                  };
-                  _references.add(material);
-                }
-                
-                _showAddMaterialModal = false;
-              });
-              titleController.dispose();
-              authorController.dispose();
-              notesController.dispose();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Material agregado')),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Por favor completa el título')),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-          child: const Text('Agregar'),
-        ),
-      ],
     );
   }
 
   Widget _buildAddClassOverviewModal() {
     return StatefulBuilder(
-      builder: (context, setModalState) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Resumen de Clase', style: TextStyle(color: AppTheme.white)),
-        content: SingleChildScrollView(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withOpacity(0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header mejorado
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple,
+                      Colors.deepPurple,
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.school,
+                        color: AppTheme.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Resumen de Clase',
+                            style: TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Organiza toda la información de tu curso',
+                            style: TextStyle(
+                              color: AppTheme.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAddClassOverviewModal = false;
+                          _courseNameController.clear();
+                          _courseTimeController.clear();
+                          _courseLocationController.clear();
+                          _courseInstructorController.clear();
+                          _courseContactInfoController.clear();
+                          _courseOfficeHoursController.clear();
+                          _courseAccessAccountController.clear();
+                          _courseAccessLoginController.clear();
+                          _courseAccessPasswordController.clear();
+                          _courseNotesController.clear();
+                          _courseTargetGradeController.clear();
+                          _courseActualGradeController.clear();
+                          _importantDates = [];
+                          _gradingComponents = [];
+                          _importantDateController.clear();
+                          _gradingComponentNameController.clear();
+                          _gradingComponentWeightController.clear();
+                        });
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -6518,60 +8318,144 @@ class _SchoolSectionsState extends State<SchoolSections> {
               const SizedBox(height: 16),
               TextField(
                 controller: _courseNameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Nombre del Curso *',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.school, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.school, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseTimeController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Horario',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.access_time, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.access_time, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseLocationController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Ubicación',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.location_on, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.location_on, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseInstructorController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Instructor',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.person, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.person, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseContactInfoController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Información de Contacto',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.contact_mail, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.contact_mail, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseOfficeHoursController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Horario de Atención',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.schedule, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.schedule, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
@@ -6603,30 +8487,72 @@ class _SchoolSectionsState extends State<SchoolSections> {
               const SizedBox(height: 16),
               TextField(
                 controller: _courseAccessAccountController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Cuenta/Plataforma',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.account_circle, color: Colors.orange),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.account_circle, color: Colors.orange),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.orange, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseAccessLoginController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Usuario/Login',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.person_outline, color: Colors.orange),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.person_outline, color: Colors.orange),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.orange, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _courseAccessPasswordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Contraseña',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.lock, color: Colors.orange),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.lock, color: Colors.orange),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.orange, width: 2),
+                  ),
                 ),
                 obscureText: true,
                 style: const TextStyle(color: AppTheme.white),
@@ -6679,10 +8605,24 @@ class _SchoolSectionsState extends State<SchoolSections> {
               const SizedBox(height: 8),
               TextField(
                 controller: _importantDateController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Descripción de la fecha importante',
-                  hintStyle: TextStyle(color: AppTheme.white40),
-                  prefixIcon: Icon(Icons.event, color: Colors.green),
+                  hintStyle: const TextStyle(color: AppTheme.white40),
+                  prefixIcon: const Icon(Icons.event, color: Colors.green),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.green, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
                 onSubmitted: (value) {
@@ -6699,20 +8639,41 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 },
               ),
               if (_importantDates.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                ..._importantDates.map((date) => ListTile(
-                  leading: const Icon(Icons.event, color: Colors.green, size: 20),
-                  title: Text(
-                    date['description'],
-                    style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                const SizedBox(height: 12),
+                ..._importantDates.map((date) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                    onPressed: () {
-                      setModalState(() {
-                        _importantDates = _importantDates.where((d) => d['id'] != date['id']).toList();
-                      });
-                    },
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.event, color: Colors.green, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          date['description'],
+                          style: const TextStyle(color: AppTheme.white, fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                        onPressed: () {
+                          setModalState(() {
+                            _importantDates = _importantDates.where((d) => d['id'] != date['id']).toList();
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 )),
               ],
@@ -6771,10 +8732,24 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     flex: 3,
                     child: TextField(
                       controller: _gradingComponentNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Nombre del componente',
-                        hintStyle: TextStyle(color: AppTheme.white40),
-                        prefixIcon: Icon(Icons.description, color: Colors.blue),
+                        hintStyle: const TextStyle(color: AppTheme.white40),
+                        prefixIcon: const Icon(Icons.description, color: Colors.blue),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                        ),
                       ),
                       style: const TextStyle(color: AppTheme.white),
                     ),
@@ -6784,10 +8759,24 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     flex: 2,
                     child: TextField(
                       controller: _gradingComponentWeightController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Peso (%)',
-                        hintStyle: TextStyle(color: AppTheme.white40),
-                        prefixIcon: Icon(Icons.percent, color: Colors.blue),
+                        hintStyle: const TextStyle(color: AppTheme.white40),
+                        prefixIcon: const Icon(Icons.percent, color: Colors.blue),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       style: const TextStyle(color: AppTheme.white),
@@ -6796,24 +8785,51 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 ],
               ),
               if (_gradingComponents.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                ..._gradingComponents.map((component) => ListTile(
-                  leading: const Icon(Icons.check_circle_outline, color: Colors.blue, size: 20),
-                  title: Text(
-                    component['name'],
-                    style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                const SizedBox(height: 12),
+                ..._gradingComponents.map((component) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
                   ),
-                  subtitle: Text(
-                    'Peso: ${component['weight']}',
-                    style: const TextStyle(color: AppTheme.white60, fontSize: 12),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                    onPressed: () {
-                      setModalState(() {
-                        _gradingComponents = _gradingComponents.where((c) => c['id'] != component['id']).toList();
-                      });
-                    },
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.check_circle_outline, color: Colors.blue, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              component['name'],
+                              style: const TextStyle(color: AppTheme.white, fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Peso: ${component['weight']}',
+                              style: const TextStyle(color: AppTheme.white60, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                        onPressed: () {
+                          setModalState(() {
+                            _gradingComponents = _gradingComponents.where((c) => c['id'] != component['id']).toList();
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 )),
               ],
@@ -6848,10 +8864,24 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   Expanded(
                     child: TextField(
                       controller: _courseTargetGradeController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Calificación Objetivo',
-                        labelStyle: TextStyle(color: AppTheme.white70),
-                        prefixIcon: Icon(Icons.track_changes, color: Colors.purple),
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        prefixIcon: const Icon(Icons.track_changes, color: Colors.purple),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.purple, width: 2),
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       style: const TextStyle(color: AppTheme.white),
@@ -6861,10 +8891,24 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   Expanded(
                     child: TextField(
                       controller: _courseActualGradeController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Calificación Actual',
-                        labelStyle: TextStyle(color: AppTheme.white70),
-                        prefixIcon: Icon(Icons.check_circle, color: Colors.purple),
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        prefixIcon: const Icon(Icons.check_circle, color: Colors.purple),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.purple, width: 2),
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       style: const TextStyle(color: AppTheme.white),
@@ -6875,83 +8919,157 @@ class _SchoolSectionsState extends State<SchoolSections> {
               const SizedBox(height: 24),
               
               // Notas
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.note, color: Colors.purple, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Notas Adicionales',
+                      style: TextStyle(
+                        color: Colors.purple,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               TextField(
                 controller: _courseNotesController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Notas Adicionales',
-                  labelStyle: TextStyle(color: AppTheme.white70),
-                  prefixIcon: Icon(Icons.note, color: Colors.purple),
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.note_add, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
                 ),
                 style: const TextStyle(color: AppTheme.white),
                 maxLines: 4,
               ),
+                    ],
+                  ),
+                ),
+              ),
+              // Botones de acción
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground.withOpacity(0.3),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAddClassOverviewModal = false;
+                          _courseNameController.clear();
+                          _courseTimeController.clear();
+                          _courseLocationController.clear();
+                          _courseInstructorController.clear();
+                          _courseContactInfoController.clear();
+                          _courseOfficeHoursController.clear();
+                          _courseAccessAccountController.clear();
+                          _courseAccessLoginController.clear();
+                          _courseAccessPasswordController.clear();
+                          _courseNotesController.clear();
+                          _courseTargetGradeController.clear();
+                          _courseActualGradeController.clear();
+                          _importantDates = [];
+                          _gradingComponents = [];
+                          _importantDateController.clear();
+                          _gradingComponentNameController.clear();
+                          _gradingComponentWeightController.clear();
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_courseNameController.text.isNotEmpty) {
+                          setState(() {
+                            _classOverview = {
+                              'course': _courseNameController.text,
+                              'time': _courseTimeController.text.isNotEmpty ? _courseTimeController.text : null,
+                              'location': _courseLocationController.text.isNotEmpty ? _courseLocationController.text : null,
+                              'instructor': _courseInstructorController.text.isNotEmpty ? _courseInstructorController.text : null,
+                              'contactInfo': _courseContactInfoController.text.isNotEmpty ? _courseContactInfoController.text : null,
+                              'officeHours': _courseOfficeHoursController.text.isNotEmpty ? _courseOfficeHoursController.text : null,
+                              'accessInfo': _courseAccessAccountController.text.isNotEmpty ? _courseAccessAccountController.text : null,
+                              'account': _courseAccessAccountController.text.isNotEmpty ? _courseAccessAccountController.text : null,
+                              'login': _courseAccessLoginController.text.isNotEmpty ? _courseAccessLoginController.text : null,
+                              'password': _courseAccessPasswordController.text.isNotEmpty ? _courseAccessPasswordController.text : null,
+                              'notes': _courseNotesController.text.isNotEmpty ? _courseNotesController.text : null,
+                              'targetGrade': _courseTargetGradeController.text.isNotEmpty ? _courseTargetGradeController.text : null,
+                              'actualGrade': _courseActualGradeController.text.isNotEmpty ? _courseActualGradeController.text : null,
+                              'importantDates': List<Map<String, dynamic>>.from(_importantDates),
+                              'gradingComponents': List<Map<String, dynamic>>.from(_gradingComponents),
+                            };
+                            _showAddClassOverviewModal = false;
+                          });
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Clase guardada exitosamente'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Por favor ingresa el nombre del curso'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Guardar',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _showAddClassOverviewModal = false;
-                _courseNameController.clear();
-                _courseTimeController.clear();
-                _courseLocationController.clear();
-                _courseInstructorController.clear();
-                _courseContactInfoController.clear();
-                _courseOfficeHoursController.clear();
-                _courseAccessAccountController.clear();
-                _courseAccessLoginController.clear();
-                _courseAccessPasswordController.clear();
-                _courseNotesController.clear();
-                _courseTargetGradeController.clear();
-                _courseActualGradeController.clear();
-                _importantDates = [];
-                _gradingComponents = [];
-                _importantDateController.clear();
-                _gradingComponentNameController.clear();
-                _gradingComponentWeightController.clear();
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_courseNameController.text.isNotEmpty) {
-                setState(() {
-                  _classOverview = {
-                    'course': _courseNameController.text,
-                    'time': _courseTimeController.text.isNotEmpty ? _courseTimeController.text : null,
-                    'location': _courseLocationController.text.isNotEmpty ? _courseLocationController.text : null,
-                    'instructor': _courseInstructorController.text.isNotEmpty ? _courseInstructorController.text : null,
-                    'contactInfo': _courseContactInfoController.text.isNotEmpty ? _courseContactInfoController.text : null,
-                    'officeHours': _courseOfficeHoursController.text.isNotEmpty ? _courseOfficeHoursController.text : null,
-                    'accessInfo': _courseAccessAccountController.text.isNotEmpty ? _courseAccessAccountController.text : null,
-                    'account': _courseAccessAccountController.text.isNotEmpty ? _courseAccessAccountController.text : null,
-                    'login': _courseAccessLoginController.text.isNotEmpty ? _courseAccessLoginController.text : null,
-                    'password': _courseAccessPasswordController.text.isNotEmpty ? _courseAccessPasswordController.text : null,
-                    'notes': _courseNotesController.text.isNotEmpty ? _courseNotesController.text : null,
-                    'targetGrade': _courseTargetGradeController.text.isNotEmpty ? _courseTargetGradeController.text : null,
-                    'actualGrade': _courseActualGradeController.text.isNotEmpty ? _courseActualGradeController.text : null,
-                    'importantDates': List<Map<String, dynamic>>.from(_importantDates),
-                    'gradingComponents': List<Map<String, dynamic>>.from(_gradingComponents),
-                  };
-                  _showAddClassOverviewModal = false;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Clase guardada')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Por favor ingresa el nombre del curso')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-            child: const Text('Guardar'),
-          ),
-        ],
       ),
     );
   }

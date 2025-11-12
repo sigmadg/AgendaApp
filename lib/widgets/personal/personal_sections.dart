@@ -9,6 +9,9 @@ import '../../theme/app_theme.dart';
 import '../../services/event_service.dart';
 import '../../services/task_service.dart';
 import '../../services/settings_service.dart';
+import '../../services/class_schedule_service.dart';
+import '../../models/school/class_schedule.dart';
+import '../../models/school/academic_task.dart';
 import '../calendar/calendar_view.dart';
 import '../event/events_sections.dart';
 import '../common/navigation_header.dart';
@@ -34,6 +37,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
   final EventService _eventService = EventService();
   final TaskService _taskService = TaskService();
   final SettingsService _settingsService = SettingsService();
+  final ClassScheduleService _classScheduleService = ClassScheduleService();
   bool _isLoadingEvents = false;
   bool _isLoadingTasks = false;
   
@@ -46,16 +50,28 @@ class _PersonalSectionsState extends State<PersonalSections> {
   void initState() {
     super.initState();
     _activeSection = widget.initialSection ?? 'events';
+    _selectedDate = DateTime.now(); // Inicializar con la fecha actual
     _dateScrollController = ScrollController();
     // Inicializar scroll al día de hoy después de que se construya el widget
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Scroll inicial: 14 días hacia atrás desde hoy (día 14 de 30)
-      // Cada día ocupa aproximadamente 90px de ancho
-      _dateScrollController.jumpTo(14 * 90.0);
+      // Scroll inicial: centrar el día actual (día 14 de 30)
+      // Cada día ocupa aproximadamente 63px de ancho (55px + 8px padding)
+      if (_dateScrollController.hasClients) {
+        final dayWidth = 63.0; // 55px width + 8px padding
+        final todayIndex = 14; // El día actual está en el índice 14
+        // Centrar el día actual en la pantalla
+        final scrollPosition = todayIndex * dayWidth;
+        _dateScrollController.animateTo(
+          scrollPosition.clamp(0.0, _dateScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
     _loadEvents();
     _loadTasks();
     _loadSettings();
+    _syncClassesToEvents(); // Sincronizar clases existentes como eventos
   }
 
   @override
@@ -334,6 +350,176 @@ class _PersonalSectionsState extends State<PersonalSections> {
         _isLoadingSettings = false;
       });
     }
+  }
+
+  // Función helper para convertir fecha a día de la semana
+  String _convertDateToDay(String dateString) {
+    try {
+      final date = DateFormat('yyyy-MM-dd').parse(dateString);
+      final weekday = date.weekday;
+      final dayMap = {
+        1: 'LUN',
+        2: 'MAR',
+        3: 'MIÉ',
+        4: 'JUE',
+        5: 'VIE',
+        6: 'SÁB',
+        7: 'DOM',
+      };
+      return dayMap[weekday] ?? 'LUN';
+    } catch (e) {
+      return 'LUN';
+    }
+  }
+
+  // Función helper para convertir CalendarTask a AcademicTask
+  AcademicTask? _calendarTaskToAcademicTask(CalendarTask calendarTask) {
+    // Solo convertir si es una tarea de escuela
+    if (calendarTask.category != 'Escuela' && calendarTask.category != 'school') {
+      return null;
+    }
+
+    return AcademicTask(
+      id: calendarTask.id.endsWith('_task') 
+          ? calendarTask.id.replaceAll('_task', '')
+          : calendarTask.id,
+      task: calendarTask.title,
+      date: calendarTask.date,
+      completed: calendarTask.completed,
+      notes: null,
+      priority: calendarTask.priority ?? 'medium',
+      subject: null,
+      estimatedTime: calendarTask.time,
+    );
+  }
+
+  // Función helper para convertir EventOrganization a ClassSchedule
+  ClassSchedule? _eventToClass(EventOrganization event) {
+    // Solo convertir si es un evento de educación/escuela
+    if (event.type != 'education' && event.category != 'school') {
+      return null;
+    }
+
+    // Necesitamos al menos nombre y hora para crear una clase
+    if (event.eventName.isEmpty || event.time == null || event.time!.isEmpty) {
+      return null;
+    }
+
+    final day = _convertDateToDay(event.date);
+    
+    // Extraer información del aula desde location o notes
+    String? classroom;
+    String? professor;
+    
+    if (event.location != null && event.location!.isNotEmpty) {
+      classroom = event.location;
+    }
+    
+    if (event.notes != null && event.notes!.isNotEmpty) {
+      // Intentar extraer profesor de las notas
+      final notes = event.notes!;
+      if (notes.contains('Profesor:')) {
+        final professorMatch = RegExp(r'Profesor:\s*(.+)').firstMatch(notes);
+        if (professorMatch != null) {
+          professor = professorMatch.group(1)?.trim();
+        }
+      }
+      if (notes.contains('Aula:')) {
+        final classroomMatch = RegExp(r'Aula:\s*(.+)').firstMatch(notes);
+        if (classroomMatch != null && classroom == null) {
+          classroom = classroomMatch.group(1)?.trim();
+        }
+      }
+    }
+
+    // Si el evento ya tiene un ID de clase, usarlo; si no, crear uno nuevo
+    final classId = event.id.endsWith('_class') 
+        ? event.id.replaceAll('_class', '')
+        : '${event.id}_class';
+    
+    return ClassSchedule(
+      id: classId,
+      subject: event.eventName,
+      day: day,
+      time: event.time!,
+      classroom: classroom,
+      professor: professor,
+      duration: 60, // Duración por defecto
+      link: null,
+    );
+  }
+
+  // Sincronizar clases existentes como eventos
+  Future<void> _syncClassesToEvents() async {
+    try {
+      final classes = await _classScheduleService.getClassSchedules();
+      final existingEvents = await _eventService.getAllEvents();
+      
+      // Crear eventos para clases que no tienen evento asociado
+      for (final classItem in classes) {
+        final eventId = '${classItem.id}_event';
+        final hasEvent = existingEvents.any((e) => e.id == eventId);
+        
+        if (!hasEvent) {
+          try {
+            final date = _convertDayToDateForClass(classItem.day);
+            final notes = <String>[];
+            if (classItem.professor != null && classItem.professor!.isNotEmpty) {
+              notes.add('Profesor: ${classItem.professor}');
+            }
+            if (classItem.classroom != null && classItem.classroom!.isNotEmpty) {
+              notes.add('Aula: ${classItem.classroom}');
+            }
+            if (classItem.link != null && classItem.link!.isNotEmpty) {
+              notes.add('Link: ${classItem.link}');
+            }
+            
+            final event = EventOrganization(
+              id: eventId,
+              eventName: classItem.subject,
+              date: date,
+              time: classItem.time,
+              location: classItem.classroom,
+              category: 'school',
+              type: 'class',
+              notes: notes.isNotEmpty ? notes.join('\n') : null,
+            );
+            
+            await _eventService.addEvent(event);
+            print('Evento sincronizado para clase: ${classItem.subject}');
+          } catch (e) {
+            print('Error al sincronizar evento para clase: $e');
+          }
+        }
+      }
+    } catch (e) {
+      print('Error al sincronizar clases: $e');
+    }
+  }
+
+  // Función helper para convertir día de la semana a fecha (próxima ocurrencia)
+  String _convertDayToDateForClass(String day) {
+    final dayMap = {
+      'LUN': 1,
+      'MAR': 2,
+      'MIÉ': 3,
+      'JUE': 4,
+      'VIE': 5,
+      'SÁB': 6,
+      'DOM': 7,
+    };
+    
+    final targetWeekday = dayMap[day] ?? 1;
+    final now = DateTime.now();
+    final currentWeekday = now.weekday;
+    
+    int daysToAdd = targetWeekday - currentWeekday;
+    if (daysToAdd <= 0) {
+      daysToAdd += 7; // Si ya pasó este día, ir a la próxima semana
+    }
+    
+    final targetDate = now.add(Duration(days: daysToAdd));
+    return DateFormat('yyyy-MM-dd').format(targetDate);
   }
 
   // Cargar eventos desde Supabase
@@ -1020,6 +1206,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       controller: _dateScrollController,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: 30,
                       itemBuilder: (context, index) {
                         final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
@@ -1653,6 +1840,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       controller: _dateScrollController,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: 30,
                       itemBuilder: (context, index) {
                         final date = DateTime.now().subtract(const Duration(days: 14)).add(Duration(days: index));
@@ -4346,6 +4534,19 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             );
 
                             if (confirmed == true) {
+                              // Si es un evento de escuela creado desde personal, eliminar la clase asociada
+                              if ((event.type == 'education' || event.category == 'school') && event.id.endsWith('_event')) {
+                                try {
+                                  final classId = event.id.replaceAll('_event', '');
+                                  await _classScheduleService.deleteClassSchedule(classId);
+                                  print('Clase eliminada automáticamente para evento: ${event.eventName}');
+                                } catch (e) {
+                                  print('Error al eliminar clase para evento: $e');
+                                  // Continuar con la eliminación del evento aunque falle la clase
+                                }
+                              }
+                              // Si el evento termina en '_class', fue creado directamente desde personal, no hay clase asociada
+                              
                               final success = await _eventService.deleteEvent(event.id);
                               if (success) {
                                 setState(() {
@@ -4636,6 +4837,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             priority: task.priority,
                           );
 
+                          // Si es una tarea de escuela, también se actualizará en la sección de escuela
+                          // (se actualizará automáticamente cuando se recargue school_sections)
+                          
                           // Actualizar en Supabase
                           final result = await _taskService.updateTask(updatedTask);
                           
@@ -4813,6 +5017,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             );
 
                             if (confirmed == true) {
+                              // Si es una tarea de escuela, también se eliminará de la sección de escuela
+                              // (se actualizará automáticamente cuando se recargue school_sections)
+                              
                               // Eliminar de Supabase
                               final success = await _taskService.deleteTask(task.id);
                               
@@ -5330,6 +5537,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       time: eventTime,
                       location: locationController.text.isNotEmpty ? locationController.text : null,
                       type: selectedType,
+                      category: selectedType == 'education' ? 'school' : null,
                       createdAt: DateTime.now(),
                     );
 
@@ -5346,6 +5554,44 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           _events.add(newEvent);
                         });
 
+                        // Si es un evento de educación, crear clase en horario
+                        if (selectedType == 'education' && eventTime != null && eventTime.isNotEmpty) {
+                          try {
+                            final classSchedule = _eventToClass(newEvent);
+                            if (classSchedule != null) {
+                              final classResult = await _classScheduleService.addClassSchedule(classSchedule);
+                              if (classResult['success'] == true) {
+                                print('Clase creada automáticamente para evento: ${newEvent.eventName}');
+                                
+                                // Actualizar el evento con referencia a la clase para futuras sincronizaciones
+                                final updatedEvent = EventOrganization(
+                                  id: '${classSchedule.id}_event',
+                                  eventName: newEvent.eventName,
+                                  date: newEvent.date,
+                                  time: newEvent.time,
+                                  location: newEvent.location,
+                                  type: newEvent.type,
+                                  category: 'school',
+                                  notes: newEvent.notes,
+                                  createdAt: newEvent.createdAt,
+                                );
+                                
+                                // Reemplazar el evento en la lista y en Supabase
+                                await _eventService.deleteEvent(newEvent.id);
+                                await _eventService.addEvent(updatedEvent);
+                                
+                                setState(() {
+                                  _events.removeWhere((e) => e.id == newEvent.id);
+                                  _events.add(updatedEvent);
+                                });
+                              }
+                            }
+                          } catch (e) {
+                            print('Error al crear clase para evento: $e');
+                            // No fallar si no se puede crear la clase
+                          }
+                        }
+
                         Navigator.of(dialogContext).pop();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -5353,7 +5599,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                               content: Text(
                                 selectedType == 'work'
                                     ? 'Evento agregado exitosamente y sincronizado con sesiones de trabajo'
-                                    : 'Evento agregado exitosamente',
+                                    : selectedType == 'education'
+                                        ? 'Evento agregado exitosamente y sincronizado con horario'
+                                        : 'Evento agregado exitosamente',
                               ),
                               backgroundColor: Colors.green,
                               duration: const Duration(seconds: 2),
@@ -5714,6 +5962,12 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       setState(() {
                         _tasks.add(newTask);
                       });
+
+                      // Si es una tarea de escuela, también se reflejará en la sección de escuela
+                      // (se cargará automáticamente cuando se abra school_sections)
+                      if (selectedSection == 'school') {
+                        print('Tarea de escuela agregada, se reflejará en la sección de escuela');
+                      }
 
                       Navigator.of(dialogContext).pop();
                       if (context.mounted) {
