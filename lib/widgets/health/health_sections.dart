@@ -146,12 +146,9 @@ class _HealthSectionsState extends State<HealthSections> {
   final sections = [
     {'id': 'meal-planner', 'name': 'Planificador de Comidas', 'icon': Icons.restaurant},
     {'id': 'recipes', 'name': 'Recetas', 'icon': Icons.menu_book},
-    {'id': 'gym-routine', 'name': 'Rutina de Gimnasio', 'icon': Icons.fitness_center},
-    {'id': 'sports-goals', 'name': 'Objetivos Deportivos', 'icon': Icons.emoji_events},
-    {'id': 'fitness-tracker', 'name': 'Seguidor de Fitness', 'icon': Icons.track_changes},
-    {'id': 'body-measurements', 'name': 'Mediciones Corporales', 'icon': Icons.straighten},
-    {'id': 'workout-tracker', 'name': 'Seguidor de Entrenamientos', 'icon': Icons.directions_run},
-    {'id': 'weight-loss', 'name': 'Pérdida de Peso', 'icon': Icons.monitor_weight},
+    {'id': 'gym-routine', 'name': 'Entrenamientos', 'icon': Icons.fitness_center},
+    {'id': 'sports-goals', 'name': 'Fitness y Objetivos', 'icon': Icons.track_changes},
+    {'id': 'body-measurements', 'name': 'Seguimiento de Salud', 'icon': Icons.health_and_safety},
     {'id': 'nutrition-tracker', 'name': 'Seguidor de Nutrición', 'icon': Icons.local_dining},
   ];
 
@@ -564,15 +561,11 @@ class _HealthSectionsState extends State<HealthSections> {
       case 'gym-routine':
         return _buildGymRoutine();
       case 'sports-goals':
-        return _buildSportsGoals();
       case 'fitness-tracker':
-        return _buildFitnessTracker();
+        return _buildFitnessAndGoals();
       case 'body-measurements':
-        return _buildBodyMeasurements();
-      case 'workout-tracker':
-        return _buildWorkoutTracker();
       case 'weight-loss':
-        return _buildWeightLoss();
+        return _buildHealthTracking();
       case 'nutrition-tracker':
         return _buildNutritionTracker();
       default:
@@ -4532,36 +4525,49 @@ class _HealthSectionsState extends State<HealthSections> {
   }
 
   Widget _buildGymRoutine() {
-    // Datos de ejemplo para mostrar el UI
-    final sampleGymData = {
-      'weeklyStats': {
-        'totalWorkouts': 4,
-        'totalDuration': 320,
-        'totalExercises': 28,
-        'averageIntensity': 7.2,
-      },
-      'routines': _gymRoutines.isEmpty ? [] : _gymRoutines.map((r) => {
-        'name': r.name,
-        'difficulty': r.difficulty,
-        'duration': r.duration,
-        'completed': false,
-      }).toList(),
-      'goals': [
-        {'id': 1, 'title': 'Entrenar 4 días/semana', 'current': 4, 'target': 4, 'unit': 'días', 'completed': true},
-        {'id': 2, 'title': 'Completar 20 ejercicios', 'current': 19, 'target': 20, 'unit': 'ejercicios', 'completed': false},
-      ],
-      'achievements': [
-        {'id': 1, 'title': 'Primera Rutina', 'description': 'Completaste tu primera rutina de gimnasio', 'icon': '🏋️', 'unlocked': !_gymRoutines.isEmpty},
-        {'id': 2, 'title': 'Consistencia', 'description': '4 entrenamientos en una semana', 'icon': '💪', 'unlocked': false},
-        {'id': 3, 'title': 'Fuerza', 'description': 'Levantaste 100kg+ en peso muerto', 'icon': '🔥', 'unlocked': false},
-        {'id': 4, 'title': 'Maratón', 'description': '30 días consecutivos entrenando', 'icon': '🏃', 'unlocked': false},
-      ],
+    // Datos combinados de rutinas y entrenamientos
+    final weeklyStats = {
+      'totalWorkouts': 5,
+      'totalDuration': 420, // minutos
+      'totalCalories': 2840,
+      'totalExercises': 28,
+      'averageIntensity': 7.5,
     };
     
-    final weeklyStats = sampleGymData['weeklyStats'] as Map<String, dynamic>;
-    final routines = sampleGymData['routines'] as List;
-    final goals = sampleGymData['goals'] as List;
-    final achievements = sampleGymData['achievements'] as List;
+    final routines = _gymRoutines.isEmpty ? [] : _gymRoutines.map((r) => {
+      'name': r.name,
+      'difficulty': r.difficulty,
+      'duration': r.duration,
+      'completed': false,
+    }).toList();
+    
+    final currentWeek = {
+      'monday': {'workout': 'Cardio HIIT', 'duration': 45, 'calories': 520, 'completed': true},
+      'tuesday': {'workout': 'Fuerza Superior', 'duration': 60, 'calories': 480, 'completed': true},
+      'wednesday': {'workout': 'Descanso', 'duration': 0, 'calories': 0, 'completed': true},
+      'thursday': {'workout': 'Cardio LISS', 'duration': 30, 'calories': 300, 'completed': true},
+      'friday': {'workout': 'Fuerza Inferior', 'duration': 55, 'calories': 450, 'completed': true},
+      'saturday': {'workout': 'Yoga', 'duration': 40, 'calories': 200, 'completed': false},
+      'sunday': {'workout': 'Caminata', 'duration': 0, 'calories': 0, 'completed': false},
+    };
+    
+    final goals = [
+      {'id': 1, 'title': 'Entrenar 5 días por semana', 'progress': 5, 'target': 5, 'completed': true},
+      {'id': 2, 'title': 'Quemar 3000 calorías', 'progress': 2840, 'target': 3000, 'completed': false},
+      {'id': 3, 'title': 'Completar 10 horas de ejercicio', 'progress': 7, 'target': 10, 'completed': false},
+      {'id': 4, 'title': 'Completar 20 ejercicios', 'progress': 19, 'target': 20, 'completed': false},
+    ];
+    
+    final achievements = [
+      {'id': 1, 'title': 'Primera Rutina', 'description': 'Completaste tu primera rutina de gimnasio', 'icon': '🏋️', 'unlocked': !_gymRoutines.isEmpty},
+      {'id': 2, 'title': 'Consistencia', 'description': '5 entrenamientos en una semana', 'icon': '💪', 'unlocked': true},
+      {'id': 3, 'title': 'Quemador de Calorías', 'description': 'Quemaste 2500+ calorías en una semana', 'icon': '🔥', 'unlocked': true},
+      {'id': 4, 'title': 'Maratón', 'description': '30 días consecutivos entrenando', 'icon': '🏃', 'unlocked': false},
+    ];
+    
+    final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
+    final weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    final weekKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     
     double getProgressPercentage(int current, int target) {
       return ((current / target) * 100).clamp(0.0, 100.0);
@@ -4608,7 +4614,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Rutina de Gimnasio',
+                        'Entrenamientos',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -4617,7 +4623,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Planifica y ejecuta tus entrenamientos',
+                        'Planifica rutinas y registra tus entrenamientos',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.white70,
@@ -4646,8 +4652,8 @@ class _HealthSectionsState extends State<HealthSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.fitness_center,
-                  title: 'Rutinas',
-                  value: weeklyStats['totalWorkouts'].toString(),
+                  title: 'Entrenamientos',
+                  value: weeklyStats['totalWorkouts']!.toString(),
                   color: Colors.green,
                 ),
               ),
@@ -4656,8 +4662,8 @@ class _HealthSectionsState extends State<HealthSections> {
                 child: _buildSummaryCard(
                   icon: Icons.access_time,
                   title: 'Duración',
-                  value: '${weeklyStats['totalDuration']}m',
-                  color: Colors.red,
+                  value: '${weeklyStats['totalDuration']} min',
+                  color: Colors.blue,
                 ),
               ),
             ],
@@ -4667,10 +4673,10 @@ class _HealthSectionsState extends State<HealthSections> {
             children: [
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.fitness_center,
-                  title: 'Ejercicios',
-                  value: weeklyStats['totalExercises'].toString(),
-                  color: Colors.orange,
+                  icon: Icons.local_fire_department,
+                  title: 'Calorías',
+                  value: weeklyStats['totalCalories']!.toString(),
+                  color: Colors.red,
                 ),
               ),
               const SizedBox(width: 8),
@@ -4679,34 +4685,56 @@ class _HealthSectionsState extends State<HealthSections> {
                   icon: Icons.speed,
                   title: 'Intensidad',
                   value: '${weeklyStats['averageIntensity']}/10',
-                  color: Colors.pink,
+                  color: Colors.orange,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
           
-          // Botón para agregar rutina
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _showAddGymModal = true;
-                });
-              },
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('Crear Rutina'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // Botones de acción
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showAddGymModal = true;
+                    });
+                  },
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
+                  label: const Text('Crear Rutina'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showAddWorkoutModal = true;
+                    });
+                  },
+                  icon: const Icon(Icons.directions_run, size: 20),
+                  label: const Text('Entrenamiento'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 24),
           
           // Lista de rutinas
           if (routines.isEmpty)
@@ -4758,7 +4786,120 @@ class _HealthSectionsState extends State<HealthSections> {
             ),
           const SizedBox(height: 24),
           
-          // Objetivos de gimnasio
+          // Semana actual con entrenamientos
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Semana Actual',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...weekKeys.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final dayKey = entry.value;
+                  final dayData = currentWeek[dayKey]!;
+                  final isCompleted = dayData['completed'] == true;
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? Colors.green.withOpacity(0.1)
+                          : AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isCompleted
+                            ? Colors.green.withOpacity(0.3)
+                            : AppTheme.darkSurfaceVariant,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          alignment: Alignment.center,
+                          child: Text(
+                            weekDays[index],
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isCompleted ? Colors.green : AppTheme.white60,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                dayData['workout'] as String,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCompleted ? AppTheme.white : AppTheme.white60,
+                                ),
+                              ),
+                              if (dayData['duration'] as int > 0) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.access_time, size: 12, color: AppTheme.white60),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${dayData['duration']} min',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.white60,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${dayData['calories']} cal',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.white60,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (isCompleted)
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.check, size: 16, color: Colors.green),
+                          ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Objetivos combinados
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -4772,7 +4913,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Objetivos de la Semana',
+                      'Objetivos Semanales',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -4791,7 +4932,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 const SizedBox(height: 16),
                 ...goals.map((goal) {
                   final isCompleted = goal['completed'] == true;
-                  final progress = getProgressPercentage(goal['current'] as int, goal['target'] as int);
+                  final progress = getProgressPercentage(goal['progress'] as int, goal['target'] as int);
                   
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
@@ -4804,20 +4945,26 @@ class _HealthSectionsState extends State<HealthSections> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Icon(
+                              isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                              size: 20,
+                              color: isCompleted ? Colors.green : AppTheme.white60,
+                            ),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 goal['title'] as String,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.white,
+                                  color: isCompleted ? AppTheme.white : AppTheme.white70,
+                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
                                 ),
                               ),
                             ),
                             Text(
-                              '${goal['current']}/${goal['target']} ${goal['unit']}',
+                              '${goal['progress']}/${goal['target']}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isCompleted ? Colors.green : AppTheme.white60,
@@ -4826,41 +4973,27 @@ class _HealthSectionsState extends State<HealthSections> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: progress / 100,
-                                  minHeight: 6,
-                                  backgroundColor: AppTheme.darkSurfaceVariant,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    isCompleted ? Colors.green : Colors.orange,
-                                  ),
-                                ),
-                              ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress / 100,
+                            minHeight: 6,
+                            backgroundColor: AppTheme.darkSurfaceVariant,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isCompleted ? Colors.green : Colors.orange,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${progress.toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
           const SizedBox(height: 24),
           
-          // Sistema de logros
+          // Sistema de logros combinados
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -4874,7 +5007,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Logros de Gimnasio',
+                      'Logros',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -4882,7 +5015,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                     ),
                     Text(
-                      '${achievements.where((a) => a['unlocked'] == true).length}/${achievements.length} desbloqueados',
+                      '$unlockedAchievements/${achievements.length} desbloqueados',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.white60,
@@ -4891,13 +5024,20 @@ class _HealthSectionsState extends State<HealthSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                  ),
+                  itemCount: achievements.length,
+                  itemBuilder: (context, index) {
+                    final achievement = achievements[index];
                     final isUnlocked = achievement['unlocked'] == true;
                     return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isUnlocked
@@ -4911,6 +5051,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ),
                       ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             isUnlocked ? achievement['icon'] as String : '🔒',
@@ -4940,7 +5081,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
@@ -4950,8 +5091,40 @@ class _HealthSectionsState extends State<HealthSections> {
     );
   }
 
-  Widget _buildSportsGoals() {
-    // Datos de ejemplo
+  Widget _buildFitnessAndGoals() {
+    // Datos de Fitness Tracker
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final todayData = _fitnessData[today] ?? {};
+    final currentSteps = int.tryParse(todayData['steps']?.toString() ?? '0') ?? 0;
+    final currentCalories = int.tryParse(todayData['caloriesOut']?.toString() ?? '0') ?? 0;
+    final currentWater = int.tryParse(todayData['water']?.toString() ?? '0') ?? 0;
+    final hasWorkout = todayData['workout'] == true;
+    
+    final dailyGoals = {
+      'steps': 10000,
+      'calories': 500,
+      'water': 8,
+      'workouts': 1,
+    };
+    
+    final fitnessWeeklyStats = {
+      'totalSteps': 45620,
+      'totalCaloriesBurned': 2840,
+      'totalWorkouts': 5,
+      'averageHeartRate': 142,
+    };
+    
+    final weeklyProgress = [
+      {'day': 'Lun', 'steps': 8500, 'calories': 420, 'water': 6, 'workout': true},
+      {'day': 'Mar', 'steps': 12000, 'calories': 580, 'water': 8, 'workout': true},
+      {'day': 'Mié', 'steps': 6800, 'calories': 320, 'water': 5, 'workout': false},
+      {'day': 'Jue', 'steps': 15000, 'calories': 720, 'water': 9, 'workout': true},
+      {'day': 'Vie', 'steps': 9200, 'calories': 450, 'water': 7, 'workout': true},
+      {'day': 'Sáb', 'steps': 11000, 'calories': 520, 'water': 8, 'workout': false},
+      {'day': 'Dom', 'steps': 7500, 'calories': 380, 'water': 6, 'workout': true},
+    ];
+    
+    // Datos de Objetivos Deportivos
     final sampleSportsData = {
       'weeklyStats': {
         'totalGoals': 8,
@@ -4973,18 +5146,27 @@ class _HealthSectionsState extends State<HealthSections> {
         {'name': 'Deportes de Resistencia', 'count': 2, 'color': Colors.green},
         {'name': 'Deportes de Raqueta', 'count': 1, 'color': Colors.orange},
       ],
-      'achievements': [
-        {'id': 1, 'title': 'Primer Objetivo', 'description': 'Completaste tu primer objetivo deportivo', 'icon': '🏆', 'unlocked': !_sportsGoals.isEmpty},
-        {'id': 2, 'title': 'Consistencia', 'description': '5 objetivos completados en un mes', 'icon': '💪', 'unlocked': false},
-        {'id': 3, 'title': 'Multideportista', 'description': 'Objetivos en 3 deportes diferentes', 'icon': '🌟', 'unlocked': false},
-        {'id': 4, 'title': 'Campeón', 'description': '10 objetivos completados', 'icon': '👑', 'unlocked': false},
-      ],
     };
     
-    final weeklyStats = sampleSportsData['weeklyStats'] as Map<String, dynamic>;
+    final sportsWeeklyStats = sampleSportsData['weeklyStats'] as Map<String, dynamic>;
     final goals = sampleSportsData['goals'] as List;
     final categories = sampleSportsData['categories'] as List;
-    final achievements = sampleSportsData['achievements'] as List;
+    
+    // Logros combinados
+    final achievements = [
+      {'id': 1, 'title': 'Primera Semana', 'description': 'Completaste tu primera semana de seguimiento', 'icon': '🏆', 'unlocked': true},
+      {'id': 2, 'title': 'Meta de Pasos', 'description': 'Superaste los 10,000 pasos diarios', 'icon': '👟', 'unlocked': true},
+      {'id': 3, 'title': 'Primer Objetivo', 'description': 'Completaste tu primer objetivo deportivo', 'icon': '🎯', 'unlocked': !_sportsGoals.isEmpty},
+      {'id': 4, 'title': 'Consistencia', 'description': '5 días consecutivos de ejercicio', 'icon': '💪', 'unlocked': false},
+      {'id': 5, 'title': 'Multideportista', 'description': 'Objetivos en 3 deportes diferentes', 'icon': '🌟', 'unlocked': false},
+      {'id': 6, 'title': 'Campeón', 'description': '10 objetivos completados', 'icon': '👑', 'unlocked': false},
+    ];
+    
+    final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
+    
+    double getProgressPercentage(int current, int goal) {
+      return (current / goal * 100).clamp(0.0, 100.0);
+    }
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -5012,14 +5194,10 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.green.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.emoji_events,
-                    size: 24,
-                    color: AppTheme.white,
-                  ),
+                  child: const Icon(Icons.track_changes, size: 24, color: Colors.green),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -5027,7 +5205,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Objetivos Deportivos',
+                        'Fitness y Objetivos',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -5036,7 +5214,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Establece y alcanza tus metas deportivas',
+                        'Monitorea tu actividad y alcanza tus metas',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.white70,
@@ -5052,31 +5230,31 @@ class _HealthSectionsState extends State<HealthSections> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.flag, size: 16, color: Colors.green),
+                  child: const Icon(Icons.fitness_center, size: 16, color: Colors.green),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 20),
           
-          // Resumen de estadísticas
+          // Resumen de estadísticas de Fitness
           Row(
             children: [
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.emoji_events,
-                  title: 'Objetivos',
-                  value: weeklyStats['totalGoals'].toString(),
+                  icon: Icons.directions_walk,
+                  title: 'Pasos',
+                  value: fitnessWeeklyStats['totalSteps']!.toString(),
                   color: Colors.green,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.check_circle_outline,
-                  title: 'Completados',
-                  value: weeklyStats['completedGoals'].toString(),
-                  color: Colors.green,
+                  icon: Icons.local_fire_department,
+                  title: 'Calorías',
+                  value: fitnessWeeklyStats['totalCaloriesBurned']!.toString(),
+                  color: Colors.red,
                 ),
               ),
             ],
@@ -5086,18 +5264,18 @@ class _HealthSectionsState extends State<HealthSections> {
             children: [
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.timer,
-                  title: 'Activos',
-                  value: weeklyStats['activeGoals'].toString(),
+                  icon: Icons.emoji_events,
+                  title: 'Objetivos',
+                  value: sportsWeeklyStats['totalGoals'].toString(),
                   color: Colors.blue,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.analytics,
-                  title: 'Progreso',
-                  value: '${weeklyStats['completionRate']}%',
+                  icon: Icons.check_circle_outline,
+                  title: 'Completados',
+                  value: sportsWeeklyStats['completedGoals'].toString(),
                   color: Colors.orange,
                 ),
               ),
@@ -5105,27 +5283,205 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
           const SizedBox(height: 24),
           
-          // Botón para agregar objetivo
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _showAddSportsModal = true;
-                });
-              },
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('Crear Objetivo'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // Botones de acción
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _selectedFitnessDate = DateTime.now();
+                    });
+                  },
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
+                  label: const Text('Registrar Actividad'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showAddSportsModal = true;
+                    });
+                  },
+                  icon: const Icon(Icons.emoji_events, size: 20),
+                  label: const Text('Crear Objetivo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Título de sección de Fitness
+          const Text(
+            'Seguimiento de Fitness',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.white,
             ),
           ),
+          const SizedBox(height: 16),
+          
+          // Progreso del día actual
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.today, color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Progreso de Hoy',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildProgressCard(
+                  icon: Icons.directions_walk,
+                  title: 'Pasos',
+                  value: currentSteps.toString(),
+                  progress: getProgressPercentage(currentSteps, dailyGoals['steps']!),
+                  goal: dailyGoals['steps']!.toString(),
+                  color: Colors.green,
+                ),
+                const SizedBox(height: 12),
+                _buildProgressCard(
+                  icon: Icons.local_fire_department,
+                  title: 'Calorías',
+                  value: currentCalories.toString(),
+                  progress: getProgressPercentage(currentCalories, dailyGoals['calories']!),
+                  goal: dailyGoals['calories']!.toString(),
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 12),
+                _buildProgressCard(
+                  icon: Icons.water_drop,
+                  title: 'Agua',
+                  value: '$currentWater vasos',
+                  progress: getProgressPercentage(currentWater, dailyGoals['water']!),
+                  goal: '${dailyGoals['water']} vasos',
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 12),
+                _buildProgressCard(
+                  icon: Icons.fitness_center,
+                  title: 'Ejercicio',
+                  value: hasWorkout ? 'Completado' : 'Pendiente',
+                  progress: hasWorkout ? 100.0 : 0.0,
+                  goal: '${dailyGoals['workouts']} sesión',
+                  color: Colors.orange,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Progreso semanal
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Progreso Semanal',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: weeklyProgress.map((day) {
+                    return Column(
+                      children: [
+                        Text(
+                          day['day'] as String,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.white60,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: (day['steps'] as int) >= dailyGoals['steps']!
+                                ? Colors.green.withOpacity(0.2)
+                                : AppTheme.darkSurfaceVariant,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: (day['steps'] as int) >= dailyGoals['steps']!
+                                  ? Colors.green
+                                  : AppTheme.darkSurfaceVariant,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              (day['steps'] as int).toString(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: (day['steps'] as int) >= dailyGoals['steps']!
+                                    ? Colors.green
+                                    : AppTheme.white60,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Título de sección de Objetivos
+          const Text(
+            'Objetivos Deportivos',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.white,
+            ),
+          ),
+          const SizedBox(height: 16),
           
           // Categorías de deportes
           Container(
@@ -5405,7 +5761,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Logros Deportivos',
+                      'Logros',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -5422,13 +5778,20 @@ class _HealthSectionsState extends State<HealthSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                  ),
+                  itemCount: achievements.length,
+                  itemBuilder: (context, index) {
+                    final achievement = achievements[index];
                     final isUnlocked = achievement['unlocked'] == true;
                     return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isUnlocked
@@ -5442,6 +5805,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ),
                       ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             isUnlocked ? achievement['icon'] as String : '🔒',
@@ -5471,7 +5835,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
@@ -5481,420 +5845,6 @@ class _HealthSectionsState extends State<HealthSections> {
     );
   }
 
-  Widget _buildFitnessTracker() {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final todayData = _fitnessData[today] ?? {};
-    final currentSteps = int.tryParse(todayData['steps']?.toString() ?? '0') ?? 0;
-    final currentCalories = int.tryParse(todayData['caloriesOut']?.toString() ?? '0') ?? 0;
-    final currentWater = int.tryParse(todayData['water']?.toString() ?? '0') ?? 0;
-    final hasWorkout = todayData['workout'] == true;
-    
-    final dailyGoals = {
-      'steps': 10000,
-      'calories': 500,
-      'water': 8,
-      'workouts': 1,
-    };
-    
-    final weeklyStats = {
-      'totalSteps': 45620,
-      'totalCaloriesBurned': 2840,
-      'totalWorkouts': 5,
-      'averageHeartRate': 142,
-    };
-    
-    final weeklyProgress = [
-      {'day': 'Lun', 'steps': 8500, 'calories': 420, 'water': 6, 'workout': true},
-      {'day': 'Mar', 'steps': 12000, 'calories': 580, 'water': 8, 'workout': true},
-      {'day': 'Mié', 'steps': 6800, 'calories': 320, 'water': 5, 'workout': false},
-      {'day': 'Jue', 'steps': 15000, 'calories': 720, 'water': 9, 'workout': true},
-      {'day': 'Vie', 'steps': 9200, 'calories': 450, 'water': 7, 'workout': true},
-      {'day': 'Sáb', 'steps': 11000, 'calories': 520, 'water': 8, 'workout': false},
-      {'day': 'Dom', 'steps': 7500, 'calories': 380, 'water': 6, 'workout': true},
-    ];
-    
-    final achievements = [
-      {'id': 1, 'title': 'Primera Semana', 'description': 'Completaste tu primera semana de seguimiento', 'icon': '🏆', 'unlocked': true},
-      {'id': 2, 'title': 'Meta de Pasos', 'description': 'Superaste los 10,000 pasos diarios', 'icon': '👟', 'unlocked': true},
-      {'id': 3, 'title': 'Consistencia', 'description': '5 días consecutivos de ejercicio', 'icon': '💪', 'unlocked': false},
-      {'id': 4, 'title': 'Hidratación', 'description': '8 vasos de agua por 7 días', 'icon': '💧', 'unlocked': false},
-    ];
-    
-    final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
-    
-    double getProgressPercentage(int current, int goal) {
-      return (current / goal * 100).clamp(0.0, 100.0);
-    }
-    
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header mejorado
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.track_changes, size: 24, color: Colors.green),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Seguidor de Fitness',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Monitorea tu actividad física diaria',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.fitness_center, size: 16, color: Colors.green),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Resumen semanal
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.directions_walk,
-                  title: 'Pasos Totales',
-                  value: weeklyStats['totalSteps']!.toString(),
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.local_fire_department,
-                  title: 'Calorías',
-                  value: weeklyStats['totalCaloriesBurned']!.toString(),
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.fitness_center,
-                  title: 'Entrenamientos',
-                  value: weeklyStats['totalWorkouts']!.toString(),
-                  color: Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.favorite,
-                  title: 'Ritmo Cardíaco',
-                  value: '${weeklyStats['averageHeartRate']}',
-                  color: Colors.pink,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Botón para agregar actividad
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _selectedFitnessDate = DateTime.now();
-                });
-                // TODO: Abrir modal para registrar actividad
-              },
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('Registrar Actividad'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          
-          // Progreso del día actual
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.today, color: Colors.green, size: 20),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Progreso de Hoy',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildProgressCard(
-                  icon: Icons.directions_walk,
-                  title: 'Pasos',
-                  value: currentSteps.toString(),
-                  progress: getProgressPercentage(currentSteps, dailyGoals['steps']!),
-                  goal: dailyGoals['steps']!.toString(),
-                  color: Colors.green,
-                ),
-                const SizedBox(height: 12),
-                _buildProgressCard(
-                  icon: Icons.local_fire_department,
-                  title: 'Calorías',
-                  value: currentCalories.toString(),
-                  progress: getProgressPercentage(currentCalories, dailyGoals['calories']!),
-                  goal: dailyGoals['calories']!.toString(),
-                  color: Colors.red,
-                ),
-                const SizedBox(height: 12),
-                _buildProgressCard(
-                  icon: Icons.water_drop,
-                  title: 'Agua',
-                  value: '$currentWater vasos',
-                  progress: getProgressPercentage(currentWater, dailyGoals['water']!),
-                  goal: '${dailyGoals['water']} vasos',
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 12),
-                _buildProgressCard(
-                  icon: Icons.fitness_center,
-                  title: 'Ejercicio',
-                  value: hasWorkout ? 'Completado' : 'Pendiente',
-                  progress: hasWorkout ? 100.0 : 0.0,
-                  goal: '${dailyGoals['workouts']} sesión',
-                  color: Colors.orange,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Progreso semanal
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Progreso Semanal',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: weeklyProgress.map((day) {
-                    return Column(
-                      children: [
-                        Text(
-                          day['day'] as String,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.white60,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: (day['steps'] as int) >= dailyGoals['steps']!
-                                ? Colors.green.withOpacity(0.2)
-                                : AppTheme.darkSurfaceVariant,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: (day['steps'] as int) >= dailyGoals['steps']!
-                                  ? Colors.green
-                                  : AppTheme.darkSurfaceVariant,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              (day['steps'] as int).toString(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: (day['steps'] as int) >= dailyGoals['steps']!
-                                    ? Colors.green
-                                    : AppTheme.white60,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Logros
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Logros',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    Text(
-                      '$unlockedAchievements/${achievements.length} desbloqueados',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
-                    final isUnlocked = achievement['unlocked'] == true;
-                    return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isUnlocked
-                            ? Colors.green.withOpacity(0.1)
-                            : AppTheme.darkSurfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isUnlocked
-                              ? Colors.green.withOpacity(0.3)
-                              : AppTheme.darkSurfaceVariant,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            isUnlocked ? achievement['icon'] as String : '🔒',
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            achievement['title'] as String,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            achievement['description'] as String,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
   Widget _buildProgressCard({
     required IconData icon,
     required String title,
@@ -6004,7 +5954,35 @@ class _HealthSectionsState extends State<HealthSections> {
     );
   }
 
-  Widget _buildBodyMeasurements() {
+  Widget _buildHealthTracking() {
+    // Datos de pérdida de peso
+    final weightData = _weightLossData;
+    final currentWeight = double.tryParse(weightData['currentWeight']?.toString() ?? '75.2') ?? 75.2;
+    final startingWeight = double.tryParse(weightData['startingWeight']?.toString() ?? '82.5') ?? 82.5;
+    final targetWeight = double.tryParse(weightData['targetWeight']?.toString() ?? '70.0') ?? 70.0;
+    final weightLost = startingWeight - currentWeight;
+    final weightToLose = currentWeight - targetWeight;
+    
+    final weeklyStats = {
+      'thisWeek': -0.8,
+      'lastWeek': -1.2,
+      'averageWeekly': -0.6,
+      'totalWeeks': 12,
+      'totalMeasurements': _bodyMeasurements.length,
+      'weightChange': -1.2,
+      'waistChange': -3.0,
+      'muscleGain': 0.8,
+    };
+    
+    final recentWeights = [
+      {'date': '2024-01-15', 'weight': 75.2, 'change': -0.3},
+      {'date': '2024-01-08', 'weight': 75.5, 'change': -0.5},
+      {'date': '2024-01-01', 'weight': 76.0, 'change': -0.8},
+      {'date': '2023-12-25', 'weight': 76.8, 'change': -0.4},
+      {'date': '2023-12-18', 'weight': 77.2, 'change': -0.6},
+    ];
+    
+    // Tipos de medidas corporales
     final measurementTypes = [
       {'id': 'weight', 'name': 'Peso', 'unit': 'kg', 'icon': Icons.monitor_weight},
       {'id': 'neck', 'name': 'Cuello', 'unit': 'cm', 'icon': Icons.circle},
@@ -6017,33 +5995,40 @@ class _HealthSectionsState extends State<HealthSections> {
       {'id': 'calf', 'name': 'Pantorrilla', 'unit': 'cm', 'icon': Icons.fitness_center},
     ];
     
-    final weeklyStats = {
-      'totalMeasurements': _bodyMeasurements.length,
-      'weightChange': -1.2,
-      'waistChange': -3.0,
-      'muscleGain': 0.8,
-    };
-    
-    final goals = {
-      'weight': 70.0,
+    final measurementGoals = {
+      'weight': targetWeight,
       'waist': 75.0,
       'chest': 100.0,
       'bicep': 35.0,
     };
     
+    final weightGoals = [
+      {'id': 1, 'title': 'Peso objetivo', 'target': targetWeight, 'current': currentWeight, 'progress': currentWeight, 'completed': currentWeight <= targetWeight},
+      {'id': 2, 'title': 'Perder 10kg', 'target': 10.0, 'current': weightLost, 'progress': weightLost, 'completed': weightLost >= 10.0},
+      {'id': 3, 'title': 'Mantener peso por 1 mes', 'target': 30, 'current': 0, 'progress': 0, 'completed': false},
+    ];
+    
+    // Logros combinados
     final achievements = [
       {'id': 1, 'title': 'Primera Medición', 'description': 'Registraste tu primera medida corporal', 'icon': '📏', 'unlocked': _bodyMeasurements.isNotEmpty},
       {'id': 2, 'title': 'Consistencia', 'description': '5 mediciones en una semana', 'icon': '📅', 'unlocked': _bodyMeasurements.length >= 5},
-      {'id': 3, 'title': 'Meta de Peso', 'description': 'Alcanzaste tu peso objetivo', 'icon': '⚖️', 'unlocked': false},
-      {'id': 4, 'title': 'Progreso Constante', 'description': 'Mejora en 3 medidas consecutivas', 'icon': '📈', 'unlocked': false},
+      {'id': 3, 'title': 'Primer Kilo', 'description': 'Perdiste tu primer kilogramo', 'icon': '🎯', 'unlocked': weightLost >= 1.0},
+      {'id': 4, 'title': 'Meta de Peso', 'description': 'Alcanzaste tu peso objetivo', 'icon': '⚖️', 'unlocked': currentWeight <= targetWeight},
+      {'id': 5, 'title': 'Maratón', 'description': 'Perdiste 5kg en total', 'icon': '🏃', 'unlocked': weightLost >= 5.0},
+      {'id': 6, 'title': 'Progreso Constante', 'description': 'Mejora en 3 medidas consecutivas', 'icon': '📈', 'unlocked': false},
     ];
     
     final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
     
-    double getProgressPercentage(String? current, double goal) {
+    double getProgressPercentageForMeasurements(String? current, double goal) {
       if (current == null || current.isEmpty) return 0;
       final currentNum = double.tryParse(current) ?? 0;
       return ((currentNum / goal) * 100).clamp(0.0, 100.0);
+    }
+    
+    double getProgressPercentageForWeight(double current, double target) {
+      if (target == 0) return 0;
+      return ((current / target) * 100).clamp(0.0, 100.0);
     }
     
     void handleMeasurementChange(String measurementId, String value) {
@@ -6099,994 +6084,8 @@ class _HealthSectionsState extends State<HealthSections> {
       );
     }
     
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.straighten, size: 24, color: Colors.green),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Medidas Corporales',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Monitorea tu progreso físico',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Resumen de estadísticas
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.analytics,
-                  title: 'Mediciones',
-                  value: weeklyStats['totalMeasurements']!.toString(),
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.trending_down,
-                  title: 'Cambio Peso',
-                  value: '${weeklyStats['weightChange']}kg',
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.remove,
-                  title: 'Cintura',
-                  value: '${weeklyStats['waistChange']}cm',
-                  color: Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.fitness_center,
-                  title: 'Músculo',
-                  value: '+${weeklyStats['muscleGain']}cm',
-                  color: Colors.pink,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Selector de fecha
-          GestureDetector(
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: _selectedMeasurementDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime.now(),
-              );
-              if (date != null) {
-                setState(() => _selectedMeasurementDate = date);
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.green, size: 20),
-                  const SizedBox(width: 12),
-                  Text(
-                    DateFormat('dd/MM/yyyy').format(_selectedMeasurementDate),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.white,
-                    ),
-                  ),
-                  const Spacer(),
-                  const Icon(Icons.arrow_drop_down, color: Colors.green),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Grid de medidas principales
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: measurementTypes.take(4).map((measurement) {
-              final measurementId = measurement['id'] as String;
-              final currentValue = _newMeasurements[measurementId] ?? '';
-              final goal = goals[measurementId] ?? 100.0;
-              
-              return Container(
-                width: (MediaQuery.of(context).size.width - 44) / 2,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkSurface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(measurement['icon'] as IconData, size: 20, color: Colors.green),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            measurement['name'] as String,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: TextEditingController(text: currentValue.toString()),
-                            onChanged: (value) => handleMeasurementChange(measurementId, value),
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.white, fontSize: 18),
-                            decoration: InputDecoration(
-                              hintText: '0',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
-                              border: InputBorder.none,
-                              suffixText: measurement['unit'] as String,
-                              suffixStyle: const TextStyle(color: AppTheme.white60),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: getProgressPercentage(currentValue.toString(), goal) / 100,
-                        minHeight: 4,
-                        backgroundColor: AppTheme.darkSurfaceVariant,
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Meta: ${goal}${measurement['unit']}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-          
-          // Medidas adicionales
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Medidas Adicionales',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: measurementTypes.skip(4).map((measurement) {
-                    final measurementId = measurement['id'] as String;
-                    final currentValue = _newMeasurements[measurementId] ?? '';
-                    
-                    return Container(
-                      width: (MediaQuery.of(context).size.width - 76) / 3,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(measurement['icon'] as IconData, size: 16, color: AppTheme.white60),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: TextEditingController(text: currentValue.toString()),
-                            onChanged: (value) => handleMeasurementChange(measurementId, value),
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: '0',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                          Text(
-                            measurement['unit'] as String,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppTheme.white60,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Botones de acción
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: handleSaveMeasurements,
-                  icon: const Icon(Icons.save, size: 20),
-                  label: const Text('Guardar Medidas'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Abrir historial
-                  },
-                  icon: const Icon(Icons.bar_chart, size: 20),
-                  label: const Text('Ver Historial'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.green,
-                    side: const BorderSide(color: Colors.green),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Notas
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.note, color: Colors.green, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Notas del Día',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: TextEditingController(text: _newMeasurements['notes']?.toString() ?? ''),
-                  onChanged: (value) => handleMeasurementChange('notes', value),
-                  maxLines: 3,
-                  style: const TextStyle(color: AppTheme.white),
-                  decoration: InputDecoration(
-                    hintText: '¿Cómo te sientes hoy? ¿Algún cambio notable?',
-                    hintStyle: const TextStyle(color: AppTheme.white40),
-                    filled: true,
-                    fillColor: AppTheme.darkBackground,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.green),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Logros
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Logros Corporales',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    Text(
-                      '$unlockedAchievements/${achievements.length} desbloqueados',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
-                    final isUnlocked = achievement['unlocked'] == true;
-                    return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isUnlocked
-                            ? Colors.green.withOpacity(0.1)
-                            : AppTheme.darkSurfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isUnlocked
-                              ? Colors.green.withOpacity(0.3)
-                              : AppTheme.darkSurfaceVariant,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            isUnlocked ? achievement['icon'] as String : '🔒',
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            achievement['title'] as String,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            achievement['description'] as String,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorkoutTracker() {
-    final weeklyStats = {
-      'totalWorkouts': 5,
-      'totalDuration': 420, // minutos
-      'totalCalories': 2840,
-      'averageIntensity': 7.5,
-    };
-    
-    final currentWeek = {
-      'monday': {'workout': 'Cardio HIIT', 'duration': 45, 'calories': 520, 'completed': true},
-      'tuesday': {'workout': 'Fuerza Superior', 'duration': 60, 'calories': 480, 'completed': true},
-      'wednesday': {'workout': 'Descanso', 'duration': 0, 'calories': 0, 'completed': true},
-      'thursday': {'workout': 'Cardio LISS', 'duration': 30, 'calories': 300, 'completed': true},
-      'friday': {'workout': 'Fuerza Inferior', 'duration': 55, 'calories': 450, 'completed': true},
-      'saturday': {'workout': 'Yoga', 'duration': 40, 'calories': 200, 'completed': false},
-      'sunday': {'workout': 'Caminata', 'duration': 0, 'calories': 0, 'completed': false},
-    };
-    
-    final goals = [
-      {'id': 1, 'title': 'Entrenar 5 días por semana', 'progress': 5, 'target': 5, 'completed': true},
-      {'id': 2, 'title': 'Quemar 3000 calorías', 'progress': 2840, 'target': 3000, 'completed': false},
-      {'id': 3, 'title': 'Completar 10 horas de ejercicio', 'progress': 7, 'target': 10, 'completed': false},
-    ];
-    
-    final achievements = [
-      {'id': 1, 'title': 'Primera Semana', 'description': 'Completaste tu primera semana de entrenamiento', 'icon': '🏋️', 'unlocked': true},
-      {'id': 2, 'title': 'Consistencia', 'description': '5 entrenamientos en una semana', 'icon': '💪', 'unlocked': true},
-      {'id': 3, 'title': 'Quemador de Calorías', 'description': 'Quemaste 2500+ calorías en una semana', 'icon': '🔥', 'unlocked': true},
-      {'id': 4, 'title': 'Maratón', 'description': '10 horas de ejercicio en un mes', 'icon': '🏃', 'unlocked': false},
-    ];
-    
-    final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
-    
-    double getProgressPercentage(int current, int target) {
-      return ((current / target) * 100).clamp(0.0, 100.0);
-    }
-    
-    final weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    final weekKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.directions_run, size: 24, color: Colors.green),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Seguidor de Entrenamientos',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Registra y monitorea tus entrenamientos',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          
-          // Resumen semanal
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.fitness_center,
-                  title: 'Entrenamientos',
-                  value: weeklyStats['totalWorkouts']!.toString(),
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.access_time,
-                  title: 'Duración',
-                  value: '${weeklyStats['totalDuration']} min',
-                  color: Colors.blue,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.local_fire_department,
-                  title: 'Calorías',
-                  value: weeklyStats['totalCalories']!.toString(),
-                  color: Colors.red,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  icon: Icons.speed,
-                  title: 'Intensidad',
-                  value: '${weeklyStats['averageIntensity']}/10',
-                  color: Colors.orange,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Botón para agregar entrenamiento
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _showAddWorkoutModal = true;
-                });
-                // TODO: Abrir modal para agregar entrenamiento
-              },
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('Agregar Entrenamiento'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          
-          // Semana actual
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Semana Actual',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...weekKeys.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final dayKey = entry.value;
-                  final dayData = currentWeek[dayKey]!;
-                  final isCompleted = dayData['completed'] == true;
-                  
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isCompleted
-                          ? Colors.green.withOpacity(0.1)
-                          : AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isCompleted
-                            ? Colors.green.withOpacity(0.3)
-                            : AppTheme.darkSurfaceVariant,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          alignment: Alignment.center,
-                          child: Text(
-                            weekDays[index],
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: isCompleted ? Colors.green : AppTheme.white60,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                dayData['workout'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isCompleted ? AppTheme.white : AppTheme.white60,
-                                ),
-                              ),
-                              if (dayData['duration'] as int > 0) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.access_time, size: 12, color: AppTheme.white60),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${dayData['duration']} min',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppTheme.white60,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${dayData['calories']} cal',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppTheme.white60,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        if (isCompleted)
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.check, size: 16, color: Colors.green),
-                          ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Objetivos
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Objetivos Semanales',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    Text(
-                      '${goals.where((g) => g['completed'] == true).length}/${goals.length} completados',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                ...goals.map((goal) {
-                  final isCompleted = goal['completed'] == true;
-                  final progress = getProgressPercentage(goal['progress'] as int, goal['target'] as int);
-                  
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                              size: 20,
-                              color: isCompleted ? Colors.green : AppTheme.white60,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                goal['title'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isCompleted ? AppTheme.white : AppTheme.white70,
-                                  decoration: isCompleted ? TextDecoration.lineThrough : null,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${goal['progress']}/${goal['target']}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: progress / 100,
-                            minHeight: 6,
-                            backgroundColor: AppTheme.darkSurfaceVariant,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              isCompleted ? Colors.green : Colors.orange,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Logros
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Logros',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    Text(
-                      '$unlockedAchievements/${achievements.length} desbloqueados',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white60,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
-                    final isUnlocked = achievement['unlocked'] == true;
-                    return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isUnlocked
-                            ? Colors.green.withOpacity(0.1)
-                            : AppTheme.darkSurfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isUnlocked
-                              ? Colors.green.withOpacity(0.3)
-                              : AppTheme.darkSurfaceVariant,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            isUnlocked ? achievement['icon'] as String : '🔒',
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            achievement['title'] as String,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            achievement['description'] as String,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeightLoss() {
-    final weightData = _weightLossData;
-    final currentWeight = double.tryParse(weightData['currentWeight']?.toString() ?? '75.2') ?? 75.2;
-    final startingWeight = double.tryParse(weightData['startingWeight']?.toString() ?? '82.5') ?? 82.5;
-    final targetWeight = double.tryParse(weightData['targetWeight']?.toString() ?? '70.0') ?? 70.0;
-    final weightLost = startingWeight - currentWeight;
-    final weightToLose = currentWeight - targetWeight;
-    
-    final weeklyStats = {
-      'thisWeek': -0.8,
-      'lastWeek': -1.2,
-      'averageWeekly': -0.6,
-      'totalWeeks': 12,
-    };
-    
-    final recentWeights = [
-      {'date': '2024-01-15', 'weight': 75.2, 'change': -0.3},
-      {'date': '2024-01-08', 'weight': 75.5, 'change': -0.5},
-      {'date': '2024-01-01', 'weight': 76.0, 'change': -0.8},
-      {'date': '2023-12-25', 'weight': 76.8, 'change': -0.4},
-      {'date': '2023-12-18', 'weight': 77.2, 'change': -0.6},
-    ];
-    
-    final goals = [
-      {'id': 1, 'title': 'Peso objetivo', 'target': targetWeight, 'current': currentWeight, 'progress': currentWeight, 'completed': currentWeight <= targetWeight},
-      {'id': 2, 'title': 'Perder 10kg', 'target': 10.0, 'current': weightLost, 'progress': weightLost, 'completed': weightLost >= 10.0},
-      {'id': 3, 'title': 'Mantener peso por 1 mes', 'target': 30, 'current': 0, 'progress': 0, 'completed': false},
-    ];
-    
-    final achievements = [
-      {'id': 1, 'title': 'Primer Kilo', 'description': 'Perdiste tu primer kilogramo', 'icon': '🎯', 'unlocked': weightLost >= 1.0},
-      {'id': 2, 'title': 'Consistencia', 'description': 'Registraste peso por 7 días seguidos', 'icon': '📅', 'unlocked': recentWeights.length >= 7},
-      {'id': 3, 'title': 'Meta Semanal', 'description': 'Perdiste 0.5kg en una semana', 'icon': '⚖️', 'unlocked': weeklyStats['thisWeek']! <= -0.5},
-      {'id': 4, 'title': 'Maratón', 'description': 'Perdiste 5kg en total', 'icon': '🏃', 'unlocked': weightLost >= 5.0},
-    ];
-    
-    final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
-    
-    double getProgressPercentage(double current, double target) {
-      if (target == 0) return 0;
-      return ((current / target) * 100).clamp(0.0, 100.0);
-    }
-    
     final totalWeightToLose = startingWeight - targetWeight;
-    final progressPercentage = getProgressPercentage(weightLost, totalWeightToLose);
+    final progressPercentage = getProgressPercentageForWeight(weightLost, totalWeightToLose);
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -7117,7 +6116,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     color: Colors.green.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.monitor_weight, size: 24, color: Colors.green),
+                  child: const Icon(Icons.health_and_safety, size: 24, color: Colors.green),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -7125,7 +6124,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Pérdida de Peso',
+                        'Seguimiento de Salud',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -7134,7 +6133,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Monitorea tu progreso hacia tu peso ideal',
+                        'Monitorea tu peso y medidas corporales',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.white70,
@@ -7148,7 +6147,7 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
           const SizedBox(height: 20),
           
-          // Resumen de estadísticas
+          // Resumen de estadísticas de peso
           Row(
             children: [
               Expanded(
@@ -7184,9 +6183,9 @@ class _HealthSectionsState extends State<HealthSections> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildSummaryCard(
-                  icon: Icons.calendar_today,
-                  title: 'Semanas',
-                  value: weeklyStats['totalWeeks']!.toString(),
+                  icon: Icons.analytics,
+                  title: 'Mediciones',
+                  value: weeklyStats['totalMeasurements']!.toString(),
                   color: Colors.pink,
                 ),
               ),
@@ -7194,7 +6193,7 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
           const SizedBox(height: 24),
           
-          // Progreso principal
+          // Progreso principal hacia meta de peso
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -7310,7 +6309,6 @@ class _HealthSectionsState extends State<HealthSections> {
                 setState(() {
                   _showAddWeightGoalModal = true;
                 });
-                // TODO: Abrir modal para registrar peso
               },
               icon: const Icon(Icons.add_circle_outline, size: 20),
               label: const Text('Registrar Peso'),
@@ -7448,7 +6446,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                     ),
                     Text(
-                      '${goals.where((g) => g['completed'] == true).length}/${goals.length} completados',
+                      '${weightGoals.where((g) => g['completed'] == true).length}/${weightGoals.length} completados',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.white60,
@@ -7457,9 +6455,9 @@ class _HealthSectionsState extends State<HealthSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ...goals.map((goal) {
+                ...weightGoals.map((goal) {
                   final isCompleted = goal['completed'] == true;
-                  final progress = getProgressPercentage(
+                  final progress = getProgressPercentageForWeight(
                     (goal['current'] as num).toDouble(),
                     (goal['target'] as num).toDouble(),
                   );
@@ -7523,6 +6521,348 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
           const SizedBox(height: 24),
           
+          // Título de sección de medidas corporales
+          const Text(
+            'Medidas Corporales',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Selector de fecha
+          GestureDetector(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _selectedMeasurementDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
+              if (date != null) {
+                setState(() => _selectedMeasurementDate = date);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: Colors.green, size: 20),
+                  const SizedBox(width: 12),
+                  Text(
+                    DateFormat('dd/MM/yyyy').format(_selectedMeasurementDate),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppTheme.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.arrow_drop_down, color: Colors.green),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Grid de medidas principales
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: measurementTypes.take(4).map((measurement) {
+              final measurementId = measurement['id'] as String;
+              final currentValue = _newMeasurements[measurementId] ?? '';
+              final goal = measurementGoals[measurementId] ?? 100.0;
+              
+              return Container(
+                width: (MediaQuery.of(context).size.width - 44) / 2,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(measurement['icon'] as IconData, size: 20, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            measurement['name'] as String,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: TextEditingController(text: currentValue.toString()),
+                            onChanged: (value) => handleMeasurementChange(measurementId, value),
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppTheme.white, fontSize: 18),
+                            decoration: InputDecoration(
+                              hintText: '0',
+                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              border: InputBorder.none,
+                              suffixText: measurement['unit'] as String,
+                              suffixStyle: const TextStyle(color: AppTheme.white60),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: getProgressPercentageForMeasurements(currentValue.toString(), goal) / 100,
+                        minHeight: 4,
+                        backgroundColor: AppTheme.darkSurfaceVariant,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Meta: ${goal}${measurement['unit']}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+          
+          // Medidas adicionales
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.green.withOpacity(0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.straighten, color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Medidas Adicionales',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemCount: measurementTypes.skip(4).length,
+                  itemBuilder: (context, index) {
+                    final measurement = measurementTypes.skip(4).elementAt(index);
+                    final measurementId = measurement['id'] as String;
+                    final currentValue = _newMeasurements[measurementId] ?? '';
+                    
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: currentValue.toString().isNotEmpty
+                              ? Colors.green.withOpacity(0.3)
+                              : AppTheme.darkSurfaceVariant,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              measurement['icon'] as IconData,
+                              size: 20,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            measurement['name'] as String,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.white70,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: TextEditingController(text: currentValue.toString()),
+                            onChanged: (value) => handleMeasurementChange(measurementId, value),
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppTheme.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: '0',
+                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                              filled: true,
+                              fillColor: AppTheme.darkSurface,
+                            ),
+                          ),
+                          Text(
+                            measurement['unit'] as String,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.green.withOpacity(0.8),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Botones de acción
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: handleSaveMeasurements,
+                  icon: const Icon(Icons.save, size: 20),
+                  label: const Text('Guardar Medidas'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    // TODO: Abrir historial
+                  },
+                  icon: const Icon(Icons.bar_chart, size: 20),
+                  label: const Text('Ver Historial'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.green,
+                    side: const BorderSide(color: Colors.green),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Notas
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.note, color: Colors.green, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Notas del Día',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: TextEditingController(text: _newMeasurements['notes']?.toString() ?? ''),
+                  onChanged: (value) => handleMeasurementChange('notes', value),
+                  maxLines: 3,
+                  style: const TextStyle(color: AppTheme.white),
+                  decoration: InputDecoration(
+                    hintText: '¿Cómo te sientes hoy? ¿Algún cambio notable?',
+                    hintStyle: const TextStyle(color: AppTheme.white40),
+                    filled: true,
+                    fillColor: AppTheme.darkBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.green),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
           // Logros
           Container(
             padding: const EdgeInsets.all(16),
@@ -7537,7 +6877,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Logros de Pérdida de Peso',
+                      'Logros',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -7554,13 +6894,20 @@ class _HealthSectionsState extends State<HealthSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                  ),
+                  itemCount: achievements.length,
+                  itemBuilder: (context, index) {
+                    final achievement = achievements[index];
                     final isUnlocked = achievement['unlocked'] == true;
                     return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isUnlocked
@@ -7574,6 +6921,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ),
                       ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             isUnlocked ? achievement['icon'] as String : '🔒',
@@ -7603,7 +6951,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
@@ -8297,13 +7645,20 @@ class _HealthSectionsState extends State<HealthSections> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: achievements.map((achievement) {
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                  ),
+                  itemCount: achievements.length,
+                  itemBuilder: (context, index) {
+                    final achievement = achievements[index];
                     final isUnlocked = achievement['unlocked'] == true;
                     return Container(
-                      width: (MediaQuery.of(context).size.width - 64) / 2,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isUnlocked
@@ -8317,6 +7672,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ),
                       ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             isUnlocked ? achievement['icon'] as String : '🔒',
@@ -8346,7 +7702,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
