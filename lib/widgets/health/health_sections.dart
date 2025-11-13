@@ -98,6 +98,20 @@ class _HealthSectionsState extends State<HealthSections> {
   DateTime? _workoutStartDate;
   DateTime? _workoutEndDate;
   
+  // Controladores para actividad de fitness
+  final TextEditingController _fitnessStepsController = TextEditingController();
+  final TextEditingController _fitnessCaloriesController = TextEditingController();
+  final TextEditingController _fitnessWaterController = TextEditingController();
+  bool _fitnessHasWorkout = false;
+  
+  // Controladores para objetivos deportivos
+  final TextEditingController _sportsGoalSportController = TextEditingController();
+  final TextEditingController _sportsGoalObjectiveController = TextEditingController();
+  final TextEditingController _sportsGoalProgressController = TextEditingController();
+  final TextEditingController _sportsGoalNotesController = TextEditingController();
+  DateTime? _sportsGoalTargetDate;
+  SportsGoal? _editingSportsGoal; // Para editar objetivo existente
+  
   // Estados para completar entrenamientos y rutinas
   Set<String> _completedRoutines = {}; // IDs de rutinas completadas
   Set<String> _completedWorkouts = {}; // IDs de entrenamientos completados
@@ -255,6 +269,26 @@ class _HealthSectionsState extends State<HealthSections> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_showAddGymModal) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddGymRoutineModal();
+      });
+    }
+    if (_showAddWorkoutModal) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddWorkoutModalDialog();
+      });
+    }
+    if (_showAddSportsModal) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddSportsGoalModal();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _itemNameController.dispose();
     _itemQuantityController.dispose();
@@ -277,6 +311,13 @@ class _HealthSectionsState extends State<HealthSections> {
     _workoutNameController.dispose();
     _workoutDurationController.dispose();
     _workoutCaloriesController.dispose();
+    _fitnessStepsController.dispose();
+    _fitnessCaloriesController.dispose();
+    _fitnessWaterController.dispose();
+    _sportsGoalSportController.dispose();
+    _sportsGoalObjectiveController.dispose();
+    _sportsGoalProgressController.dispose();
+    _sportsGoalNotesController.dispose();
     super.dispose();
   }
 
@@ -5702,9 +5743,7 @@ class _HealthSectionsState extends State<HealthSections> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    setState(() {
-                      _selectedFitnessDate = DateTime.now();
-                    });
+                    _showAddFitnessActivityModal();
                   },
                   icon: const Icon(Icons.add_circle_outline, size: 20),
                   label: const Text('Registrar Actividad'),
@@ -10130,6 +10169,560 @@ class _HealthSectionsState extends State<HealthSections> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  // Mostrar modal para registrar actividad de fitness
+  void _showAddFitnessActivityModal() {
+    // Limpiar controladores y establecer valores por defecto
+    final today = DateFormat('yyyy-MM-dd').format(_selectedFitnessDate);
+    final todayData = _fitnessData[today] ?? {};
+    
+    _fitnessStepsController.text = todayData['steps']?.toString() ?? '';
+    _fitnessCaloriesController.text = todayData['caloriesOut']?.toString() ?? '';
+    _fitnessWaterController.text = todayData['water']?.toString() ?? '';
+    _fitnessHasWorkout = todayData['workout'] == true;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _buildAddFitnessActivityModal(),
+    );
+  }
+
+  Widget _buildAddFitnessActivityModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurface,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.withOpacity(0.3), Colors.green.withOpacity(0.1)],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_circle_outline, color: Colors.green, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Registrar Actividad de Fitness',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Fecha
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedFitnessDate,
+                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now().add(const Duration(days: 1)),
+                          );
+                          if (date != null) {
+                            setModalState(() {
+                              _selectedFitnessDate = date;
+                              // Actualizar valores con los datos de la nueva fecha
+                              final dateKey = DateFormat('yyyy-MM-dd').format(date);
+                              final dateData = _fitnessData[dateKey] ?? {};
+                              _fitnessStepsController.text = dateData['steps']?.toString() ?? '';
+                              _fitnessCaloriesController.text = dateData['caloriesOut']?.toString() ?? '';
+                              _fitnessWaterController.text = dateData['water']?.toString() ?? '';
+                              _fitnessHasWorkout = dateData['workout'] == true;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: Colors.green),
+                              const SizedBox(width: 12),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(_selectedFitnessDate),
+                                style: const TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Pasos
+                      TextField(
+                        controller: _fitnessStepsController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Pasos',
+                          hintText: 'Ej: 10000',
+                          prefixIcon: const Icon(Icons.directions_walk, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Calorías
+                      TextField(
+                        controller: _fitnessCaloriesController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Calorías quemadas',
+                          hintText: 'Ej: 500',
+                          prefixIcon: const Icon(Icons.local_fire_department, color: Colors.red),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Agua
+                      TextField(
+                        controller: _fitnessWaterController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Vasos de agua',
+                          hintText: 'Ej: 8',
+                          prefixIcon: const Icon(Icons.water_drop, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Ejercicio completado
+                      CheckboxListTile(
+                        title: const Text(
+                          'Ejercicio completado',
+                          style: TextStyle(color: AppTheme.white),
+                        ),
+                        value: _fitnessHasWorkout,
+                        onChanged: (value) {
+                          setModalState(() {
+                            _fitnessHasWorkout = value ?? false;
+                          });
+                        },
+                        activeColor: Colors.orange,
+                        checkColor: AppTheme.white,
+                        tileColor: AppTheme.darkBackground,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Botones
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.green,
+                                side: const BorderSide(color: Colors.green),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final dateKey = DateFormat('yyyy-MM-dd').format(_selectedFitnessDate);
+                                setState(() {
+                                  _fitnessData[dateKey] = {
+                                    'steps': _fitnessStepsController.text.trim().isNotEmpty 
+                                        ? int.tryParse(_fitnessStepsController.text.trim()) ?? 0 
+                                        : 0,
+                                    'caloriesOut': _fitnessCaloriesController.text.trim().isNotEmpty 
+                                        ? int.tryParse(_fitnessCaloriesController.text.trim()) ?? 0 
+                                        : 0,
+                                    'water': _fitnessWaterController.text.trim().isNotEmpty 
+                                        ? int.tryParse(_fitnessWaterController.text.trim()) ?? 0 
+                                        : 0,
+                                    'workout': _fitnessHasWorkout,
+                                  };
+                                });
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Actividad registrada exitosamente')),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Guardar'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Mostrar modal para crear/editar objetivo deportivo
+  void _showAddSportsGoalModal() {
+    // Limpiar controladores si no está editando
+    if (_editingSportsGoal == null) {
+      _sportsGoalSportController.clear();
+      _sportsGoalObjectiveController.clear();
+      _sportsGoalProgressController.clear();
+      _sportsGoalNotesController.clear();
+      _sportsGoalTargetDate = DateTime.now().add(const Duration(days: 30));
+    } else {
+      // Llenar con datos del objetivo a editar
+      _sportsGoalSportController.text = _editingSportsGoal!.sport;
+      _sportsGoalObjectiveController.text = _editingSportsGoal!.objective;
+      _sportsGoalProgressController.text = _editingSportsGoal!.currentProgress;
+      _sportsGoalNotesController.text = _editingSportsGoal!.notes ?? '';
+      _sportsGoalTargetDate = _editingSportsGoal!.targetDate;
+    }
+    
+    setState(() {
+      _showAddSportsModal = false;
+    });
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _buildAddSportsGoalModal(),
+    );
+  }
+
+  Widget _buildAddSportsGoalModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurface,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.1)],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.emoji_events, color: Colors.blue, size: 28),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        _editingSportsGoal == null ? 'Crear Objetivo Deportivo' : 'Editar Objetivo',
+                        style: const TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                      onPressed: () {
+                        setState(() {
+                          _editingSportsGoal = null;
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Deporte
+                      TextField(
+                        controller: _sportsGoalSportController,
+                        decoration: InputDecoration(
+                          labelText: 'Deporte',
+                          hintText: 'Ej: Running, Natación, Ciclismo',
+                          prefixIcon: const Icon(Icons.sports_soccer, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Objetivo
+                      TextField(
+                        controller: _sportsGoalObjectiveController,
+                        decoration: InputDecoration(
+                          labelText: 'Objetivo',
+                          hintText: 'Ej: Correr 5km en 25 minutos',
+                          prefixIcon: const Icon(Icons.flag, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Fecha objetivo
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _sportsGoalTargetDate ?? DateTime.now().add(const Duration(days: 30)),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (date != null) {
+                            setModalState(() {
+                              _sportsGoalTargetDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: Colors.blue),
+                              const SizedBox(width: 12),
+                              Text(
+                                _sportsGoalTargetDate != null
+                                    ? DateFormat('dd/MM/yyyy').format(_sportsGoalTargetDate!)
+                                    : 'Fecha objetivo',
+                                style: const TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Progreso actual
+                      TextField(
+                        controller: _sportsGoalProgressController,
+                        decoration: InputDecoration(
+                          labelText: 'Progreso actual',
+                          hintText: 'Ej: 3km en 20 minutos',
+                          prefixIcon: const Icon(Icons.trending_up, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Notas
+                      TextField(
+                        controller: _sportsGoalNotesController,
+                        decoration: InputDecoration(
+                          labelText: 'Notas (opcional)',
+                          hintText: 'Agrega notas adicionales...',
+                          prefixIcon: const Icon(Icons.note, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Botones
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _editingSportsGoal = null;
+                                });
+                                Navigator.pop(context);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.blue,
+                                side: const BorderSide(color: Colors.blue),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (_sportsGoalSportController.text.trim().isEmpty ||
+                                    _sportsGoalObjectiveController.text.trim().isEmpty ||
+                                    _sportsGoalTargetDate == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Por favor completa todos los campos requeridos'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                final newGoal = SportsGoal(
+                                  id: _editingSportsGoal?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                                  sport: _sportsGoalSportController.text.trim(),
+                                  objective: _sportsGoalObjectiveController.text.trim(),
+                                  targetDate: _sportsGoalTargetDate!,
+                                  currentProgress: _sportsGoalProgressController.text.trim().isNotEmpty
+                                      ? _sportsGoalProgressController.text.trim()
+                                      : 'Sin progreso',
+                                  notes: _sportsGoalNotesController.text.trim().isNotEmpty
+                                      ? _sportsGoalNotesController.text.trim()
+                                      : null,
+                                );
+                                
+                                final isEditing = _editingSportsGoal != null;
+                                setState(() {
+                                  if (isEditing) {
+                                    final index = _sportsGoals.indexWhere((g) => g.id == _editingSportsGoal!.id);
+                                    if (index != -1) {
+                                      _sportsGoals[index] = newGoal;
+                                    }
+                                  } else {
+                                    _sportsGoals.add(newGoal);
+                                  }
+                                  _editingSportsGoal = null;
+                                });
+                                
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isEditing
+                                        ? 'Objetivo actualizado exitosamente'
+                                        : 'Objetivo creado exitosamente'),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(_editingSportsGoal == null ? 'Crear' : 'Actualizar'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
