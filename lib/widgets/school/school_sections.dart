@@ -71,6 +71,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
   bool _showAddMaterialModal = false;
   bool _showAddClassOverviewModal = false;
   String _currentModalType = '';
+  int? _editingMaterialIndex;
   
   // Controladores para formularios
   final TextEditingController _classSubjectController = TextEditingController();
@@ -115,6 +116,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
   final TextEditingController _courseNotesController = TextEditingController();
   final TextEditingController _courseTargetGradeController = TextEditingController();
   final TextEditingController _courseActualGradeController = TextEditingController();
+  final TextEditingController _courseNotesUrlController = TextEditingController();
   final TextEditingController _importantDateController = TextEditingController();
   final TextEditingController _gradingComponentNameController = TextEditingController();
   final TextEditingController _gradingComponentWeightController = TextEditingController();
@@ -252,6 +254,53 @@ class _SchoolSectionsState extends State<SchoolSections> {
     );
   }
 
+  EventOrganization _examToEvent(ExamRevision exam) {
+    final notes = <String>[];
+    if (exam.notes != null && exam.notes!.isNotEmpty) {
+      notes.add(exam.notes!);
+    }
+    if (exam.todos.isNotEmpty) {
+      notes.add('Tareas de preparación: ${exam.todos.length}');
+    }
+    
+    return EventOrganization(
+      id: '${exam.id}_event',
+      eventName: 'Examen: ${exam.topic}',
+      date: DateFormat('yyyy-MM-dd').format(exam.date),
+      time: null,
+      location: null,
+      category: 'school',
+      type: 'exam',
+      notes: notes.isNotEmpty ? notes.join('\n') : null,
+    );
+  }
+
+  EventOrganization _projectToEvent(GroupProject project) {
+    final notes = <String>[];
+    notes.add('Objetivo: ${project.objective}');
+    if (project.resources != null && project.resources!.isNotEmpty) {
+      notes.add('Recursos: ${project.resources}');
+    }
+    if (project.ideas != null && project.ideas!.isNotEmpty) {
+      notes.add('Ideas: ${project.ideas}');
+    }
+    if (project.actionSteps.isNotEmpty) {
+      final completed = project.actionSteps.where((s) => s.completed).length;
+      notes.add('Pasos: $completed/${project.actionSteps.length} completados');
+    }
+    
+    return EventOrganization(
+      id: '${project.id}_event',
+      eventName: 'Proyecto: ${project.title}',
+      date: DateFormat('yyyy-MM-dd').format(project.startDate),
+      time: null,
+      location: null,
+      category: 'school',
+      type: 'project',
+      notes: notes.isNotEmpty ? notes.join('\n') : null,
+    );
+  }
+
   // Cargar clases desde Supabase
   Future<void> _loadClasses() async {
     // Evitar múltiples cargas simultáneas
@@ -308,6 +357,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
     _courseNotesController.dispose();
     _courseTargetGradeController.dispose();
     _courseActualGradeController.dispose();
+    _courseNotesUrlController.dispose();
     _importantDateController.dispose();
     _gradingComponentNameController.dispose();
     _gradingComponentWeightController.dispose();
@@ -806,11 +856,14 @@ class _SchoolSectionsState extends State<SchoolSections> {
     showDialog(
       context: context,
       builder: (context) => _buildAddMaterialModal(),
-    ).then((_) {
-      setState(() {
-        _showAddMaterialModal = false;
-      });
-    });
+    );
+  }
+
+  void _showEditMaterialDialog(Map<String, dynamic> material) {
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddMaterialModal(material: material),
+    );
   }
 
   void _showAddClassOverviewDialog() {
@@ -1115,7 +1168,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.school,
-                  title: 'Clases Hoy',
                   value: '${_classes.where((c) => c.day == currentDay).length}',
                   color: Colors.purple,
                 ),
@@ -1124,7 +1176,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.access_time,
-                  title: 'Horas Totales',
                   value: '${_timeSlots.length}',
                   color: Colors.blue,
                 ),
@@ -1133,7 +1184,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.event_available,
-                  title: 'Esta Semana',
                   value: '${_classes.length}',
                   color: Colors.green,
                 ),
@@ -1502,7 +1552,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       width: 1,
                     ),
                   ),
-                  child: TextButton.icon(
+                  child: IconButton(
                     onPressed: () async {
                       if (classItem.link != null && classItem.link!.isNotEmpty) {
                         try {
@@ -1541,19 +1591,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       }
                     },
                     icon: const Icon(Icons.videocam, size: 16, color: AppTheme.white),
-                    label: const Text(
-                      'Unirse',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
+                    padding: const EdgeInsets.all(10),
+                    constraints: const BoxConstraints(),
                   ),
                 ),
               ),
@@ -1568,24 +1607,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       width: 1,
                     ),
                   ),
-                  child: TextButton.icon(
+                  child: IconButton(
                     onPressed: () {
                       _showEditClassModal(classItem);
                     },
                     icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
-                    label: const Text(
-                      'Editar',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
+                    padding: const EdgeInsets.all(10),
+                    constraints: const BoxConstraints(),
                   ),
                 ),
               ),
@@ -1679,7 +1707,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
 
   Widget _buildSummaryCard({
     required IconData icon,
-    required String title,
+    String? title,
     required String value,
     required Color color,
   }) {
@@ -1706,13 +1734,14 @@ class _SchoolSectionsState extends State<SchoolSections> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.white60,
+                if (title != null)
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.white60,
+                    ),
                   ),
-                ),
                 Text(
                   value,
                   style: TextStyle(
@@ -1764,27 +1793,25 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  context.pro.primary,
-                  context.pro.secondary,
-                  context.pro.accent,
+                  Colors.purple.withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
                 ],
               ),
-              borderRadius: AppRadius.xLargeAll,
-              boxShadow: AppShadows.elevated(context.pro.secondary),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
+                    color: Colors.purple.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.assignment,
-                    color: AppTheme.white,
-                    size: 24,
+                    size: 32,
+                    color: Colors.purple,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1795,7 +1822,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       const Text(
                         'Tareas Académicas',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.white,
                         ),
@@ -1816,73 +1843,55 @@ class _SchoolSectionsState extends State<SchoolSections> {
           ),
           const SizedBox(height: 20),
           
-          // Resumen de tareas mejorado
+          // Resumen
           Row(
             children: [
               Expanded(
-                child: _buildTaskSummaryCard(
+                child: _buildSummaryCard(
                   icon: Icons.assignment,
-                  title: 'Total',
                   value: '$totalTasks',
-                  color: context.pro.accent,
-                  gradient: LinearGradient(
-                    colors: [context.pro.accent, context.pro.secondary],
-                  ),
+                  color: Colors.purple,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
-                child: _buildTaskSummaryCard(
+                child: _buildSummaryCard(
                   icon: Icons.check_circle,
-                  title: 'Completadas',
                   value: '$completedTasks',
-                  color: context.pro.teal,
-                  gradient: LinearGradient(
-                    colors: [context.pro.teal, context.pro.accent],
-                  ),
+                  color: Colors.green,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
-                child: _buildTaskSummaryCard(
+                child: _buildSummaryCard(
                   icon: Icons.pending_actions,
-                  title: 'Pendientes',
                   value: '$pendingTasks',
-                  color: context.pro.secondary,
-                  gradient: LinearGradient(
-                    colors: [context.pro.secondary, context.pro.primary],
-                  ),
+                  color: Colors.orange,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
-                child: _buildTaskSummaryCard(
+                child: _buildSummaryCard(
                   icon: Icons.warning_rounded,
-                  title: 'Urgentes',
                   value: '$overdueTasks',
                   color: Colors.red,
-                  gradient: LinearGradient(
-                    colors: [Colors.red, Colors.red.shade700],
-                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           
-          // Lista de tareas (igual formato que trabajo)
+          // Lista de tareas
           if (_academicTasks.isEmpty)
             _buildEmptyState(
               'No hay tareas académicas',
               Icons.description,
               'Agrega tu primera tarea para comenzar a organizarte',
-              'Nueva Tarea Académica',
-              () => _showAddTaskDialog(),
-              context.pro.accent,
-              [context.pro.secondary, context.pro.accent],
             )
           else
-            ...sortedDates.map((date) => _buildAcademicTaskCard(date, tasksByDate[date]!)),
+            Column(
+              children: sortedDates.map((date) => _buildAcademicTaskCard(date, tasksByDate[date]!)).toList(),
+            ),
         ],
       ),
     );
@@ -2014,14 +2023,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${completedCount}/${totalCount} completadas',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.white,
-                        ),
                       ),
                     ],
                   ),
@@ -2681,7 +2682,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
 
   Widget _buildTaskSummaryCard({
     required IconData icon,
-    required String title,
+    String? title,
     required String value,
     required Color color,
     required LinearGradient gradient,
@@ -2740,13 +2741,14 @@ class _SchoolSectionsState extends State<SchoolSections> {
               color: AppTheme.white,
             ),
           ),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.white60,
+          if (title != null)
+            Text(
+              title!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.white60,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -2849,7 +2851,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.folder,
-                  title: 'Proyectos Activos',
                   value: '${_groupProjects.length}',
                   color: Colors.purple,
                 ),
@@ -2858,7 +2859,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.people,
-                  title: 'Colaboradores',
                   value: '${_groupProjects.length * 3}', // Placeholder - calcular basado en proyectos
                   color: Colors.green,
                 ),
@@ -2867,7 +2867,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.check_circle,
-                  title: 'Tareas Completadas',
                   value: '${_groupProjects.fold<int>(0, (sum, p) => sum + p.actionSteps.where((s) => s.completed).length)}',
                   color: Colors.orange,
                 ),
@@ -2955,7 +2954,16 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Eliminar evento en personal si existe
+                    try {
+                      await _eventService.deleteEvent('${project.id}_event');
+                      print('Evento eliminado automáticamente para proyecto: ${project.title}');
+                    } catch (e) {
+                      print('Error al eliminar evento para proyecto: $e');
+                      // Continuar con la eliminación aunque falle
+                    }
+                    
                     setState(() {
                       _groupProjects = _groupProjects.where((p) => p.id != project.id).toList();
                     });
@@ -3243,7 +3251,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.school,
-                  title: 'Exámenes Programados',
                   value: '${_examRevisions.length}',
                   color: Colors.purple,
                 ),
@@ -3252,7 +3259,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.access_time,
-                  title: 'Próximos',
                   value: '${_examRevisions.where((e) => e.date.isAfter(DateTime.now()) && e.date.isBefore(DateTime.now().add(const Duration(days: 7)))).length}',
                   color: Colors.orange,
                 ),
@@ -3261,7 +3267,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.check_circle,
-                  title: 'Preparados',
                   value: '${_examRevisions.fold<int>(0, (sum, e) => sum + (e.todos.isNotEmpty && e.todos.every((t) => t.completed) ? 1 : 0))}',
                   color: Colors.green,
                 ),
@@ -3349,7 +3354,16 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Eliminar evento en personal si existe
+                    try {
+                      await _eventService.deleteEvent('${exam.id}_event');
+                      print('Evento eliminado automáticamente para examen: ${exam.topic}');
+                    } catch (e) {
+                      print('Error al eliminar evento para examen: $e');
+                      // Continuar con la eliminación aunque falle
+                    }
+                    
                     setState(() {
                       _examRevisions = _examRevisions.where((e) => e.id != exam.id).toList();
                     });
@@ -3602,7 +3616,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.book,
-                  title: 'Libros de Texto',
                   value: '${_textbooks.length}',
                   color: Colors.purple,
                 ),
@@ -3611,7 +3624,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.language,
-                  title: 'Recursos Online',
                   value: '${_onlineResources.length}',
                   color: Colors.green,
                 ),
@@ -3620,7 +3632,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.library_books,
-                  title: 'Referencias',
                   value: '${_references.length}',
                   color: Colors.orange,
                 ),
@@ -3638,6 +3649,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onAdd: () {
               setState(() {
                 _currentModalType = 'textbook';
+                _editingMaterialIndex = null;
               });
               _showAddMaterialDialog();
             },
@@ -3645,6 +3657,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
               setState(() {
                 _textbooks.removeAt(index);
               });
+            },
+            onEdit: (index, item) {
+              setState(() {
+                _currentModalType = 'textbook';
+                _editingMaterialIndex = index;
+              });
+              _showEditMaterialDialog(item);
             },
           ),
           const SizedBox(height: 16),
@@ -3658,6 +3677,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onAdd: () {
               setState(() {
                 _currentModalType = 'online';
+                _editingMaterialIndex = null;
               });
               _showAddMaterialDialog();
             },
@@ -3665,6 +3685,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
               setState(() {
                 _onlineResources.removeAt(index);
               });
+            },
+            onEdit: (index, item) {
+              setState(() {
+                _currentModalType = 'online';
+                _editingMaterialIndex = index;
+              });
+              _showEditMaterialDialog(item);
             },
           ),
           const SizedBox(height: 16),
@@ -3678,6 +3705,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
             onAdd: () {
               setState(() {
                 _currentModalType = 'reference';
+                _editingMaterialIndex = null;
               });
               _showAddMaterialDialog();
             },
@@ -3685,6 +3713,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
               setState(() {
                 _references.removeAt(index);
               });
+            },
+            onEdit: (index, item) {
+              setState(() {
+                _currentModalType = 'reference';
+                _editingMaterialIndex = index;
+              });
+              _showEditMaterialDialog(item);
             },
           ),
         ],
@@ -3699,6 +3734,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
     required List<Map<String, dynamic>> items,
     required VoidCallback onAdd,
     required Function(int) onDelete,
+    Function(int, Map<String, dynamic>)? onEdit,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -3896,10 +3932,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.edit, color: AppTheme.white60, size: 18),
-                          ),
+                          if (onEdit != null)
+                            IconButton(
+                              onPressed: () => onEdit(index, item),
+                              icon: const Icon(Icons.edit, color: AppTheme.white60, size: 18),
+                            ),
                           IconButton(
                             onPressed: () => onDelete(index),
                             icon: const Icon(Icons.delete, color: Colors.red, size: 18),
@@ -3987,7 +4024,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.school,
-                  title: 'Clases Activas',
                   value: _classOverview['course'] != null ? '1' : '0',
                   color: Colors.purple,
                 ),
@@ -3996,7 +4032,6 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Expanded(
                 child: _buildSummaryCard(
                   icon: Icons.access_time,
-                  title: 'Horas Semanales',
                   value: '15h',
                   color: Colors.orange,
                 ),
@@ -4177,6 +4212,82 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Icons.schedule,
               _classOverview['officeHours'] ?? '',
             ),
+          if (_classOverview['notesUrl'] != null)
+            GestureDetector(
+              onTap: () async {
+                final url = Uri.parse(_classOverview['notesUrl']);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No se pudo abrir la URL'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.link,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Apuntes Digitales',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.white60,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _classOverview['notesUrl'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.blue,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.open_in_new,
+                      color: Colors.blue,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           if (_classOverview['targetGrade'] != null || _classOverview['actualGrade'] != null) ...[
             const SizedBox(height: 8),
             Container(
@@ -4259,6 +4370,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       _courseAccessLoginController.text = _classOverview['login'] ?? '';
                       _courseAccessPasswordController.text = _classOverview['password'] ?? '';
                       _courseNotesController.text = _classOverview['notes'] ?? '';
+                      _courseNotesUrlController.text = _classOverview['notesUrl'] ?? '';
                       _courseTargetGradeController.text = _classOverview['targetGrade'] ?? '';
                       _courseActualGradeController.text = _classOverview['actualGrade'] ?? '';
                       _importantDates = _classOverview['importantDates'] != null 
@@ -6442,8 +6554,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
             ],
           ),
         ),
-      ),
-        );
+      );
       },
     );
   }
@@ -6989,30 +7100,32 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_projectTitleController.text.isNotEmpty && 
                             _projectObjectiveController.text.isNotEmpty &&
                             _selectedProjectStartDate != null &&
                             _selectedProjectEndDate != null) {
+                          final newProject = GroupProject(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            title: _projectTitleController.text,
+                            objective: _projectObjectiveController.text,
+                            startDate: _selectedProjectStartDate!,
+                            endDate: _selectedProjectEndDate!,
+                            resources: _projectResourcesController.text.isNotEmpty 
+                                ? _projectResourcesController.text 
+                                : null,
+                            ideas: _projectIdeasController.text.isNotEmpty
+                                ? _projectIdeasController.text
+                                : null,
+                            actionSteps: _projectActionSteps.map((step) => ActionStep(
+                              id: step['id'] as String,
+                              text: step['text'] as String,
+                              completed: step['completed'] as bool,
+                            )).toList(),
+                          );
+                          
                           setState(() {
-                            _groupProjects.add(GroupProject(
-                              id: DateTime.now().millisecondsSinceEpoch.toString(),
-                              title: _projectTitleController.text,
-                              objective: _projectObjectiveController.text,
-                              startDate: _selectedProjectStartDate!,
-                              endDate: _selectedProjectEndDate!,
-                              resources: _projectResourcesController.text.isNotEmpty 
-                                  ? _projectResourcesController.text 
-                                  : null,
-                              ideas: _projectIdeasController.text.isNotEmpty
-                                  ? _projectIdeasController.text
-                                  : null,
-                              actionSteps: _projectActionSteps.map((step) => ActionStep(
-                                id: step['id'] as String,
-                                text: step['text'] as String,
-                                completed: step['completed'] as bool,
-                              )).toList(),
-                            ));
+                            _groupProjects.add(newProject);
                             _showAddProjectModal = false;
                             _projectTitleController.clear();
                             _projectObjectiveController.clear();
@@ -7022,6 +7135,16 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             _selectedProjectStartDate = null;
                             _selectedProjectEndDate = null;
                           });
+                          
+                          // Crear evento en personal
+                          try {
+                            final event = _projectToEvent(newProject);
+                            await _eventService.addEvent(event);
+                            print('Evento creado automáticamente para proyecto: ${newProject.title}');
+                          } catch (e) {
+                            print('Error al crear evento para proyecto: $e');
+                          }
+                          
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -7489,26 +7612,38 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_examTopicController.text.isNotEmpty && _selectedExamDate != null) {
+                          final newExam = ExamRevision(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            topic: _examTopicController.text,
+                            date: _selectedExamDate!,
+                            todos: _examTodos.map((todo) => ExamTodo(
+                              id: todo['id'] as String,
+                              text: todo['text'] as String,
+                              completed: todo['completed'] as bool,
+                            )).toList(),
+                            notes: _examNotesController.text.isNotEmpty ? _examNotesController.text : null,
+                          );
+                          
                           setState(() {
-                            _examRevisions.add(ExamRevision(
-                              id: DateTime.now().millisecondsSinceEpoch.toString(),
-                              topic: _examTopicController.text,
-                              date: _selectedExamDate!,
-                              todos: _examTodos.map((todo) => ExamTodo(
-                                id: todo['id'] as String,
-                                text: todo['text'] as String,
-                                completed: todo['completed'] as bool,
-                              )).toList(),
-                              notes: _examNotesController.text.isNotEmpty ? _examNotesController.text : null,
-                            ));
+                            _examRevisions.add(newExam);
                             _showAddExamModal = false;
                             _examTopicController.clear();
                             _examNotesController.clear();
                             _examTodos = [];
                             _selectedExamDate = null;
                           });
+                          
+                          // Crear evento en personal
+                          try {
+                            final event = _examToEvent(newExam);
+                            await _eventService.addEvent(event);
+                            print('Evento creado automáticamente para examen: ${newExam.topic}');
+                          } catch (e) {
+                            print('Error al crear evento para examen: $e');
+                          }
+                          
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -7547,14 +7682,23 @@ class _SchoolSectionsState extends State<SchoolSections> {
     );
   }
 
-  Widget _buildAddMaterialModal() {
+  Widget _buildAddMaterialModal({Map<String, dynamic>? material}) {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController authorController = TextEditingController();
     final TextEditingController notesController = TextEditingController();
     String? selectedClassId;
+    final BuildContext parentContext = context;
+    
+    // Si estamos editando, llenar los controladores con los datos existentes
+    if (material != null) {
+      titleController.text = material['title'] ?? material['quote'] ?? material['website'] ?? '';
+      authorController.text = material['author'] ?? material['book'] ?? material['login'] ?? '';
+      notesController.text = material['notes'] ?? '';
+      selectedClassId = material['classId'];
+    }
     
     return StatefulBuilder(
-      builder: (context, setModalState) => Dialog(
+      builder: (dialogContext, setModalState) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
@@ -7618,11 +7762,17 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _currentModalType == 'textbook' 
-                                ? 'Agregar Libro de Texto'
-                                : _currentModalType == 'online'
-                                    ? 'Agregar Recurso Online'
-                                    : 'Agregar Referencia',
+                            _editingMaterialIndex != null
+                                ? (_currentModalType == 'textbook' 
+                                    ? 'Editar Libro de Texto'
+                                    : _currentModalType == 'online'
+                                        ? 'Editar Recurso Online'
+                                        : 'Editar Referencia')
+                                : (_currentModalType == 'textbook' 
+                                    ? 'Agregar Libro de Texto'
+                                    : _currentModalType == 'online'
+                                        ? 'Agregar Recurso Online'
+                                        : 'Agregar Referencia'),
                             style: const TextStyle(
                               color: AppTheme.white,
                               fontSize: 22,
@@ -7631,11 +7781,13 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _currentModalType == 'textbook' 
-                                ? 'Organiza tus libros de texto'
-                                : _currentModalType == 'online'
-                                    ? 'Guarda recursos en línea'
-                                    : 'Agrega referencias bibliográficas',
+                            _editingMaterialIndex != null
+                                ? 'Modifica la información del material'
+                                : (_currentModalType == 'textbook' 
+                                    ? 'Organiza tus libros de texto'
+                                    : _currentModalType == 'online'
+                                        ? 'Guarda recursos en línea'
+                                        : 'Agrega referencias bibliográficas'),
                             style: const TextStyle(
                               color: AppTheme.white70,
                               fontSize: 14,
@@ -7646,11 +7798,12 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ),
                     IconButton(
                       onPressed: () {
-                        titleController.dispose();
-                        authorController.dispose();
-                        notesController.dispose();
-                        setState(() => _showAddMaterialModal = false);
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
+                        if (mounted) {
+                          setState(() {
+                            _editingMaterialIndex = null;
+                          });
+                        }
                       },
                       icon: const Icon(Icons.close, color: AppTheme.white),
                     ),
@@ -7888,8 +8041,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         GestureDetector(
                           onTap: () {
                             showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
+                              context: dialogContext,
+                              builder: (selectContext) => AlertDialog(
                                 backgroundColor: AppTheme.darkSurface,
                                 title: const Text(
                                   'Seleccionar Clase',
@@ -7926,7 +8079,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                           setModalState(() {
                                             selectedClassId = classItem.id;
                                           });
-                                          Navigator.pop(context);
+                                          Navigator.pop(selectContext);
                                         },
                                       );
                                     },
@@ -7934,7 +8087,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context),
+                                    onPressed: () => Navigator.pop(selectContext),
                                     child: const Text('Cancelar'),
                                   ),
                                   if (selectedClassId != null)
@@ -7943,7 +8096,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         setModalState(() {
                                           selectedClassId = null;
                                         });
-                                        Navigator.pop(context);
+                                        Navigator.pop(selectContext);
                                       },
                                       child: const Text('Limpiar'),
                                     ),
@@ -8076,11 +8229,12 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        titleController.dispose();
-                        authorController.dispose();
-                        notesController.dispose();
-                        setState(() => _showAddMaterialModal = false);
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
+                        if (mounted) {
+                          setState(() {
+                            _editingMaterialIndex = null;
+                          });
+                        }
                       },
                       child: const Text(
                         'Cancelar',
@@ -8091,61 +8245,87 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ElevatedButton(
                       onPressed: () {
                         if (titleController.text.isNotEmpty) {
-                          setState(() {
-                            Map<String, dynamic> material;
-                            
-                            if (_currentModalType == 'textbook') {
-                              material = {
-                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                                'title': titleController.text,
-                                'author': authorController.text.isNotEmpty ? authorController.text : null,
-                                'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                                'classId': selectedClassId,
-                                'className': selectedClassId != null 
-                                    ? _classes.firstWhere((c) => c.id == selectedClassId).subject
-                                    : null,
-                              };
-                              _textbooks.add(material);
-                            } else if (_currentModalType == 'online') {
-                              material = {
-                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                                'website': titleController.text,
-                                'login': authorController.text.isNotEmpty ? authorController.text : null,
-                                'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                                'classId': selectedClassId,
-                                'className': selectedClassId != null 
-                                    ? _classes.firstWhere((c) => c.id == selectedClassId).subject
-                                    : null,
-                              };
-                              _onlineResources.add(material);
+                          final isEditing = _editingMaterialIndex != null;
+                          Map<String, dynamic> material;
+                          
+                          if (_currentModalType == 'textbook') {
+                            material = {
+                              'id': isEditing && _textbooks[_editingMaterialIndex!]['id'] != null
+                                  ? _textbooks[_editingMaterialIndex!]['id']
+                                  : DateTime.now().millisecondsSinceEpoch.toString(),
+                              'title': titleController.text,
+                              'author': authorController.text.isNotEmpty ? authorController.text : null,
+                              'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                              'classId': selectedClassId,
+                              'className': selectedClassId != null 
+                                  ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                  : null,
+                            };
+                            if (isEditing) {
+                              _textbooks[_editingMaterialIndex!] = material;
                             } else {
-                              material = {
-                                'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                                'quote': titleController.text,
-                                'book': authorController.text.isNotEmpty ? authorController.text : null,
-                                'notes': notesController.text.isNotEmpty ? notesController.text : null,
-                                'classId': selectedClassId,
-                                'className': selectedClassId != null 
-                                    ? _classes.firstWhere((c) => c.id == selectedClassId).subject
-                                    : null,
-                              };
+                              _textbooks.add(material);
+                            }
+                          } else if (_currentModalType == 'online') {
+                            material = {
+                              'id': isEditing && _onlineResources[_editingMaterialIndex!]['id'] != null
+                                  ? _onlineResources[_editingMaterialIndex!]['id']
+                                  : DateTime.now().millisecondsSinceEpoch.toString(),
+                              'website': titleController.text,
+                              'login': authorController.text.isNotEmpty ? authorController.text : null,
+                              'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                              'classId': selectedClassId,
+                              'className': selectedClassId != null 
+                                  ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                  : null,
+                            };
+                            if (isEditing) {
+                              _onlineResources[_editingMaterialIndex!] = material;
+                            } else {
+                              _onlineResources.add(material);
+                            }
+                          } else {
+                            material = {
+                              'id': isEditing && _references[_editingMaterialIndex!]['id'] != null
+                                  ? _references[_editingMaterialIndex!]['id']
+                                  : DateTime.now().millisecondsSinceEpoch.toString(),
+                              'quote': titleController.text,
+                              'book': authorController.text.isNotEmpty ? authorController.text : null,
+                              'notes': notesController.text.isNotEmpty ? notesController.text : null,
+                              'classId': selectedClassId,
+                              'className': selectedClassId != null 
+                                  ? _classes.firstWhere((c) => c.id == selectedClassId).subject
+                                  : null,
+                            };
+                            if (isEditing) {
+                              _references[_editingMaterialIndex!] = material;
+                            } else {
                               _references.add(material);
                             }
-                            
-                            _showAddMaterialModal = false;
+                          }
+                          
+                          // Cerrar el diálogo primero
+                          Navigator.pop(dialogContext);
+                          
+                          // Actualizar el estado del widget padre después de cerrar el diálogo
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            if (mounted) {
+                              setState(() {
+                                _editingMaterialIndex = null;
+                                // Forzar actualización de la UI
+                              });
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                SnackBar(
+                                  content: Text(isEditing 
+                                      ? 'Material actualizado exitosamente'
+                                      : 'Material agregado exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
                           });
-                          titleController.dispose();
-                          authorController.dispose();
-                          notesController.dispose();
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Material agregado exitosamente'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(dialogContext).showSnackBar(
                             const SnackBar(
                               content: Text('Por favor completa el título'),
                               backgroundColor: Colors.red,
@@ -8160,9 +8340,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Agregar',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      child: Text(
+                        _editingMaterialIndex != null ? 'Guardar' : 'Agregar',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -8269,6 +8449,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           _courseAccessLoginController.clear();
                           _courseAccessPasswordController.clear();
                           _courseNotesController.clear();
+                          _courseNotesUrlController.clear();
                           _courseTargetGradeController.clear();
                           _courseActualGradeController.clear();
                           _importantDates = [];
@@ -8559,6 +8740,58 @@ class _SchoolSectionsState extends State<SchoolSections> {
               ),
               const SizedBox(height: 24),
               
+              // Apuntes Digitales
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.description, color: Colors.blue, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Apuntes Digitales',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseNotesUrlController,
+                decoration: InputDecoration(
+                  labelText: 'URL de Apuntes Digitales',
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  hintText: 'https://ejemplo.com/apuntes',
+                  hintStyle: const TextStyle(color: AppTheme.white40),
+                  prefixIcon: const Icon(Icons.link, color: Colors.blue),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                  ),
+                ),
+                keyboardType: TextInputType.url,
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 24),
+              
               // Fechas Importantes
               Container(
                 padding: const EdgeInsets.all(12),
@@ -8726,63 +8959,53 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: _gradingComponentNameController,
-                      decoration: InputDecoration(
-                        hintText: 'Nombre del componente',
-                        hintStyle: const TextStyle(color: AppTheme.white40),
-                        prefixIcon: const Icon(Icons.description, color: Colors.blue),
-                        filled: true,
-                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
-                        ),
-                      ),
-                      style: const TextStyle(color: AppTheme.white),
-                    ),
+              TextField(
+                controller: _gradingComponentNameController,
+                decoration: InputDecoration(
+                  labelText: 'Nombre del componente',
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.description, color: Colors.blue),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      controller: _gradingComponentWeightController,
-                      decoration: InputDecoration(
-                        hintText: 'Peso (%)',
-                        hintStyle: const TextStyle(color: AppTheme.white40),
-                        prefixIcon: const Icon(Icons.percent, color: Colors.blue),
-                        filled: true,
-                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: AppTheme.white),
-                    ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
                   ),
-                ],
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                  ),
+                ),
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _gradingComponentWeightController,
+                decoration: InputDecoration(
+                  labelText: 'Peso (%)',
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.percent, color: Colors.blue),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppTheme.white),
               ),
               if (_gradingComponents.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -8859,62 +9082,54 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _courseTargetGradeController,
-                      decoration: InputDecoration(
-                        labelText: 'Calificación Objetivo',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
-                        prefixIcon: const Icon(Icons.track_changes, color: Colors.purple),
-                        filled: true,
-                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.purple, width: 2),
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: AppTheme.white),
-                    ),
+              TextField(
+                controller: _courseTargetGradeController,
+                decoration: InputDecoration(
+                  labelText: 'Calificación Objetivo',
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.track_changes, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: _courseActualGradeController,
-                      decoration: InputDecoration(
-                        labelText: 'Calificación Actual',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
-                        prefixIcon: const Icon(Icons.check_circle, color: Colors.purple),
-                        filled: true,
-                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.purple, width: 2),
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: AppTheme.white),
-                    ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
                   ),
-                ],
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _courseActualGradeController,
+                decoration: InputDecoration(
+                  labelText: 'Calificación Actual',
+                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  prefixIcon: const Icon(Icons.check_circle, color: Colors.purple),
+                  filled: true,
+                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.purple, width: 2),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppTheme.white),
               ),
               const SizedBox(height: 24),
               
@@ -8999,6 +9214,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           _courseNotesController.clear();
                           _courseTargetGradeController.clear();
                           _courseActualGradeController.clear();
+                          _courseNotesUrlController.clear();
                           _importantDates = [];
                           _gradingComponents = [];
                           _importantDateController.clear();
@@ -9029,6 +9245,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               'login': _courseAccessLoginController.text.isNotEmpty ? _courseAccessLoginController.text : null,
                               'password': _courseAccessPasswordController.text.isNotEmpty ? _courseAccessPasswordController.text : null,
                               'notes': _courseNotesController.text.isNotEmpty ? _courseNotesController.text : null,
+                              'notesUrl': _courseNotesUrlController.text.isNotEmpty ? _courseNotesUrlController.text : null,
                               'targetGrade': _courseTargetGradeController.text.isNotEmpty ? _courseTargetGradeController.text : null,
                               'actualGrade': _courseActualGradeController.text.isNotEmpty ? _courseActualGradeController.text : null,
                               'importantDates': List<Map<String, dynamic>>.from(_importantDates),

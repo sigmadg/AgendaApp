@@ -229,6 +229,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       if (!mounted) return;
 
       if (result['success'] == true) {
+        // Mostrar mensaje si se guardaron las credenciales
+        if (_rememberMe && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Credenciales guardadas. La próxima vez se llenarán automáticamente.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
         context.go('/main');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -546,9 +556,22 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           _checkboxAnimationController.forward().then((_) {
                             _checkboxAnimationController.reverse();
                           });
+                          print('LoginPage: Recordarme activado');
                         } else {
                           // Si se desmarca, limpiar credenciales guardadas
                           await _clearRememberedCredentials();
+                          // También limpiar los campos si estaban pre-llenados
+                          if (_emailController.text.isNotEmpty || _passwordController.text.isNotEmpty) {
+                            setState(() {
+                              _emailController.clear();
+                              _passwordController.clear();
+                              _hasEmailText = false;
+                              _hasPasswordText = false;
+                              _emailValid = null;
+                              _passwordValid = null;
+                            });
+                          }
+                          print('LoginPage: Recordarme desactivado - credenciales limpiadas');
                         }
                       },
                       child: Row(

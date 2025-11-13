@@ -8,6 +8,7 @@ import '../../models/exercise/gym_routine.dart';
 import '../../models/exercise/sports_goal.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../services/health_service.dart';
 import '../common/navigation_header.dart';
 
 class HealthSections extends StatefulWidget {
@@ -20,6 +21,7 @@ class HealthSections extends StatefulWidget {
 class _HealthSectionsState extends State<HealthSections> {
   String _activeSection = 'meal-planner';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final HealthService _healthService = HealthService();
   
   // Estados para Meal Planner
   Map<String, Map<String, dynamic>> _mealPlans = {}; // {date: {breakfast, lunch, dinner, waterGlasses}}
@@ -38,9 +40,36 @@ class _HealthSectionsState extends State<HealthSections> {
   String _newItemText = '';
   int _newItemQuantity = 1;
   String _newItemUnit = 'unidad';
+  final TextEditingController _itemNameController = TextEditingController();
+  final TextEditingController _itemQuantityController = TextEditingController();
+  final TextEditingController _itemUnitController = TextEditingController();
+  final TextEditingController _newCategoryNameController = TextEditingController();
+  final TextEditingController _newCategoryIconController = TextEditingController();
+  bool _showAddCategoryModal = false;
+  
+  // Controladores para agregar comida
+  final TextEditingController _mealNameController = TextEditingController();
+  final TextEditingController _mealTimeController = TextEditingController();
+  String? _selectedMealType; // 'breakfast', 'lunch', 'dinner'
+  TimeOfDay? _selectedMealTime;
+  Recipe? _selectedRecipe;
+  String? _selectedRecipeId; // ID de la receta seleccionada para el dropdown
+  
+  // Controladores para agregar receta
+  final TextEditingController _recipeNameController = TextEditingController();
+  final TextEditingController _recipeCategoryController = TextEditingController();
+  final TextEditingController _recipeDifficultyController = TextEditingController();
+  final TextEditingController _recipePrepTimeController = TextEditingController();
+  final TextEditingController _recipeServingsController = TextEditingController();
+  final TextEditingController _recipeCaloriesController = TextEditingController();
+  final TextEditingController _recipeIngredientsController = TextEditingController();
+  final TextEditingController _recipeInstructionsController = TextEditingController();
+  final TextEditingController _recipeTagsController = TextEditingController();
+  String _selectedRecipeDifficulty = 'Fácil';
   
   // Estados para recetas
   List<Recipe> _recipes = [];
+  Set<String> _favoriteRecipes = {}; // IDs de recetas favoritas
   
   // Estados para rutinas de gimnasio
   List<GymRoutine> _gymRoutines = [];
@@ -116,7 +145,6 @@ class _HealthSectionsState extends State<HealthSections> {
 
   final sections = [
     {'id': 'meal-planner', 'name': 'Planificador de Comidas', 'icon': Icons.restaurant},
-    {'id': 'market-list', 'name': 'Lista de Compras', 'icon': Icons.shopping_cart},
     {'id': 'recipes', 'name': 'Recetas', 'icon': Icons.menu_book},
     {'id': 'gym-routine', 'name': 'Rutina de Gimnasio', 'icon': Icons.fitness_center},
     {'id': 'sports-goals', 'name': 'Objetivos Deportivos', 'icon': Icons.emoji_events},
@@ -125,10 +153,9 @@ class _HealthSectionsState extends State<HealthSections> {
     {'id': 'workout-tracker', 'name': 'Seguidor de Entrenamientos', 'icon': Icons.directions_run},
     {'id': 'weight-loss', 'name': 'Pérdida de Peso', 'icon': Icons.monitor_weight},
     {'id': 'nutrition-tracker', 'name': 'Seguidor de Nutrición', 'icon': Icons.local_dining},
-    {'id': 'water-tracker', 'name': 'Rastreador de Agua', 'icon': Icons.water_drop},
   ];
 
-  final mealCategories = [
+  List<Map<String, dynamic>> mealCategories = [
     {'id': 'fruits', 'name': 'Frutas', 'icon': '🍎'},
     {'id': 'vegetables', 'name': 'Verduras', 'icon': '🥬'},
     {'id': 'dairy', 'name': 'Lácteos', 'icon': '🥛'},
@@ -136,6 +163,75 @@ class _HealthSectionsState extends State<HealthSections> {
     {'id': 'grains', 'name': 'Granos', 'icon': '🌾'},
     {'id': 'snacks', 'name': 'Snacks', 'icon': '🍿'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHealthData();
+  }
+
+  Future<void> _loadHealthData() async {
+    try {
+      // Cargar planes de comidas
+      final mealPlans = await _healthService.getAllMealPlans();
+      if (mounted) {
+        setState(() {
+          _mealPlans = mealPlans;
+        });
+      }
+
+      // Cargar lista de compras
+      final shoppingList = await _healthService.getShoppingList();
+      if (shoppingList != null && mounted) {
+        setState(() {
+          _marketList = shoppingList;
+        });
+      }
+
+      // Cargar recetas
+      final recipesData = await _healthService.getRecipes();
+      if (mounted) {
+        setState(() {
+          _recipes = recipesData.map((data) => Recipe(
+            id: data['id'] ?? '',
+            name: data['name'] ?? '',
+            category: data['category'] ?? '',
+            difficulty: data['difficulty'] ?? '',
+            prepTime: data['prep_time'] ?? '',
+            servings: data['servings'] ?? 0,
+            calories: data['calories'] ?? 0,
+            rating: (data['rating'] ?? 0.0).toDouble(),
+            ingredients: data['ingredients'] ?? '',
+            instructions: data['instructions'] ?? '',
+            tags: List<String>.from(data['tags'] ?? []),
+          )).toList();
+        });
+      }
+    } catch (e) {
+      print('HealthSections: Error cargando datos: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _itemNameController.dispose();
+    _itemQuantityController.dispose();
+    _itemUnitController.dispose();
+    _newCategoryNameController.dispose();
+    _newCategoryIconController.dispose();
+    _mealNameController.dispose();
+    _mealTimeController.dispose();
+    _recipeNameController.dispose();
+    _recipeCategoryController.dispose();
+    _recipeDifficultyController.dispose();
+    _recipePrepTimeController.dispose();
+    _recipeServingsController.dispose();
+    _recipeCaloriesController.dispose();
+    _recipeIngredientsController.dispose();
+    _recipeInstructionsController.dispose();
+    _recipeTagsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +248,13 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
         ],
       ),
+      floatingActionButton: _buildFloatingActionButton(),
     );
+  }
+
+  Widget? _buildFloatingActionButton() {
+    // No mostrar FloatingActionButton en meal-planner
+    return null;
   }
 
   Widget _buildNavigationDrawer(BuildContext context) {
@@ -457,8 +559,6 @@ class _HealthSectionsState extends State<HealthSections> {
     switch (_activeSection) {
       case 'meal-planner':
         return _buildMealPlanner();
-      case 'market-list':
-        return _buildMarketList();
       case 'recipes':
         return _buildRecipes();
       case 'gym-routine':
@@ -475,8 +575,6 @@ class _HealthSectionsState extends State<HealthSections> {
         return _buildWeightLoss();
       case 'nutrition-tracker':
         return _buildNutritionTracker();
-      case 'water-tracker':
-        return _buildWaterTracker();
       default:
         return _buildMealPlanner();
     }
@@ -489,7 +587,13 @@ class _HealthSectionsState extends State<HealthSections> {
       todayMealPlan['breakfast'],
       todayMealPlan['lunch'],
       todayMealPlan['dinner']
-    ].where((meal) => meal != null && meal.toString().isNotEmpty).length;
+    ].where((meal) {
+      if (meal == null) return false;
+      if (meal is Map) {
+        return meal['name'] != null && meal['name'].toString().isNotEmpty;
+      }
+      return meal.toString().isNotEmpty;
+    }).length;
     final waterGlasses = todayMealPlan['waterGlasses'] ?? 0;
     
     return SingleChildScrollView(
@@ -618,28 +722,6 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
           const SizedBox(height: 24),
           
-          // Botón para agregar comida
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _showAddMealModal = true;
-                });
-              },
-              icon: const Icon(Icons.add_circle_outline, size: 20),
-              label: const Text('Planificar Comida'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          
           // Plan de comidas del día mejorado
           Container(
             padding: const EdgeInsets.all(16),
@@ -680,17 +762,45 @@ class _HealthSectionsState extends State<HealthSections> {
                   'Desayuno',
                   Icons.wb_sunny,
                   '7:00 - 9:00 AM',
-                  todayMealPlan['breakfast']?.toString() ?? '',
+                  _getMealDisplayText(todayMealPlan['breakfast']),
                   Colors.orange,
                   onAdd: () {
                     setState(() {
-                      _showAddMealModal = true;
+                      _selectedMealType = 'breakfast';
+                      _mealNameController.clear();
+                      _mealTimeController.clear();
+                      _selectedMealTime = null;
+                      _selectedRecipe = null;
+                      _selectedRecipeId = null;
                     });
+                    _showAddMealDialog();
                   },
                   onEdit: () {
                     setState(() {
-                      _showAddMealModal = true;
+                      _selectedMealType = 'breakfast';
+                      final mealData = todayMealPlan['breakfast'];
+                      if (mealData is Map) {
+                        _mealNameController.text = mealData['name'] ?? '';
+                        _mealTimeController.text = mealData['time'] ?? '';
+                        // Intentar parsear la hora si existe
+                        if (mealData['time'] != null && mealData['time'].toString().isNotEmpty) {
+                          _parseTimeToTimeOfDay(mealData['time'].toString());
+                        } else {
+                          _selectedMealTime = null;
+                        }
+                        // Buscar receta si existe
+                        final foundRecipe = _findRecipeByName(mealData['name'] ?? '');
+                        _selectedRecipe = foundRecipe;
+                        _selectedRecipeId = foundRecipe?.id;
+                      } else {
+                        _mealNameController.clear();
+                        _mealTimeController.clear();
+                        _selectedMealTime = null;
+                        _selectedRecipe = null;
+                        _selectedRecipeId = null;
+                      }
                     });
+                    _showAddMealDialog();
                   },
                   onDelete: () {
                     setState(() {
@@ -711,17 +821,45 @@ class _HealthSectionsState extends State<HealthSections> {
                   'Comida',
                   Icons.wb_sunny,
                   '12:00 - 2:00 PM',
-                  todayMealPlan['lunch']?.toString() ?? '',
+                  _getMealDisplayText(todayMealPlan['lunch']),
                   Colors.orange,
                   onAdd: () {
                     setState(() {
-                      _showAddMealModal = true;
+                      _selectedMealType = 'lunch';
+                      _mealNameController.clear();
+                      _mealTimeController.clear();
+                      _selectedMealTime = null;
+                      _selectedRecipe = null;
+                      _selectedRecipeId = null;
                     });
+                    _showAddMealDialog();
                   },
                   onEdit: () {
                     setState(() {
-                      _showAddMealModal = true;
+                      _selectedMealType = 'lunch';
+                      final mealData = todayMealPlan['lunch'];
+                      if (mealData is Map) {
+                        _mealNameController.text = mealData['name'] ?? '';
+                        _mealTimeController.text = mealData['time'] ?? '';
+                        // Intentar parsear la hora si existe
+                        if (mealData['time'] != null && mealData['time'].toString().isNotEmpty) {
+                          _parseTimeToTimeOfDay(mealData['time'].toString());
+                        } else {
+                          _selectedMealTime = null;
+                        }
+                        // Buscar receta si existe
+                        final foundRecipe = _findRecipeByName(mealData['name'] ?? '');
+                        _selectedRecipe = foundRecipe;
+                        _selectedRecipeId = foundRecipe?.id;
+                      } else {
+                        _mealNameController.clear();
+                        _mealTimeController.clear();
+                        _selectedMealTime = null;
+                        _selectedRecipe = null;
+                        _selectedRecipeId = null;
+                      }
                     });
+                    _showAddMealDialog();
                   },
                   onDelete: () {
                     setState(() {
@@ -742,17 +880,45 @@ class _HealthSectionsState extends State<HealthSections> {
                   'Cena',
                   Icons.nightlight_round,
                   '7:00 - 9:00 PM',
-                  todayMealPlan['dinner']?.toString() ?? '',
+                  _getMealDisplayText(todayMealPlan['dinner']),
                   Colors.purple,
                   onAdd: () {
                     setState(() {
-                      _showAddMealModal = true;
+                      _selectedMealType = 'dinner';
+                      _mealNameController.clear();
+                      _mealTimeController.clear();
+                      _selectedMealTime = null;
+                      _selectedRecipe = null;
+                      _selectedRecipeId = null;
                     });
+                    _showAddMealDialog();
                   },
                   onEdit: () {
                     setState(() {
-                      _showAddMealModal = true;
+                      _selectedMealType = 'dinner';
+                      final mealData = todayMealPlan['dinner'];
+                      if (mealData is Map) {
+                        _mealNameController.text = mealData['name'] ?? '';
+                        _mealTimeController.text = mealData['time'] ?? '';
+                        // Intentar parsear la hora si existe
+                        if (mealData['time'] != null && mealData['time'].toString().isNotEmpty) {
+                          _parseTimeToTimeOfDay(mealData['time'].toString());
+                        } else {
+                          _selectedMealTime = null;
+                        }
+                        // Buscar receta si existe
+                        final foundRecipe = _findRecipeByName(mealData['name'] ?? '');
+                        _selectedRecipe = foundRecipe;
+                        _selectedRecipeId = foundRecipe?.id;
+                      } else {
+                        _mealNameController.clear();
+                        _mealTimeController.clear();
+                        _selectedMealTime = null;
+                        _selectedRecipe = null;
+                        _selectedRecipeId = null;
+                      }
                     });
+                    _showAddMealDialog();
                   },
                   onDelete: () {
                     setState(() {
@@ -805,60 +971,73 @@ class _HealthSectionsState extends State<HealthSections> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: List.generate(8, (index) {
-                    final isFilled = index < waterGlasses;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          final dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-                          if (!_mealPlans.containsKey(dateKey)) {
-                            _mealPlans[dateKey] = {};
-                          }
-                          final newGlasses = index + 1 == waterGlasses ? 0 : index + 1;
-                          _mealPlans[dateKey]!['waterGlasses'] = newGlasses;
-                          _waterGlasses = newGlasses;
-                        });
-                      },
-                      child: Container(
-                        width: (MediaQuery.of(context).size.width - 88) / 4,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: isFilled
-                              ? Colors.blue.withOpacity(0.2)
-                              : AppTheme.darkBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isFilled
-                                ? Colors.blue
-                                : AppTheme.darkSurfaceVariant,
-                            width: 2,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.water_drop,
-                              size: 20,
-                              color: isFilled ? Colors.blue : AppTheme.white60,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: isFilled ? Colors.blue : AppTheme.white60,
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Calcular el ancho disponible: ancho del contenedor - padding (16*2) - spacing entre elementos (3 espacios de 6)
+                    final availableWidth = constraints.maxWidth;
+                    final spacing = 6.0;
+                    final spacingTotal = spacing * 3; // 3 espacios entre 4 elementos
+                    final itemWidth = (availableWidth - spacingTotal) / 4;
+                    
+                    return Wrap(
+                      spacing: spacing,
+                      runSpacing: spacing,
+                      alignment: WrapAlignment.start,
+                      children: List.generate(8, (index) {
+                        final isFilled = index < waterGlasses;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              final dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                              if (!_mealPlans.containsKey(dateKey)) {
+                                _mealPlans[dateKey] = {};
+                              }
+                              final newGlasses = index + 1 == waterGlasses ? 0 : index + 1;
+                              _mealPlans[dateKey]!['waterGlasses'] = newGlasses;
+                              _waterGlasses = newGlasses;
+                            });
+                          },
+                          child: SizedBox(
+                            width: itemWidth,
+                            height: 50,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isFilled
+                                    ? Colors.blue.withOpacity(0.2)
+                                    : AppTheme.darkBackground,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isFilled
+                                      ? Colors.blue
+                                      : AppTheme.darkSurfaceVariant,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.water_drop,
+                                    size: 16,
+                                    color: isFilled ? Colors.blue : AppTheme.white60,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: isFilled ? Colors.blue : AppTheme.white60,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      }),
                     );
-                  }),
+                  },
                 ),
                 const SizedBox(height: 16),
                 ClipRRect(
@@ -967,6 +1146,101 @@ class _HealthSectionsState extends State<HealthSections> {
     );
   }
 
+  Recipe? _findRecipeByName(String name) {
+    if (name.isEmpty) return null;
+    final allRecipes = _recipes.isNotEmpty 
+        ? _recipes 
+        : [
+            Recipe(
+              id: '1',
+              name: 'Ensalada César Saludable',
+              category: 'Ensaladas',
+              difficulty: 'Fácil',
+              prepTime: '15 min',
+              servings: 4,
+              calories: 320,
+              rating: 4.5,
+              ingredients: 'Lechuga romana, pechuga de pollo, queso parmesano, crutones integrales',
+              instructions: 'Corta la lechuga, cocina el pollo, mezcla todos los ingredientes y sirve con el aderezo.',
+              tags: const ['proteína', 'vegetales', 'bajo en calorías'],
+            ),
+            Recipe(
+              id: '2',
+              name: 'Salmón a la Plancha con Vegetales',
+              category: 'Pescados',
+              difficulty: 'Intermedio',
+              prepTime: '25 min',
+              servings: 2,
+              calories: 450,
+              rating: 4.8,
+              ingredients: 'Filete de salmón, brócoli, zanahorias, aceite de oliva, limón',
+              instructions: 'Marina el salmón, cocina a la plancha con vegetales al vapor, sirve con limón.',
+              tags: const ['omega-3', 'proteína', 'vegetales'],
+            ),
+            Recipe(
+              id: '3',
+              name: 'Bowl de Quinoa y Aguacate',
+              category: 'Bowls',
+              difficulty: 'Fácil',
+              prepTime: '20 min',
+              servings: 2,
+              calories: 380,
+              rating: 4.3,
+              ingredients: 'Quinoa cocida, aguacate, tomates cherry, pepino, semillas de chía',
+              instructions: 'Cocina la quinoa, corta los vegetales, mezcla todo y adereza con aceite de oliva.',
+              tags: const ['superalimento', 'vegetariano', 'fibra'],
+            ),
+          ];
+    
+    try {
+      return allRecipes.firstWhere(
+        (recipe) => recipe.name.toLowerCase() == name.toLowerCase(),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void _parseTimeToTimeOfDay(String timeString) {
+    try {
+      // Intentar parsear formatos como "08:00 AM", "8:00 AM", "20:00", etc.
+      final regex = RegExp(r'(\d{1,2}):(\d{2})\s*(AM|PM)?', caseSensitive: false);
+      final match = regex.firstMatch(timeString);
+      if (match != null) {
+        var hour = int.parse(match.group(1)!);
+        final minute = int.parse(match.group(2)!);
+        final period = match.group(3);
+        
+        if (period != null) {
+          if (period.toUpperCase() == 'PM' && hour != 12) {
+            hour += 12;
+          } else if (period.toUpperCase() == 'AM' && hour == 12) {
+            hour = 0;
+          }
+        } else if (hour >= 12) {
+          // Si no hay periodo pero la hora es >= 12, asumir formato 24h
+        }
+        
+        _selectedMealTime = TimeOfDay(hour: hour, minute: minute);
+      }
+    } catch (e) {
+      _selectedMealTime = null;
+    }
+  }
+
+  String _getMealDisplayText(dynamic mealData) {
+    if (mealData == null) return '';
+    if (mealData is Map) {
+      final name = mealData['name'] ?? '';
+      final time = mealData['time'] ?? '';
+      if (time.isNotEmpty) {
+        return '$name - $time';
+      }
+      return name;
+    }
+    return mealData.toString();
+  }
+
   Widget _buildMealCard(
     String title,
     IconData icon,
@@ -1025,9 +1299,19 @@ class _HealthSectionsState extends State<HealthSections> {
                 ),
               ),
               if (!hasContent)
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.green, size: 18),
+                ElevatedButton.icon(
                   onPressed: onAdd,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Agregar'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: AppTheme.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -1106,17 +1390,6 @@ class _HealthSectionsState extends State<HealthSections> {
                     style: TextStyle(
                       fontSize: 12,
                       color: AppTheme.white60,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: onAdd,
-                    icon: const Icon(Icons.add_circle_outline, size: 16),
-                    label: const Text('Agregar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      minimumSize: Size.zero,
                     ),
                   ),
                 ],
@@ -1275,8 +1548,11 @@ class _HealthSectionsState extends State<HealthSections> {
                         onPressed: () {
                           setState(() {
                             _selectedCategory = categoryId;
-                            _showAddItemModal = true;
+                            _itemNameController.clear();
+                            _itemQuantityController.text = '1';
+                            _itemUnitController.text = 'unidad';
                           });
+                          _showAddItemDialog();
                         },
                         icon: const Icon(Icons.add, size: 16),
                         label: const Text('Agregar'),
@@ -1408,7 +1684,1040 @@ class _HealthSectionsState extends State<HealthSections> {
               ),
             );
           }).toList(),
+          
+          // Botón para agregar nueva categoría
+          Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 16),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _newCategoryNameController.clear();
+                  _newCategoryIconController.clear();
+                  _showAddCategoryModal = true;
+                });
+                _showAddCategoryDialog();
+              },
+              icon: const Icon(Icons.add_circle_outline),
+              label: const Text('Agregar Nueva Categoría'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.withOpacity(0.2),
+                foregroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.green.withOpacity(0.5)),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showAddItemDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddItemModal(),
+    );
+  }
+
+  void _showAddCategoryDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddCategoryModal(),
+    );
+  }
+
+  void _showAddMealDialog() async {
+    try {
+      print('HealthSections: Abriendo modal de agregar comida');
+      // Asegurar que _selectedRecipeId sea null o un ID válido antes de abrir el modal
+      if (_selectedRecipeId != null) {
+        final allRecipes = _recipes.isNotEmpty ? _recipes : [
+          Recipe(id: '1', name: 'Ensalada César Saludable', category: 'Ensaladas', difficulty: 'Fácil', prepTime: '15 min', servings: 4, calories: 320, rating: 4.5, ingredients: '', instructions: '', tags: const []),
+          Recipe(id: '2', name: 'Salmón a la Plancha con Vegetales', category: 'Pescados', difficulty: 'Intermedio', prepTime: '25 min', servings: 2, calories: 450, rating: 4.8, ingredients: '', instructions: '', tags: const []),
+          Recipe(id: '3', name: 'Bowl de Quinoa y Aguacate', category: 'Bowls', difficulty: 'Fácil', prepTime: '20 min', servings: 2, calories: 380, rating: 4.3, ingredients: '', instructions: '', tags: const []),
+        ];
+        final recipeExists = allRecipes.any((r) => r.id == _selectedRecipeId);
+        if (!recipeExists) {
+          print('HealthSections: Limpiando _selectedRecipeId porque no existe en la lista');
+          setState(() {
+            _selectedRecipeId = null;
+            _selectedRecipe = null;
+          });
+        }
+      }
+      
+      final result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext dialogContext) {
+          return StatefulBuilder(
+            builder: (context, setModalState) {
+              return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.darkSurface,
+                      AppTheme.darkSurfaceVariant,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.green, Colors.green.shade700],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(28),
+                          topRight: Radius.circular(28),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.restaurant, color: AppTheme.white, size: 28),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              _selectedMealType == 'breakfast' 
+                                  ? 'Agregar Desayuno'
+                                  : _selectedMealType == 'lunch'
+                                      ? 'Agregar Comida'
+                                      : 'Agregar Cena',
+                              style: const TextStyle(
+                                color: AppTheme.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(Icons.close, color: AppTheme.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Contenido
+                    Flexible(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 500),
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                      // Selector de recetas
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.menu_book, color: Colors.orange, size: 20),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Seleccionar Receta',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildRecipeSelector(setModalState),
+                      const SizedBox(height: 16),
+                      const Divider(color: AppTheme.white40),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Nombre de la comida:',
+                        style: TextStyle(
+                          color: AppTheme.white60,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _mealNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nombre de la comida *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.restaurant_menu, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: _selectedMealTime ?? TimeOfDay.now(),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: Colors.green,
+                                  onPrimary: AppTheme.white,
+                                  surface: AppTheme.darkSurface,
+                                  onSurface: AppTheme.white,
+                                ),
+                                timePickerTheme: TimePickerThemeData(
+                                  backgroundColor: AppTheme.darkSurface,
+                                  hourMinuteShape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                                  ),
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setModalState(() {
+                            _selectedMealTime = picked;
+                            final hour = picked.hour;
+                            final minute = picked.minute;
+                            final period = hour >= 12 ? 'PM' : 'AM';
+                            final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+                            _mealTimeController.text = '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+                          });
+                        }
+                      },
+                      child: AbsorbPointer(
+                        child: TextField(
+                          controller: _mealTimeController,
+                          decoration: InputDecoration(
+                            labelText: 'Hora estimada',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            hintText: 'Toca para seleccionar hora',
+                            hintStyle: const TextStyle(color: AppTheme.white40),
+                            prefixIcon: const Icon(Icons.access_time, color: Colors.green),
+                            suffixIcon: const Icon(Icons.schedule, color: Colors.green),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.green, width: 2),
+                            ),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            try {
+                              print('HealthSections: Botón Agregar presionado');
+                              print('HealthSections: Nombre: ${_mealNameController.text.trim()}');
+                              print('HealthSections: Tipo: $_selectedMealType');
+                              
+                              if (_mealNameController.text.trim().isNotEmpty && _selectedMealType != null) {
+                                // Guardar los datos y retornarlos
+                                final mealName = _mealNameController.text.trim();
+                                final mealTime = _mealTimeController.text.trim().isNotEmpty 
+                                    ? _mealTimeController.text.trim() 
+                                    : null;
+                                final mealType = _selectedMealType!;
+                                
+                                print('HealthSections: Datos preparados - Tipo: $mealType, Nombre: $mealName, Hora: $mealTime');
+                                
+                                // Limpiar controles y estado
+                                _mealNameController.clear();
+                                _mealTimeController.clear();
+                              _selectedMealTime = null;
+                              _selectedRecipe = null;
+                              _selectedRecipeId = null;
+                              _selectedMealType = null;
+                                
+                                // Cerrar el modal y retornar los datos
+                                print('HealthSections: Cerrando modal y retornando datos');
+                                Navigator.pop(context, {
+                                  'type': mealType,
+                                  'name': mealName,
+                                  'time': mealTime,
+                                });
+                              } else {
+                                print('HealthSections: Validación fallida - nombre vacío o tipo nulo');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Por favor ingresa el nombre de la comida'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } catch (e, stackTrace) {
+                              print('HealthSections: Error en onPressed del botón Agregar: $e');
+                              print('HealthSections: StackTrace: $stackTrace');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: ${e.toString()}'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Agregar',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    
+      // Procesar el resultado después de cerrar el modal
+          print('HealthSections: Modal cerrado, resultado: $result');
+      if (result != null && mounted) {
+        try {
+          print('HealthSections: Procesando resultado - Tipo: ${result['type']}, Nombre: ${result['name']}');
+          final dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+          print('HealthSections: Clave de fecha: $dateKey');
+          
+          setState(() {
+            if (!_mealPlans.containsKey(dateKey)) {
+              _mealPlans[dateKey] = {};
+            }
+            _mealPlans[dateKey]![result['type']] = {
+              'name': result['name'],
+              'time': result['time'],
+            };
+            print('HealthSections: Comida guardada en _mealPlans');
+          });
+
+          // Guardar en Supabase
+          final mealPlanData = {
+            'breakfast': _mealPlans[dateKey]?['breakfast'],
+            'lunch': _mealPlans[dateKey]?['lunch'],
+            'dinner': _mealPlans[dateKey]?['dinner'],
+            'waterGlasses': _mealPlans[dateKey]?['waterGlasses'] ?? 0,
+          };
+          
+          final saveResult = await _healthService.saveMealPlan(dateKey, mealPlanData);
+          if (saveResult['success'] == true) {
+            print('HealthSections: Plan de comidas guardado en Supabase');
+          } else {
+            print('HealthSections: Error guardando en Supabase: ${saveResult['error']}');
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Comida agregada exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          print('HealthSections: SnackBar mostrado');
+        } catch (e, stackTrace) {
+          print('HealthSections: Error al procesar resultado: $e');
+          print('HealthSections: StackTrace: $stackTrace');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        print('HealthSections: Resultado nulo o widget no montado');
+      }
+    } catch (e, stackTrace) {
+      print('HealthSections: Error en _showAddMealDialog: $e');
+      print('HealthSections: StackTrace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al abrir modal: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildRecipeSelector(StateSetter setModalState) {
+    // Obtener recetas disponibles (de _recipes o sampleRecipes)
+    final availableRecipes = _recipes.isNotEmpty 
+        ? _recipes 
+        : [
+            Recipe(
+              id: '1',
+              name: 'Ensalada César Saludable',
+              category: 'Ensaladas',
+              difficulty: 'Fácil',
+              prepTime: '15 min',
+              servings: 4,
+              calories: 320,
+              rating: 4.5,
+              ingredients: 'Lechuga romana, pechuga de pollo, queso parmesano, crutones integrales',
+              instructions: 'Corta la lechuga, cocina el pollo, mezcla todos los ingredientes y sirve con el aderezo.',
+              tags: const ['proteína', 'vegetales', 'bajo en calorías'],
+            ),
+            Recipe(
+              id: '2',
+              name: 'Salmón a la Plancha con Vegetales',
+              category: 'Pescados',
+              difficulty: 'Intermedio',
+              prepTime: '25 min',
+              servings: 2,
+              calories: 450,
+              rating: 4.8,
+              ingredients: 'Filete de salmón, brócoli, zanahorias, aceite de oliva, limón',
+              instructions: 'Marina el salmón, cocina a la plancha con vegetales al vapor, sirve con limón.',
+              tags: const ['omega-3', 'proteína', 'vegetales'],
+            ),
+            Recipe(
+              id: '3',
+              name: 'Bowl de Quinoa y Aguacate',
+              category: 'Bowls',
+              difficulty: 'Fácil',
+              prepTime: '20 min',
+              servings: 2,
+              calories: 380,
+              rating: 4.3,
+              ingredients: 'Quinoa cocida, aguacate, tomates cherry, pepino, semillas de chía',
+              instructions: 'Cocina la quinoa, corta los vegetales, mezcla todo y adereza con aceite de oliva.',
+              tags: const ['superalimento', 'vegetariano', 'fibra'],
+            ),
+          ];
+    
+    // Verificar que el ID seleccionado existe en las recetas disponibles
+    // IMPORTANTE: Siempre usar String? y verificar que el ID existe en la lista
+    String? validSelectedId;
+    if (_selectedRecipeId != null && _selectedRecipeId!.isNotEmpty) {
+      final matchingRecipes = availableRecipes.where((r) => r.id == _selectedRecipeId).toList();
+      if (matchingRecipes.length == 1) {
+        // Verificar que el ID coincide exactamente
+        final recipe = matchingRecipes.first;
+        if (recipe.id == _selectedRecipeId) {
+          validSelectedId = _selectedRecipeId;
+        } else {
+          validSelectedId = null;
+        }
+      } else {
+        // Si no hay coincidencia exacta o hay múltiples, limpiar la selección
+        validSelectedId = null;
+        print('HealthSections: ID de receta no válido: $_selectedRecipeId. Coincidencias: ${matchingRecipes.length}');
+        // Limpiar la selección en el estado del modal
+        setModalState(() {
+          _selectedRecipeId = null;
+          _selectedRecipe = null;
+        });
+      }
+    } else {
+      validSelectedId = null;
+    }
+
+    if (availableRecipes.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.darkBackground.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.withOpacity(0.2)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange, size: 20),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'No hay recetas guardadas. Ve a la sección "Recetas" para agregar recetas.',
+                style: TextStyle(
+                  color: AppTheme.white60,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: validSelectedId,
+        decoration: InputDecoration(
+          labelText: 'Seleccionar receta',
+          labelStyle: const TextStyle(color: AppTheme.white70),
+          prefixIcon: const Icon(Icons.menu_book, color: Colors.orange),
+          filled: true,
+          fillColor: Colors.transparent,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.orange, width: 2),
+          ),
+        ),
+        dropdownColor: AppTheme.darkSurface,
+        style: const TextStyle(color: AppTheme.white),
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.orange),
+        items: availableRecipes.map((recipe) {
+          return DropdownMenuItem<String>(
+            value: recipe.id,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(Icons.restaurant, color: Colors.orange, size: 16),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    recipe.name,
+                    style: const TextStyle(
+                      color: AppTheme.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (String? recipeId) {
+          setModalState(() {
+            _selectedRecipeId = recipeId;
+            if (recipeId != null) {
+              try {
+                final recipe = availableRecipes.firstWhere((r) => r.id == recipeId);
+                _selectedRecipe = recipe;
+                // Solo pre-llenar si el campo está vacío
+                if (_mealNameController.text.trim().isEmpty) {
+                  _mealNameController.text = recipe.name;
+                }
+              } catch (e) {
+                print('HealthSections: Error al encontrar receta con ID $recipeId: $e');
+                _selectedRecipe = null;
+                _selectedRecipeId = null;
+              }
+            } else {
+              _selectedRecipe = null;
+              _selectedRecipeId = null;
+            }
+            // No limpiar el campo si se deselecciona la receta, permitir edición manual
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildAddItemModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_shopping_cart, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Agregar Artículo',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _itemNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre del artículo *',
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        prefixIcon: const Icon(Icons.shopping_bag, color: Colors.green),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: _itemQuantityController,
+                            decoration: InputDecoration(
+                              labelText: 'Cantidad',
+                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              prefixIcon: const Icon(Icons.numbers, color: Colors.green),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Colors.green, width: 2),
+                              ),
+                            ),
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppTheme.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: TextField(
+                            controller: _itemUnitController,
+                            decoration: InputDecoration(
+                              labelText: 'Unidad',
+                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              prefixIcon: const Icon(Icons.straighten, color: Colors.green),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Colors.green, width: 2),
+                              ),
+                            ),
+                            style: const TextStyle(color: AppTheme.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_itemNameController.text.isNotEmpty) {
+                              setState(() {
+                                final quantity = _itemQuantityController.text.isNotEmpty 
+                                    ? _itemQuantityController.text 
+                                    : '1';
+                                final unit = _itemUnitController.text.isNotEmpty 
+                                    ? _itemUnitController.text 
+                                    : 'unidad';
+                                final quantityText = '$quantity $unit';
+                                
+                                if (!_marketList.containsKey(_selectedCategory)) {
+                                  _marketList[_selectedCategory] = [];
+                                }
+                                
+                                _marketList[_selectedCategory]!.add({
+                                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                  'name': _itemNameController.text,
+                                  'quantity': quantityText,
+                                  'purchased': false,
+                                });
+                                
+                                _itemNameController.clear();
+                                _itemQuantityController.text = '1';
+                                _itemUnitController.text = 'unidad';
+                                
+                                // Guardar en Supabase
+                                _healthService.saveShoppingList(_marketList).then((result) {
+                                  if (result['success'] == true) {
+                                    print('HealthSections: Lista de compras guardada en Supabase');
+                                  } else {
+                                    print('HealthSections: Error guardando lista de compras: ${result['error']}');
+                                  }
+                                });
+                              });
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Artículo agregado exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Por favor ingresa el nombre del artículo'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Agregar',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddCategoryModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.category, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Nueva Categoría',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _newCategoryNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre de la categoría *',
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        prefixIcon: const Icon(Icons.label, color: Colors.green),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _newCategoryIconController,
+                      decoration: InputDecoration(
+                        labelText: 'Icono (emoji) *',
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        hintText: '🍎',
+                        hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 24),
+                        prefixIcon: const Icon(Icons.emoji_emotions, color: Colors.green),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white, fontSize: 24),
+                      maxLength: 2,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_newCategoryNameController.text.isNotEmpty && 
+                                _newCategoryIconController.text.isNotEmpty) {
+                              setState(() {
+                                final newCategoryId = _newCategoryNameController.text.toLowerCase().replaceAll(' ', '_');
+                                mealCategories.add({
+                                  'id': newCategoryId,
+                                  'name': _newCategoryNameController.text,
+                                  'icon': _newCategoryIconController.text,
+                                });
+                                
+                                // Inicializar la lista vacía para la nueva categoría
+                                _marketList[newCategoryId] = [];
+                                
+                                _newCategoryNameController.clear();
+                                _newCategoryIconController.clear();
+                                
+                                // Guardar en Supabase
+                                _healthService.saveShoppingList(_marketList).then((result) {
+                                  if (result['success'] == true) {
+                                    print('HealthSections: Lista de compras guardada en Supabase');
+                                  } else {
+                                    print('HealthSections: Error guardando lista de compras: ${result['error']}');
+                                  }
+                                });
+                              });
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Categoría agregada exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Por favor completa todos los campos'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Agregar',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1596,9 +2905,7 @@ class _HealthSectionsState extends State<HealthSections> {
             margin: const EdgeInsets.only(bottom: 16),
             child: ElevatedButton.icon(
               onPressed: () {
-                setState(() {
-                  _showAddRecipeModal = true;
-                });
+                _showAddRecipeDialog();
               },
               icon: const Icon(Icons.add_circle_outline, size: 20),
               label: const Text('Nueva Receta'),
@@ -1656,6 +2963,463 @@ class _HealthSectionsState extends State<HealthSections> {
     );
   }
 
+  void _showAddRecipeDialog() {
+    // Limpiar controladores
+    _recipeNameController.clear();
+    _recipeCategoryController.clear();
+    _recipeDifficultyController.text = 'Fácil';
+    _recipePrepTimeController.clear();
+    _recipeServingsController.text = '2';
+    _recipeCaloriesController.clear();
+    _recipeIngredientsController.clear();
+    _recipeInstructionsController.clear();
+    _recipeTagsController.clear();
+    _selectedRecipeDifficulty = 'Fácil';
+    
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddRecipeModal(),
+    );
+  }
+
+  Widget _buildAddRecipeModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.restaurant_menu, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Nueva Receta',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Nombre
+                      TextField(
+                        controller: _recipeNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nombre de la receta *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.restaurant, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Categoría
+                      TextField(
+                        controller: _recipeCategoryController,
+                        decoration: InputDecoration(
+                          labelText: 'Categoría *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          hintText: 'Ej: Ensaladas, Pescados, Bowls',
+                          prefixIcon: const Icon(Icons.category, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Dificultad
+                      DropdownButtonFormField<String>(
+                        value: _selectedRecipeDifficulty,
+                        decoration: InputDecoration(
+                          labelText: 'Dificultad *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.speed, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        dropdownColor: AppTheme.darkSurface,
+                        style: const TextStyle(color: AppTheme.white),
+                        items: ['Fácil', 'Intermedio', 'Avanzado'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? value) {
+                          setModalState(() {
+                            _selectedRecipeDifficulty = value ?? 'Fácil';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Tiempo de preparación y Porciones
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _recipePrepTimeController,
+                              decoration: InputDecoration(
+                                labelText: 'Tiempo de preparación *',
+                                labelStyle: const TextStyle(color: AppTheme.white70),
+                                hintText: 'Ej: 15 min',
+                                prefixIcon: const Icon(Icons.access_time, color: Colors.green),
+                                filled: true,
+                                fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.green, width: 2),
+                                ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: _recipeServingsController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Porciones *',
+                                labelStyle: const TextStyle(color: AppTheme.white70),
+                                prefixIcon: const Icon(Icons.people, color: Colors.green),
+                                filled: true,
+                                fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Colors.green, width: 2),
+                                ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Calorías
+                      TextField(
+                        controller: _recipeCaloriesController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Calorías',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.local_fire_department, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Ingredientes
+                      TextField(
+                        controller: _recipeIngredientsController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: 'Ingredientes *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          hintText: 'Lista los ingredientes separados por comas',
+                          prefixIcon: const Icon(Icons.shopping_basket, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Instrucciones
+                      TextField(
+                        controller: _recipeInstructionsController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          labelText: 'Instrucciones *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          hintText: 'Describe los pasos para preparar la receta',
+                          prefixIcon: const Icon(Icons.list, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Tags
+                      TextField(
+                        controller: _recipeTagsController,
+                        decoration: InputDecoration(
+                          labelText: 'Tags',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          hintText: 'Ej: proteína, vegetales, bajo en calorías',
+                          prefixIcon: const Icon(Icons.label, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 24),
+                      // Botones
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () async {
+                              if (_recipeNameController.text.trim().isEmpty ||
+                                  _recipeCategoryController.text.trim().isEmpty ||
+                                  _recipeIngredientsController.text.trim().isEmpty ||
+                                  _recipeInstructionsController.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Por favor completa todos los campos requeridos'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                final recipeId = DateTime.now().millisecondsSinceEpoch.toString();
+                                final servings = int.tryParse(_recipeServingsController.text) ?? 2;
+                                final calories = int.tryParse(_recipeCaloriesController.text) ?? 0;
+                                final tags = _recipeTagsController.text.trim().isEmpty
+                                    ? <String>[]
+                                    : _recipeTagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+                                final recipeData = {
+                                  'id': recipeId,
+                                  'name': _recipeNameController.text.trim(),
+                                  'category': _recipeCategoryController.text.trim(),
+                                  'difficulty': _selectedRecipeDifficulty,
+                                  'prepTime': _recipePrepTimeController.text.trim(),
+                                  'servings': servings,
+                                  'calories': calories,
+                                  'rating': 0.0,
+                                  'ingredients': _recipeIngredientsController.text.trim(),
+                                  'instructions': _recipeInstructionsController.text.trim(),
+                                  'tags': tags,
+                                };
+
+                                final result = await _healthService.saveRecipe(recipeData);
+                                
+                                if (result['success'] == true) {
+                                  // Recargar recetas
+                                  final recipesData = await _healthService.getRecipes();
+                                  if (mounted) {
+                                    setState(() {
+                                      _recipes = recipesData.map((data) => Recipe(
+                                        id: data['id'] ?? '',
+                                        name: data['name'] ?? '',
+                                        category: data['category'] ?? '',
+                                        difficulty: data['difficulty'] ?? '',
+                                        prepTime: data['prep_time'] ?? '',
+                                        servings: data['servings'] ?? 0,
+                                        calories: data['calories'] ?? 0,
+                                        rating: (data['rating'] ?? 0.0).toDouble(),
+                                        ingredients: data['ingredients'] ?? '',
+                                        instructions: data['instructions'] ?? '',
+                                        tags: List<String>.from(data['tags'] ?? []),
+                                      )).toList();
+                                    });
+                                  }
+                                  
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Receta agregada exitosamente'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error al guardar: ${result['error']}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: ${e.toString()}'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Guardar',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEnhancedRecipeCard(Recipe recipe) {
     final difficultyColor = _getDifficultyColor(recipe.difficulty);
     final categoryIcon = _getCategoryIcon(recipe.category);
@@ -1708,13 +3472,80 @@ class _HealthSectionsState extends State<HealthSections> {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.favorite_border, size: 20, color: Colors.red),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.share, size: 20, color: Colors.green),
-                onPressed: () {},
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, size: 20, color: AppTheme.white60),
+                color: AppTheme.darkSurface,
+                onSelected: (value) {
+                  switch (value) {
+                    case 'favorite':
+                      setState(() {
+                        if (_favoriteRecipes.contains(recipe.id)) {
+                          _favoriteRecipes.remove(recipe.id);
+                        } else {
+                          _favoriteRecipes.add(recipe.id);
+                        }
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(_favoriteRecipes.contains(recipe.id)
+                              ? 'Receta agregada a favoritos'
+                              : 'Receta eliminada de favoritos'),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                      break;
+                    case 'edit':
+                      _showEditRecipeDialog(recipe);
+                      break;
+                    case 'delete':
+                      _showDeleteRecipeConfirmation(recipe);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'favorite',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _favoriteRecipes.contains(recipe.id)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          size: 20,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _favoriteRecipes.contains(recipe.id)
+                              ? 'Quitar de favoritos'
+                              : 'Agregar a favoritos',
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: const Row(
+                      children: [
+                        Icon(Icons.edit, size: 20, color: Colors.blue),
+                        SizedBox(width: 12),
+                        Text('Editar', style: TextStyle(color: AppTheme.white)),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: const Row(
+                      children: [
+                        Icon(Icons.delete, size: 20, color: Colors.red),
+                        SizedBox(width: 12),
+                        Text('Eliminar', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1811,7 +3642,7 @@ class _HealthSectionsState extends State<HealthSections> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Ver receta completa
+                    _showRecipeDetailsDialog(recipe);
                   },
                   icon: const Icon(Icons.visibility, size: 16),
                   label: const Text('Ver Receta'),
@@ -1825,7 +3656,7 @@ class _HealthSectionsState extends State<HealthSections> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    // TODO: Agregar a plan
+                    _addRecipeToMealPlan(recipe);
                   },
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Agregar a Plan'),
@@ -1837,6 +3668,832 @@ class _HealthSectionsState extends State<HealthSections> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRecipeDetailsDialog(Recipe recipe) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.restaurant_menu, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        recipe.name,
+                        style: const TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Información básica
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _getDifficultyColor(recipe.difficulty),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              recipe.difficulty,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Row(
+                            children: [
+                              const Icon(Icons.star, size: 16, color: Colors.orange),
+                              const SizedBox(width: 4),
+                              Text(
+                                recipe.rating.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            recipe.category,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // Meta información
+                      Row(
+                        children: [
+                          _buildMetaItem(Icons.access_time, recipe.prepTime),
+                          const SizedBox(width: 16),
+                          _buildMetaItem(Icons.people, '${recipe.servings} porciones'),
+                          const SizedBox(width: 16),
+                          _buildMetaItem(Icons.local_fire_department, '${recipe.calories} kcal'),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Ingredientes
+                      const Text(
+                        'Ingredientes:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          recipe.ingredients,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.white70,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Instrucciones
+                      const Text(
+                        'Instrucciones:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          recipe.instructions,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.white70,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      if (recipe.tags.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Tags:',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: recipe.tags.map((tag) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              child: Text(
+                                tag,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white70,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addRecipeToMealPlan(Recipe recipe) {
+    // Mostrar selector de tipo de comida
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text(
+          'Agregar a Plan de Comidas',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.wb_sunny, color: Colors.orange),
+              title: const Text('Desayuno', style: TextStyle(color: AppTheme.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _addRecipeToMeal(recipe, 'breakfast');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.wb_sunny, color: Colors.yellow),
+              title: const Text('Comida', style: TextStyle(color: AppTheme.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _addRecipeToMeal(recipe, 'lunch');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.nightlight_round, color: Colors.blue),
+              title: const Text('Cena', style: TextStyle(color: AppTheme.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _addRecipeToMeal(recipe, 'dinner');
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addRecipeToMeal(Recipe recipe, String mealType) {
+    setState(() {
+      final dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      if (!_mealPlans.containsKey(dateKey)) {
+        _mealPlans[dateKey] = {};
+      }
+      _mealPlans[dateKey]![mealType] = {
+        'name': recipe.name,
+        'time': '',
+      };
+    });
+
+    // Guardar en Supabase
+    final dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final mealPlanData = {
+      'breakfast': _mealPlans[dateKey]?['breakfast'],
+      'lunch': _mealPlans[dateKey]?['lunch'],
+      'dinner': _mealPlans[dateKey]?['dinner'],
+      'waterGlasses': _mealPlans[dateKey]?['waterGlasses'] ?? 0,
+    };
+    
+    _healthService.saveMealPlan(dateKey, mealPlanData).then((result) {
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${recipe.name} agregada a ${mealType == 'breakfast' ? 'Desayuno' : mealType == 'lunch' ? 'Comida' : 'Cena'}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    });
+
+    // Cambiar a la sección de meal-planner
+    setState(() {
+      _activeSection = 'meal-planner';
+    });
+  }
+
+  void _showEditRecipeDialog(Recipe recipe) {
+    // Pre-llenar controladores con los datos de la receta
+    _recipeNameController.text = recipe.name;
+    _recipeCategoryController.text = recipe.category;
+    _selectedRecipeDifficulty = recipe.difficulty;
+    _recipePrepTimeController.text = recipe.prepTime;
+    _recipeServingsController.text = recipe.servings.toString();
+    _recipeCaloriesController.text = recipe.calories.toString();
+    _recipeIngredientsController.text = recipe.ingredients;
+    _recipeInstructionsController.text = recipe.instructions;
+    _recipeTagsController.text = recipe.tags.join(', ');
+    
+    // Guardar el ID de la receta que se está editando y el rating
+    final editingRecipeId = recipe.id;
+    final currentRating = recipe.rating;
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.darkSurface,
+                      AppTheme.darkSurfaceVariant,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue, Colors.blue.shade700],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(28),
+                          topRight: Radius.circular(28),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit, color: AppTheme.white, size: 28),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Text(
+                              'Editar Receta',
+                              style: TextStyle(
+                                color: AppTheme.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                            },
+                            icon: const Icon(Icons.close, color: AppTheme.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Contenido (reutilizar el mismo formulario)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Nombre
+                            TextField(
+                              controller: _recipeNameController,
+                              decoration: InputDecoration(
+                            labelText: 'Nombre de la receta *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.restaurant, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                            const SizedBox(height: 16),
+                            // Categoría
+                            TextField(
+                              controller: _recipeCategoryController,
+                              decoration: InputDecoration(
+                            labelText: 'Categoría *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.category, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                            const SizedBox(height: 16),
+                            // Dificultad
+                            DropdownButtonFormField<String>(
+                              value: _selectedRecipeDifficulty,
+                              decoration: InputDecoration(
+                            labelText: 'Dificultad *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.speed, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              dropdownColor: AppTheme.darkSurface,
+                              style: const TextStyle(color: AppTheme.white),
+                              items: ['Fácil', 'Intermedio', 'Avanzado'].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                              }).toList(),
+                              onChanged: (String? value) {
+                            setModalState(() {
+                              _selectedRecipeDifficulty = value ?? 'Fácil';
+                            });
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            // Tiempo y Porciones
+                            Row(
+                              children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _recipePrepTimeController,
+                                decoration: InputDecoration(
+                                  labelText: 'Tiempo de preparación *',
+                                  labelStyle: const TextStyle(color: AppTheme.white70),
+                                  prefixIcon: const Icon(Icons.access_time, color: Colors.blue),
+                                  filled: true,
+                                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                                  ),
+                                ),
+                                style: const TextStyle(color: AppTheme.white),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _recipeServingsController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Porciones *',
+                                  labelStyle: const TextStyle(color: AppTheme.white70),
+                                  prefixIcon: const Icon(Icons.people, color: Colors.blue),
+                                  filled: true,
+                                  fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                                  ),
+                                ),
+                                style: const TextStyle(color: AppTheme.white),
+                              ),
+                            ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Calorías
+                            TextField(
+                              controller: _recipeCaloriesController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                            labelText: 'Calorías',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.local_fire_department, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                            const SizedBox(height: 16),
+                            // Ingredientes
+                            TextField(
+                              controller: _recipeIngredientsController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                            labelText: 'Ingredientes *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.shopping_basket, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                            const SizedBox(height: 16),
+                            // Instrucciones
+                            TextField(
+                              controller: _recipeInstructionsController,
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                            labelText: 'Instrucciones *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.list, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                            const SizedBox(height: 16),
+                            // Tags
+                            TextField(
+                              controller: _recipeTagsController,
+                              decoration: InputDecoration(
+                            labelText: 'Tags',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.label, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue, width: 2),
+                            ),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                            const SizedBox(height: 24),
+                            // Botones
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(dialogContext);
+                                  },
+                                  child: const Text(
+                                    'Cancelar',
+                                    style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                  if (_recipeNameController.text.trim().isEmpty ||
+                                    _recipeCategoryController.text.trim().isEmpty ||
+                                    _recipeIngredientsController.text.trim().isEmpty ||
+                                    _recipeInstructionsController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Por favor completa todos los campos requeridos'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                  }
+
+                                  try {
+                                  final servings = int.tryParse(_recipeServingsController.text) ?? 2;
+                                  final calories = int.tryParse(_recipeCaloriesController.text) ?? 0;
+                                  final tags = _recipeTagsController.text.trim().isEmpty
+                                      ? <String>[]
+                                      : _recipeTagsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+                                  final recipeData = {
+                                    'id': editingRecipeId,
+                                    'name': _recipeNameController.text.trim(),
+                                    'category': _recipeCategoryController.text.trim(),
+                                    'difficulty': _selectedRecipeDifficulty,
+                                    'prepTime': _recipePrepTimeController.text.trim(),
+                                    'servings': servings,
+                                    'calories': calories,
+                                    'rating': currentRating, // Mantener el rating existente
+                                    'ingredients': _recipeIngredientsController.text.trim(),
+                                    'instructions': _recipeInstructionsController.text.trim(),
+                                    'tags': tags,
+                                  };
+
+                                  final result = await _healthService.saveRecipe(recipeData);
+                                  
+                                  if (result['success'] == true) {
+                                    // Recargar recetas
+                                    final recipesData = await _healthService.getRecipes();
+                                    if (mounted) {
+                                      setState(() {
+                                        _recipes = recipesData.map((data) => Recipe(
+                                          id: data['id'] ?? '',
+                                          name: data['name'] ?? '',
+                                          category: data['category'] ?? '',
+                                          difficulty: data['difficulty'] ?? '',
+                                          prepTime: data['prep_time'] ?? '',
+                                          servings: data['servings'] ?? 0,
+                                          calories: data['calories'] ?? 0,
+                                          rating: (data['rating'] ?? 0.0).toDouble(),
+                                          ingredients: data['ingredients'] ?? '',
+                                          instructions: data['instructions'] ?? '',
+                                          tags: List<String>.from(data['tags'] ?? []),
+                                        )).toList();
+                                      });
+                                    }
+                                    
+                                    Navigator.pop(dialogContext);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Receta actualizada exitosamente'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error al actualizar: ${result['error']}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                  } catch (e) {
+                                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Guardar Cambios',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+            },
+          );
+        },
+      );
+    }
+
+  void _showDeleteRecipeConfirmation(Recipe recipe) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text(
+          'Eliminar Receta',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar "${recipe.name}"? Esta acción no se puede deshacer.',
+          style: const TextStyle(color: AppTheme.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                // Eliminar de Supabase usando el servicio
+                final result = await _healthService.deleteRecipe(recipe.id);
+                
+                if (result['success'] == true) {
+                  // Actualizar lista local
+                  if (mounted) {
+                    setState(() {
+                      _recipes.removeWhere((r) => r.id == recipe.id);
+                      _favoriteRecipes.remove(recipe.id);
+                    });
+                  }
+
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Receta eliminada exitosamente'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al eliminar: ${result['error']}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -5696,79 +8353,6 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildWaterTracker() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'RASTREADOR DE AGUA',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.water_drop, size: 64, color: Colors.blue),
-                const SizedBox(height: 24),
-                Text(
-                  '$_waterGlasses / 8',
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Vasos de agua hoy',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: AppTheme.white70,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline, size: 32, color: AppTheme.white),
-                      onPressed: () {
-                        if (_waterGlasses > 0) {
-                          setState(() => _waterGlasses--);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 32),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline, size: 32, color: Colors.blue),
-                      onPressed: () {
-                        if (_waterGlasses < 8) {
-                          setState(() => _waterGlasses++);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 

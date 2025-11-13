@@ -10,6 +10,7 @@ import '../../models/finance/savings_goal.dart';
 import '../../models/finance/shopping_item.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../services/health_service.dart';
 import '../common/navigation_header.dart';
 
 class FinanceSections extends StatefulWidget {
@@ -22,6 +23,7 @@ class FinanceSections extends StatefulWidget {
 class _FinanceSectionsState extends State<FinanceSections> {
   String _activeSection = 'budget-tracker';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final HealthService _healthService = HealthService();
   
   // Estados
   String _monthlyBudget = '';
@@ -31,7 +33,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
   List<Bill> _bills = [];
   List<Investment> _investments = [];
   List<SavingsGoal> _savingsGoals = [];
-  Map<String, List<ShoppingItem>> _shoppingList = {
+  Map<String, List<Map<String, dynamic>>> _marketList = {
     'fruits': [],
     'vegetables': [],
     'dairy': [],
@@ -45,6 +47,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
   String _selectedCategory = '';
   String _newItemText = '';
   int _newItemQuantity = 1;
+  
+  // Controladores para lista de compras
+  final TextEditingController _itemNameController = TextEditingController();
+  final TextEditingController _itemQuantityController = TextEditingController();
+  final TextEditingController _itemUnitController = TextEditingController();
+  final TextEditingController _newCategoryNameController = TextEditingController();
+  final TextEditingController _newCategoryIconController = TextEditingController();
+  bool _showAddCategoryModal = false;
 
   final sections = [
     {'id': 'budget-tracker', 'name': 'Presupuesto', 'icon': Icons.account_balance_wallet},
@@ -77,6 +87,30 @@ class _FinanceSectionsState extends State<FinanceSections> {
       BudgetCategory(id: '5', name: 'Salud', budget: '', spent: '', remaining: ''),
       BudgetCategory(id: '6', name: 'Otros', budget: '', spent: '', remaining: ''),
     ];
+    _loadShoppingList();
+  }
+
+  Future<void> _loadShoppingList() async {
+    try {
+      final shoppingList = await _healthService.getShoppingList();
+      if (shoppingList != null && mounted) {
+        setState(() {
+          _marketList = shoppingList;
+        });
+      }
+    } catch (e) {
+      print('FinanceSections: Error cargando lista de compras: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _itemNameController.dispose();
+    _itemQuantityController.dispose();
+    _itemUnitController.dispose();
+    _newCategoryNameController.dispose();
+    _newCategoryIconController.dispose();
+    super.dispose();
   }
 
   @override
@@ -1336,78 +1370,301 @@ class _FinanceSectionsState extends State<FinanceSections> {
   }
 
   Widget _buildShoppingList() {
-    final totalItems = _shoppingList.values.fold<int>(0, (sum, list) => sum + list.length);
-    final purchasedItems = _shoppingList.values.fold<int>(
-      0,
-      (sum, list) => sum + list.where((item) => item.purchased).length,
-    );
-
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildImprovedHeader(
-                'Lista de Compras',
-                'Organiza tus compras por categorías',
-                Icons.shopping_cart,
-                const Color(0xFF4A7C59),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header mejorado
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.green.withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    // Summary Cards
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryCard(
-                            '$totalItems',
-                            'Artículos',
-                            Icons.shopping_basket,
-                            Colors.blue,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.shopping_cart,
+                    size: 24,
+                    color: AppTheme.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Lista de Compras',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Organiza tus compras por categorías',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Lista de categorías
+          ...mealCategories.map((category) {
+            final categoryId = category['id'] as String;
+            final items = _marketList[categoryId] ?? [];
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header de categoría
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            category['icon'] as String,
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            category['name'] as String,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _selectedCategory = categoryId;
+                            _itemNameController.clear();
+                            _itemQuantityController.text = '1';
+                            _itemUnitController.text = 'unidad';
+                          });
+                          _showAddItemDialog();
+                        },
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Agregar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: Size.zero,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Items de la categoría
+                  if (items.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white40),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'No hay artículos en esta categoría',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.white60,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...items.map((item) {
+                      final isPurchased = item['purchased'] == true;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isPurchased
+                              ? Colors.green.withOpacity(0.1)
+                              : AppTheme.darkBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isPurchased
+                                ? Colors.green.withOpacity(0.3)
+                                : AppTheme.darkSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            '$purchasedItems',
-                            'Comprados',
-                            Icons.check_circle,
-                            Colors.green,
-                          ),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  final itemIndex = items.indexOf(item);
+                                  items[itemIndex]['purchased'] = !isPurchased;
+                                  // Guardar en Supabase
+                                  _healthService.saveShoppingList(_marketList).then((result) {
+                                    if (result['success'] == true) {
+                                      print('FinanceSections: Lista de compras guardada en Supabase');
+                                    }
+                                  });
+                                });
+                              },
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: isPurchased
+                                      ? Colors.green
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: isPurchased
+                                        ? Colors.green
+                                        : AppTheme.white60,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: isPurchased
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: AppTheme.white,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: isPurchased
+                                          ? AppTheme.white60
+                                          : AppTheme.white,
+                                      decoration: isPurchased
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item['quantity'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isPurchased
+                                          ? AppTheme.white40
+                                          : AppTheme.white60,
+                                      decoration: isPurchased
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  items.remove(item);
+                                  // Guardar en Supabase
+                                  _healthService.saveShoppingList(_marketList).then((result) {
+                                    if (result['success'] == true) {
+                                      print('FinanceSections: Lista de compras guardada en Supabase');
+                                    }
+                                  });
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            '${mealCategories.length}',
-                            'Categorías',
-                            Icons.store,
-                            Colors.orange,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Lista de categorías
-                    ...mealCategories.map((category) {
-                      final items = _shoppingList[category['id']] ?? [];
-                      return _buildShoppingCategoryCard(
-                        category['id'] as String,
-                        category['name'] as String,
-                        category['icon'] as String,
-                        items,
                       );
-                    }),
-                  ],
+                    }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+          
+          // Botón para agregar nueva categoría
+          Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 16),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _newCategoryNameController.clear();
+                  _newCategoryIconController.clear();
+                  _showAddCategoryModal = true;
+                });
+                _showAddCategoryDialog();
+              },
+              icon: const Icon(Icons.add_circle_outline),
+              label: const Text('Agregar Nueva Categoría'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.withOpacity(0.2),
+                foregroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.green.withOpacity(0.5)),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-        // Modal para agregar items
-        if (_showAddItemModal) _buildAddItemModal(),
-      ],
+        ],
+      ),
+    );
+  }
+
+  void _showAddItemDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddItemModal(),
+    );
+  }
+
+  void _showAddCategoryDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddCategoryModal(),
     );
   }
 
@@ -3313,7 +3570,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
     );
   }
 
-  Widget _buildShoppingCategoryCard(String categoryId, String categoryName, String emoji, List<ShoppingItem> items) {
+  Widget _buildShoppingCategoryCard(String categoryId, String categoryName, String emoji, List<Map<String, dynamic>> items) {
     return Card(
       color: AppTheme.darkSurface,
       margin: const EdgeInsets.only(bottom: 16),
@@ -3371,10 +3628,11 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   onPressed: () {
                     setState(() {
                       _selectedCategory = categoryId;
-                      _newItemText = '';
-                      _newItemQuantity = 1;
-                      _showAddItemModal = true;
+                      _itemNameController.clear();
+                      _itemQuantityController.text = '1';
+                      _itemUnitController.text = 'unidad';
                     });
+                    _showAddItemDialog();
                   },
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Agregar'),
@@ -3405,10 +3663,11 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         onPressed: () {
                           setState(() {
                             _selectedCategory = categoryId;
-                            _newItemText = '';
-                            _newItemQuantity = 1;
-                            _showAddItemModal = true;
+                            _itemNameController.clear();
+                            _itemQuantityController.text = '1';
+                            _itemUnitController.text = 'unidad';
                           });
+                          _showAddItemDialog();
                         },
                         icon: const Icon(Icons.add, size: 16),
                         label: const Text('Agregar primer artículo'),
@@ -3422,7 +3681,113 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 ),
               )
             else
-              ...items.map((item) => _buildShoppingItem(item, categoryId)),
+              ...items.map((item) {
+                final isPurchased = item['purchased'] == true;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPurchased
+                        ? Colors.green.withOpacity(0.1)
+                        : AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isPurchased
+                          ? Colors.green.withOpacity(0.3)
+                          : AppTheme.darkSurfaceVariant,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            final itemIndex = items.indexOf(item);
+                            items[itemIndex]['purchased'] = !isPurchased;
+                            // Guardar en Supabase
+                            _healthService.saveShoppingList(_marketList).then((result) {
+                              if (result['success'] == true) {
+                                print('FinanceSections: Lista de compras guardada en Supabase');
+                              }
+                            });
+                          });
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: isPurchased
+                                ? Colors.green
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: isPurchased
+                                  ? Colors.green
+                                  : AppTheme.white60,
+                              width: 2,
+                            ),
+                          ),
+                          child: isPurchased
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 16,
+                                  color: AppTheme.white,
+                                )
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'] ?? '',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isPurchased
+                                    ? AppTheme.white60
+                                    : AppTheme.white,
+                                decoration: isPurchased
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item['quantity'] ?? '',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isPurchased
+                                    ? AppTheme.white40
+                                    : AppTheme.white60,
+                                decoration: isPurchased
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            items.remove(item);
+                            // Guardar en Supabase
+                            _healthService.saveShoppingList(_marketList).then((result) {
+                              if (result['success'] == true) {
+                                print('FinanceSections: Lista de compras guardada en Supabase');
+                              }
+                            });
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
           ],
         ),
       ),
@@ -3430,204 +3795,224 @@ class _FinanceSectionsState extends State<FinanceSections> {
   }
 
   Widget _buildAddItemModal() {
-    final category = mealCategories.firstWhere(
-      (cat) => cat['id'] == _selectedCategory,
-      orElse: () => mealCategories[0],
-    );
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _showAddItemModal = false;
-          _selectedCategory = '';
-          _newItemText = '';
-          _newItemQuantity = 1;
-        });
-      },
-      child: Container(
-        color: Colors.black.withOpacity(0.5),
-        child: Center(
-          child: GestureDetector(
-            onTap: () {}, // Prevenir que el tap se propague
-            child: Container(
-              margin: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4A7C59),
-                  width: 2,
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.add_shopping_cart, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Agregar Artículo',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
                 ),
               ),
-              child: Padding(
+              // Contenido
+              Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Agregar a ${category['name']}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.white,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: AppTheme.white),
-                          onPressed: () {
-                            setState(() {
-                              _showAddItemModal = false;
-                              _selectedCategory = '';
-                              _newItemText = '';
-                              _newItemQuantity = 1;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Nombre del producto
-                    const Text(
-                      'Nombre del producto:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     TextField(
-                      onChanged: (value) => setState(() => _newItemText = value),
+                      controller: _itemNameController,
                       decoration: InputDecoration(
-                        hintText: 'Ej: Manzanas',
-                        hintStyle: const TextStyle(color: AppTheme.white40),
+                        labelText: 'Nombre del artículo *',
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        prefixIcon: const Icon(Icons.shopping_bag, color: Colors.green),
                         filled: true,
-                        fillColor: AppTheme.darkSurfaceVariant,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
                       ),
-                      style: const TextStyle(color: AppTheme.white, fontSize: 16),
+                      style: const TextStyle(color: AppTheme.white),
                     ),
-                    const SizedBox(height: 24),
-                    // Cantidad
-                    const Text(
-                      'Cantidad:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              if (_newItemQuantity > 1) {
-                                _newItemQuantity--;
-                              }
-                            });
-                          },
-                          icon: const Icon(Icons.remove, color: Color(0xFF4A7C59)),
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppTheme.darkSurfaceVariant,
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.darkSurfaceVariant,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '$_newItemQuantity',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _newItemQuantity++;
-                            });
-                          },
-                          icon: const Icon(Icons.add, color: Color(0xFF4A7C59)),
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppTheme.darkSurfaceVariant,
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    // Botones
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _showAddItemModal = false;
-                                _selectedCategory = '';
-                                _newItemText = '';
-                                _newItemQuantity = 1;
-                              });
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppTheme.white60),
-                              foregroundColor: AppTheme.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                          flex: 2,
+                          child: TextField(
+                            controller: _itemQuantityController,
+                            decoration: InputDecoration(
+                              labelText: 'Cantidad',
+                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              prefixIcon: const Icon(Icons.numbers, color: Colors.green),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Colors.green, width: 2),
+                              ),
                             ),
-                            child: const Text('Cancelar'),
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppTheme.white),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_newItemText.trim().isNotEmpty && _selectedCategory.isNotEmpty) {
-                                setState(() {
-                                  _shoppingList[_selectedCategory] = [
-                                    ...(_shoppingList[_selectedCategory] ?? []),
-                                    ShoppingItem(
-                                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                                      name: _newItemText.trim(),
-                                      quantity: _newItemQuantity,
-                                      purchased: false,
-                                    ),
-                                  ];
-                                  _showAddItemModal = false;
-                                  _selectedCategory = '';
-                                  _newItemText = '';
-                                  _newItemQuantity = 1;
-                                });
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4A7C59),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                          flex: 3,
+                          child: TextField(
+                            controller: _itemUnitController,
+                            decoration: InputDecoration(
+                              labelText: 'Unidad',
+                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              prefixIcon: const Icon(Icons.straighten, color: Colors.green),
+                              filled: true,
+                              fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Colors.green, width: 2),
+                              ),
                             ),
-                            child: const Text('Agregar'),
+                            style: const TextStyle(color: AppTheme.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_itemNameController.text.isNotEmpty) {
+                              setState(() {
+                                final quantity = _itemQuantityController.text.isNotEmpty 
+                                    ? _itemQuantityController.text 
+                                    : '1';
+                                final unit = _itemUnitController.text.isNotEmpty 
+                                    ? _itemUnitController.text 
+                                    : 'unidad';
+                                final quantityText = '$quantity $unit';
+                                
+                                if (!_marketList.containsKey(_selectedCategory)) {
+                                  _marketList[_selectedCategory] = [];
+                                }
+                                
+                                _marketList[_selectedCategory]!.add({
+                                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                  'name': _itemNameController.text,
+                                  'quantity': quantityText,
+                                  'purchased': false,
+                                });
+                                
+                                _itemNameController.clear();
+                                _itemQuantityController.text = '1';
+                                _itemUnitController.text = 'unidad';
+                                
+                                // Guardar en Supabase
+                                _healthService.saveShoppingList(_marketList).then((result) {
+                                  if (result['success'] == true) {
+                                    print('FinanceSections: Lista de compras guardada en Supabase');
+                                  } else {
+                                    print('FinanceSections: Error guardando lista de compras: ${result['error']}');
+                                  }
+                                });
+                              });
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Artículo agregado exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Por favor ingresa el nombre del artículo'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Agregar',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -3635,121 +4020,201 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   ],
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildShoppingItem(ShoppingItem item, String categoryId) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.darkSurfaceVariant,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.darkSurfaceVariant,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
+  Widget _buildAddCategoryModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _shoppingList[categoryId] = _shoppingList[categoryId]!.map((i) {
-                      if (i.id == item.id) {
-                        return ShoppingItem(
-                          id: i.id,
-                          name: i.name,
-                          quantity: i.quantity,
-                          purchased: !i.purchased,
-                        );
-                      }
-                      return i;
-                    }).toList();
-                  });
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: item.purchased ? Colors.green : Colors.transparent,
-                    border: Border.all(
-                      color: item.purchased ? Colors.green : AppTheme.white60,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(6),
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
                   ),
-                  child: item.purchased
-                      ? const Icon(Icons.check, size: 16, color: AppTheme.white)
-                      : null,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      item.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: item.purchased ? AppTheme.white40 : AppTheme.white,
-                        decoration: item.purchased ? TextDecoration.lineThrough : null,
+                    const Icon(Icons.category, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Nueva Categoría',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    Text(
-                      'Cantidad: ${item.quantity}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: item.purchased ? AppTheme.white40 : AppTheme.white60,
-                      ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                onPressed: () {
-                  setState(() {
-                    _shoppingList[categoryId] = _shoppingList[categoryId]!
-                        .where((i) => i.id != item.id)
-                        .toList();
-                  });
-                },
+              // Contenido
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _newCategoryNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre de la categoría *',
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        prefixIcon: const Icon(Icons.label, color: Colors.green),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _newCategoryIconController,
+                      decoration: InputDecoration(
+                        labelText: 'Icono (emoji) *',
+                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        hintText: '🍎',
+                        hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 24),
+                        prefixIcon: const Icon(Icons.emoji_emotions, color: Colors.green),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white, fontSize: 24),
+                      maxLength: 2,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_newCategoryNameController.text.isNotEmpty && 
+                                _newCategoryIconController.text.isNotEmpty) {
+                              setState(() {
+                                final newCategoryId = _newCategoryNameController.text.toLowerCase().replaceAll(' ', '_');
+                                mealCategories.add({
+                                  'id': newCategoryId,
+                                  'name': _newCategoryNameController.text,
+                                  'icon': _newCategoryIconController.text,
+                                });
+                                
+                                // Inicializar la lista vacía para la nueva categoría
+                                _marketList[newCategoryId] = [];
+                                
+                                _newCategoryNameController.clear();
+                                _newCategoryIconController.clear();
+                                
+                                // Guardar en Supabase
+                                _healthService.saveShoppingList(_marketList).then((result) {
+                                  if (result['success'] == true) {
+                                    print('FinanceSections: Lista de compras guardada en Supabase');
+                                  } else {
+                                    print('FinanceSections: Error guardando lista de compras: ${result['error']}');
+                                  }
+                                });
+                              });
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Categoría agregada exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Por favor completa todos los campos'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Agregar',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          // Indicador de estado
-          Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: item.purchased ? Colors.green : Colors.orange,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                item.purchased ? 'Comprado' : 'Pendiente',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: item.purchased ? Colors.green : Colors.orange,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
