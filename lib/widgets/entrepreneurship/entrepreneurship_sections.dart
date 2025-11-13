@@ -400,7 +400,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
         ),
         child: Icon(
           icon,
-          color: color,
+          color: AppTheme.white,
           size: 22,
         ),
       ),
@@ -574,7 +574,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
+          Icon(icon, color: AppTheme.white, size: 24),
           const SizedBox(height: 8),
           Text(
             value,

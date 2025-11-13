@@ -563,7 +563,7 @@ class _HealthSectionsState extends State<HealthSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? AppTheme.white : color,
+          color: AppTheme.white,
           size: 22,
         ),
       ),
@@ -614,9 +614,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     children: [
                       Icon(
                         section['icon'] as IconData,
-                        color: isActive 
-                            ? AppTheme.orangeAccent 
-                            : AppTheme.white,
+                        color: AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -625,9 +623,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           section['name'] as String,
                           style: TextStyle(
                             fontSize: 10,
-                            color: isActive 
-                                ? AppTheme.orangeAccent 
-                                : AppTheme.white,
+                            color: AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -1351,7 +1347,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   color: color.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, size: 20, color: color),
+                child: Icon(icon, size: 20, color: AppTheme.white),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1502,7 +1498,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 color: color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: AppTheme.white, size: 24),
             ),
             const SizedBox(height: 8),
             Text(
@@ -6434,7 +6430,7 @@ class _HealthSectionsState extends State<HealthSections> {
               color: color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: AppTheme.white, size: 20),
           ),
           const SizedBox(height: 8),
           Text(
@@ -6442,7 +6438,7 @@ class _HealthSectionsState extends State<HealthSections> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: AppTheme.white,
             ),
           ),
           const SizedBox(height: 4),

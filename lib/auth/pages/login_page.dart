@@ -135,28 +135,22 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     try {
       final prefs = await SharedPreferences.getInstance();
       final rememberMe = prefs.getBool('remember_me') ?? false;
-      final userData = prefs.getString('user_data');
-      final savedPassword = prefs.getString('remembered_password');
+      // SEGURIDAD: Solo cargar el email, NO la contraseña
+      final rememberedEmail = prefs.getString('remembered_email');
       
-      if (rememberMe && userData != null) {
-        final userJson = jsonDecode(userData);
-        final email = userJson['email'] as String?;
-        
-        if (email != null && mounted) {
+      if (rememberMe && rememberedEmail != null && rememberedEmail.isNotEmpty) {
+        if (mounted) {
           setState(() {
-            _emailController.text = email;
-            if (savedPassword != null && savedPassword.isNotEmpty) {
-              _passwordController.text = savedPassword;
-              _hasPasswordText = true;
-              _passwordValid = _validatePassword(savedPassword);
-            }
+            _emailController.text = rememberedEmail;
+            // NO pre-llenar la contraseña por seguridad
+            // El usuario debe ingresarla manualmente cada vez
             _rememberMe = true;
-            _hasEmailText = email.isNotEmpty;
-            _emailValid = _validateEmail(email);
+            _hasEmailText = rememberedEmail.isNotEmpty;
+            _emailValid = _validateEmail(rememberedEmail);
           });
           
-          // NO hacer login automático, solo llenar los campos
-          // El usuario debe presionar el botón de login manualmente
+          // NO hacer login automático, solo llenar el email
+          // El usuario debe ingresar la contraseña y presionar el botón de login manualmente
         }
       }
     } catch (e) {
@@ -168,9 +162,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _clearRememberedCredentials() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('remembered_password');
+      await prefs.remove('remembered_password'); // Limpiar por si acaso existe
+      await prefs.remove('remembered_email');
       await prefs.setBool('remember_me', false);
-      print('LoginPage: Credenciales recordadas eliminadas');
+      print('LoginPage: Datos recordados eliminados (solo email, contraseña nunca se guarda)');
     } catch (e) {
       print('Error clearing remembered credentials: $e');
     }

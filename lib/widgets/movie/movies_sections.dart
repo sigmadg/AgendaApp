@@ -305,14 +305,14 @@ class _MoviesSectionsState extends State<MoviesSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? color : AppTheme.white,
+          color: AppTheme.white,
           size: 22,
         ),
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: isActive ? color : AppTheme.white,
+          color: AppTheme.white,
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           fontSize: 16,
         ),
@@ -2377,7 +2377,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
+          Icon(icon, color: AppTheme.white, size: 24),
           const SizedBox(height: 8),
           Text(
             value,

@@ -760,7 +760,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.event, size: 16, color: Colors.orange),
+                  Icon(Icons.event, size: 16, color: AppTheme.white),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1253,9 +1253,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   children: [
                     Icon(
                     section['icon'] as IconData,
-                      color: isActive 
-                          ? rainbowColor 
-                          : AppTheme.white,
+                      color: AppTheme.white,
                     size: 20,
                   ),
                     const SizedBox(height: 2),
@@ -1264,9 +1262,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         section['name'] as String,
                         style: TextStyle(
                           fontSize: 10,
-                          color: isActive 
-                              ? rainbowColor 
-                              : AppTheme.white,
+                          color: AppTheme.white,
                           fontWeight: isActive 
                               ? FontWeight.w600 
                               : FontWeight.normal,
@@ -1418,14 +1414,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? _carminePastel : AppTheme.white),
+            Icon(icon, size: 18, color: AppTheme.white),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? _carminePastel : AppTheme.white,
+                color: AppTheme.white,
               ),
             ),
           ],
@@ -1497,14 +1493,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.amber),
+                  Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                   const SizedBox(width: 6),
                   Text(
                     title,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _carminePastel,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -1701,7 +1697,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isToday ? Colors.red : AppTheme.white,
+                            color: AppTheme.white,
                           ),
                         ),
                       ),
@@ -1711,7 +1707,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isToday ? Colors.red : AppTheme.white,
+                          color: AppTheme.white,
                         ),
                       ),
                       const Spacer(),
@@ -1727,7 +1723,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: _carminePastel,
+                              color: AppTheme.white,
                             ),
                           ),
                         ),
@@ -1813,7 +1809,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: isToday ? Colors.red : AppTheme.white,
+                          color: AppTheme.white,
                         ),
                       ),
                       const Spacer(),
@@ -1828,7 +1824,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: _carminePastel,
+                            color: AppTheme.white,
                           ),
                         ),
                       ),
@@ -1900,7 +1896,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 style: TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? _carminePastel : AppTheme.white,
+                  color: AppTheme.white,
                   height: 1.0,
                 ),
                 maxLines: 1,
@@ -1912,7 +1908,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? _carminePastel : AppTheme.white,
+                  color: AppTheme.white,
                   height: 1.0,
                 ),
                 maxLines: 1,
@@ -2071,14 +2067,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle, size: 16, color: _carminePastel),
+                  Icon(Icons.check_circle, size: 16, color: AppTheme.white),
                   const SizedBox(width: 6),
                   Text(
                     title,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _carminePastel,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -2152,7 +2148,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       '$pendingTasks pendiente${pendingTasks == 1 ? '' : 's'}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: _carminePastel,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -2308,7 +2304,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isToday ? Colors.blue : AppTheme.white,
+                            color: AppTheme.white,
                           ),
                         ),
                       ),
@@ -2318,7 +2314,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isToday ? Colors.blue : AppTheme.white,
+                          color: AppTheme.white,
                         ),
                       ),
                       const Spacer(),
@@ -2337,7 +2333,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: _carminePastel,
+                                    color: AppTheme.white,
                                   ),
                                 ),
                               ),
@@ -2444,7 +2440,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: isToday ? Colors.blue : AppTheme.white,
+                          color: AppTheme.white,
                         ),
                       ),
                       const Spacer(),
@@ -2462,7 +2458,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: _carminePastel,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -2790,7 +2786,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             ),
             child: Icon(
               icon,
-              color: color,
+              color: AppTheme.white,
               size: 28,
             ),
           ),
@@ -2800,7 +2796,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: AppTheme.white,
             ),
           ),
           const SizedBox(height: 4),
@@ -2884,7 +2880,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         width: 1,
                       ),
                     ),
-                    child: Icon(icon, color: color, size: 24),
+                    child: Icon(icon, color: AppTheme.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -2919,7 +2915,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     ),
                     child: Icon(
                 Icons.chevron_right,
-                      color: color,
+                      color: AppTheme.white,
                       size: 20,
                     ),
                   ),
@@ -3106,12 +3102,12 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const Icon(Icons.error_outline, color: AppTheme.white, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 errorMessage!,
-                                style: const TextStyle(color: Colors.red, fontSize: 14),
+                                style: const TextStyle(color: AppTheme.white, fontSize: 14),
                               ),
                             ),
                           ],
@@ -3291,7 +3287,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.favorite, color: _carminePastel, size: 20),
+                    Icon(Icons.favorite, color: AppTheme.white, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -3312,7 +3308,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
                 'Cerrar',
-                style: TextStyle(color: _carminePastel),
+                style: TextStyle(color: AppTheme.white),
               ),
             ),
           ],
@@ -3324,7 +3320,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
   Widget _buildInfoRow(IconData icon, String title, String subtitle) {
     return Row(
       children: [
-        Icon(icon, color: _carminePastel, size: 20),
+        Icon(icon, color: AppTheme.white, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -3630,7 +3626,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             color: color.withOpacity(0.2),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: color, size: 22),
+          child: Icon(icon, color: AppTheme.white, size: 22),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -3771,7 +3767,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     child: const Icon(
                       Icons.settings,
                       size: 40,
-                      color: _carminePastel,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -3803,7 +3799,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.check_circle, color: Colors.green, size: 20),
+                        Icon(Icons.check_circle, color: AppTheme.white, size: 20),
                         const SizedBox(width: 8),
           Text(
                           '$activeCount de $totalCount secciones activas',
@@ -4018,7 +4014,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                     ),
                                     child: Icon(
                                       Icons.warning_amber_rounded,
-                                      color: _carminePastel,
+                                      color: AppTheme.white,
                                       size: 32,
                                     ),
                                   ),
@@ -4066,7 +4062,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         children: [
                                           Icon(
                                             Icons.info_outline,
-                                            color: _carminePastel,
+                                            color: AppTheme.white,
                                             size: 20,
                                           ),
                                           const SizedBox(width: 12),
@@ -4355,7 +4351,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     ),
                     child: Icon(
                       icon,
-                      color: isActive ? sectionColor : AppTheme.white,
+                      color: AppTheme.white,
                       size: 28,
                     ),
           ),
@@ -4672,9 +4668,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, size: 18, color: Colors.red),
+                                Icon(Icons.delete, size: 18, color: AppTheme.white),
                                 SizedBox(width: 8),
-                                Text('Eliminar', style: TextStyle(color: Colors.red)),
+                                Text('Eliminar', style: TextStyle(color: AppTheme.white)),
                               ],
                             ),
                           ),
@@ -4945,7 +4941,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           ),
                           child: Center(
                 child: task.completed
-                                ? const Icon(Icons.check, color: Colors.green, size: 28)
+                                ? const Icon(Icons.check, color: AppTheme.white, size: 28)
                                 : Container(
                                     width: 20,
                                     height: 20,
@@ -5118,9 +5114,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, size: 18, color: Colors.red),
+                                Icon(Icons.delete, size: 18, color: AppTheme.white),
                                 SizedBox(width: 8),
-                                Text('Eliminar', style: TextStyle(color: Colors.red)),
+                                Text('Eliminar', style: TextStyle(color: AppTheme.white)),
                               ],
                             ),
                           ),
@@ -5293,7 +5289,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             child: Icon(
               icon,
               size: 64,
-              color: colors[0],
+              color: AppTheme.white,
             ),
           ),
           const SizedBox(height: 24),
@@ -5394,7 +5390,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const Icon(Icons.error_outline, color: AppTheme.white, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -5406,7 +5402,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                              icon: const Icon(Icons.close, color: AppTheme.white, size: 18),
                               onPressed: () {
                                 setDialogState(() {
                                   errorMessage = null;
@@ -5747,7 +5743,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const Icon(Icons.error_outline, color: AppTheme.white, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -5759,7 +5755,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                              icon: const Icon(Icons.close, color: AppTheme.white, size: 18),
                               onPressed: () {
                                 setDialogState(() {
                                   errorMessage = null;

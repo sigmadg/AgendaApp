@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../models/finance/budget_category.dart';
 import '../../models/finance/expense.dart';
 import '../../models/finance/credit_card.dart';
@@ -27,6 +28,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
   
   // Estados
   String _monthlyBudget = '';
+  final TextEditingController _monthlyBudgetController = TextEditingController();
   List<BudgetCategory> _categories = [];
   List<Expense> _expenses = [];
   List<CreditCard> _creditCards = [];
@@ -55,6 +57,18 @@ class _FinanceSectionsState extends State<FinanceSections> {
   final TextEditingController _newCategoryNameController = TextEditingController();
   final TextEditingController _newCategoryIconController = TextEditingController();
   bool _showAddCategoryModal = false;
+  
+  // Controladores para categorías de presupuesto
+  final TextEditingController _categoryNameController = TextEditingController();
+  BudgetCategory? _editingCategory;
+  
+  // Controladores para gastos
+  final TextEditingController _expenseDescriptionController = TextEditingController();
+  final TextEditingController _expenseAmountController = TextEditingController();
+  final TextEditingController _expenseCategoryController = TextEditingController();
+  final TextEditingController _expensePaymentMethodController = TextEditingController();
+  DateTime? _expenseDate;
+  Expense? _editingExpense;
 
   final sections = [
     {'id': 'budget-tracker', 'name': 'Presupuesto', 'icon': Icons.account_balance_wallet},
@@ -105,11 +119,17 @@ class _FinanceSectionsState extends State<FinanceSections> {
 
   @override
   void dispose() {
+    _monthlyBudgetController.dispose();
     _itemNameController.dispose();
     _itemQuantityController.dispose();
     _itemUnitController.dispose();
     _newCategoryNameController.dispose();
     _newCategoryIconController.dispose();
+    _categoryNameController.dispose();
+    _expenseDescriptionController.dispose();
+    _expenseAmountController.dispose();
+    _expenseCategoryController.dispose();
+    _expensePaymentMethodController.dispose();
     super.dispose();
   }
 
@@ -128,6 +148,22 @@ class _FinanceSectionsState extends State<FinanceSections> {
           ),
         ],
       ),
+      floatingActionButton: _activeSection == 'expense-tracker'
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                _showAddExpenseDialog();
+              },
+              backgroundColor: const Color(0xFF4A7C59),
+              icon: const Icon(Icons.add, color: AppTheme.white),
+              label: const Text(
+                'Agregar Gasto',
+                style: TextStyle(
+                  color: AppTheme.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -344,7 +380,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? AppTheme.white : color,
+          color: AppTheme.white,
           size: 22,
         ),
       ),
@@ -395,9 +431,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       Icon(
                         section['icon'] as IconData,
-                        color: isActive 
-                            ? AppTheme.orangeAccent 
-                            : AppTheme.white,
+                        color: AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -406,9 +440,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           section['name'] as String,
                           style: TextStyle(
                             fontSize: 10,
-                            color: isActive 
-                                ? AppTheme.orangeAccent 
-                                : AppTheme.white,
+                            color: AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -523,11 +555,23 @@ class _FinanceSectionsState extends State<FinanceSections> {
   }
 
   Widget _buildBudgetTracker() {
+    // Calcular totales
+    final totalBudget = _categories.fold<double>(
+      0.0,
+      (sum, cat) => sum + (double.tryParse(cat.budget) ?? 0.0),
+    );
+    final totalSpent = _categories.fold<double>(
+      0.0,
+      (sum, cat) => sum + (double.tryParse(cat.spent) ?? 0.0),
+    );
+    final totalRemaining = totalBudget - totalSpent;
+    final budgetPercentage = totalBudget > 0 ? (totalSpent / totalBudget * 100).clamp(0.0, 100.0) : 0.0;
+    
     return SingleChildScrollView(
       child: Column(
         children: [
           _buildImprovedHeader(
-            'Seguimiento de Presupuesto',
+            'Presupuesto',
             'Controla tus gastos mensuales',
             Icons.account_balance_wallet,
             const Color(0xFF4A7C59),
@@ -536,104 +580,321 @@ class _FinanceSectionsState extends State<FinanceSections> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-              // Monthly Budget Card
-              Card(
-                color: AppTheme.darkSurface,
-                shape: RoundedRectangleBorder(
+              // Monthly Budget Card - Mejorado
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.darkSurfaceVariant,
+                    width: 1,
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.calendar_today, color: AppTheme.orangeAccent, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Presupuesto Mensual',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          prefixText: '\$ ',
-                          prefixStyle: const TextStyle(
-                            color: AppTheme.orangeAccent,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          hintText: '0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.orangeAccent.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today,
+                            color: AppTheme.orangeAccent,
+                            size: 24,
                           ),
                         ),
-                        style: const TextStyle(
-                          color: AppTheme.white,
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Presupuesto Mensual',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Establece tu presupuesto total',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      keyboardType: TextInputType.number,
+                      controller: _monthlyBudgetController,
+                      decoration: InputDecoration(
+                        prefixText: '\$ ',
+                        prefixStyle: const TextStyle(
+                          color: AppTheme.orangeAccent,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
-                        onChanged: (value) => setState(() => _monthlyBudget = value),
+                        hintText: '0.00',
+                        hintStyle: const TextStyle(color: AppTheme.white),
+                        filled: true,
+                        fillColor: AppTheme.darkBackground,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppTheme.darkSurfaceVariant,
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppTheme.darkSurfaceVariant,
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: AppTheme.orangeAccent,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                       ),
-                    ],
-                  ),
+                      style: const TextStyle(
+                        color: AppTheme.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _monthlyBudget = value;
+                        });
+                      },
+                      onFieldSubmitted: (value) {
+                        if (value.trim().isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Presupuesto mensual guardado'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              // Summary Cards
+              const SizedBox(height: 20),
+              // Summary Cards - Mejoradas
               Row(
                 children: [
                   Expanded(
-                    child: _buildSummaryCard('6', 'Categorías', Icons.folder, Colors.blue),
+                    child: _buildImprovedSummaryCard(
+                      '${_categories.length}',
+                      'Categorías',
+                      Icons.folder,
+                      Colors.blue,
+                      Icons.trending_up,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildSummaryCard('\$0', 'Total Gastado', Icons.bar_chart, Colors.orange),
+                    child: _buildImprovedSummaryCard(
+                      '\$${totalSpent.toStringAsFixed(2)}',
+                      'Total Gastado',
+                      Icons.bar_chart,
+                      Colors.orange,
+                      Icons.arrow_upward,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildSummaryCard('\$0', 'Restante', Icons.account_balance_wallet, Colors.green),
+                    child: _buildImprovedSummaryCard(
+                      '\$${totalRemaining.toStringAsFixed(2)}',
+                      'Restante',
+                      Icons.account_balance_wallet,
+                      totalRemaining >= 0 ? Colors.green : Colors.red,
+                      totalRemaining >= 0 ? Icons.arrow_downward : Icons.warning,
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+              // Progress Overview Card
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.darkSurfaceVariant,
+                    width: 1,
+                  ),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Resumen del Presupuesto',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: budgetPercentage > 80
+                                ? Colors.red.withOpacity(0.2)
+                                : budgetPercentage > 50
+                                    ? Colors.orange.withOpacity(0.2)
+                                    : Colors.green.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${budgetPercentage.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: budgetPercentage > 80
+                                  ? Colors.red
+                                  : budgetPercentage > 50
+                                      ? Colors.orange
+                                      : Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: budgetPercentage / 100,
+                        minHeight: 12,
+                        backgroundColor: AppTheme.darkSurfaceVariant,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          budgetPercentage > 80
+                              ? Colors.red
+                              : budgetPercentage > 50
+                                  ? Colors.orange
+                                  : Colors.green,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Presupuesto Total',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '\$${totalBudget.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              'Gastado',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '\$${totalSpent.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: totalSpent > totalBudget ? Colors.red : AppTheme.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
-              // Categories
+              // Categories Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Categorías de Gastos',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.white,
-                    ),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Categorías de Gastos',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Gestiona tus gastos por categoría',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                    ],
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.add, size: 16),
+                    onPressed: () {
+                      _showAddCategoryDialog();
+                    },
+                    icon: const Icon(Icons.add, size: 18),
                     label: const Text('Agregar'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4A7C59),
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-                ..._categories.map((category) => _buildCategoryCard(category)),
+                ..._categories.map((category) => _buildImprovedCategoryCard(category)),
               ],
             ),
           ),
@@ -659,7 +920,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 color: color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: AppTheme.white, size: 20),
             ),
             const SizedBox(height: 8),
             Text(
@@ -681,6 +942,69 @@ class _FinanceSectionsState extends State<FinanceSections> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildImprovedSummaryCard(String value, String label, IconData icon, Color color, IconData trendIcon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.darkSurfaceVariant,
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppTheme.white, size: 22),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(trendIcon, color: AppTheme.white, size: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.white,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.white,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -726,9 +1050,37 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     ),
                   ],
                 ),
-                IconButton(
+                PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, size: 18, color: AppTheme.white),
-                  onPressed: () {},
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _showEditCategoryDialog(category);
+                    } else if (value == 'delete') {
+                      _showDeleteCategoryDialog(category);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18, color: AppTheme.white),
+                          SizedBox(width: 8),
+                          Text('Editar', style: TextStyle(color: AppTheme.white)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: AppTheme.white),
+                          SizedBox(width: 8),
+                          Text('Eliminar', style: TextStyle(color: AppTheme.white)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -764,12 +1116,15 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           setState(() {
                             _categories = _categories.map((c) {
                               if (c.id == category.id) {
+                                final budget = double.tryParse(value) ?? 0.0;
+                                final spent = double.tryParse(c.spent) ?? 0.0;
+                                final remaining = budget - spent;
                                 return BudgetCategory(
                                   id: c.id,
                                   name: c.name,
                                   budget: value,
                                   spent: c.spent,
-                                  remaining: c.remaining,
+                                  remaining: remaining.toStringAsFixed(2),
                                 );
                               }
                               return c;
@@ -810,12 +1165,15 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           setState(() {
                             _categories = _categories.map((c) {
                               if (c.id == category.id) {
+                                final budget = double.tryParse(c.budget) ?? 0.0;
+                                final spent = double.tryParse(value) ?? 0.0;
+                                final remaining = budget - spent;
                                 return BudgetCategory(
                                   id: c.id,
                                   name: c.name,
                                   budget: c.budget,
                                   spent: value,
-                                  remaining: c.remaining,
+                                  remaining: remaining.toStringAsFixed(2),
                                 );
                               }
                               return c;
@@ -836,38 +1194,22 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
-                      TextFormField(
-                        keyboardType: TextInputType.number,
-                        initialValue: category.remaining,
-                        decoration: InputDecoration(
-                          prefixText: '\$ ',
-                          prefixStyle: const TextStyle(color: AppTheme.white),
-                          hintText: '0.00',
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            _categories = _categories.map((c) {
-                              if (c.id == category.id) {
-                                return BudgetCategory(
-                                  id: c.id,
-                                  name: c.name,
-                                  budget: c.budget,
-                                  spent: c.spent,
-                                  remaining: value,
-                                );
-                              }
-                              return c;
-                            }).toList();
-                          });
-                        },
+                        child: Text(
+                          '\$${category.remaining}',
+                          style: TextStyle(
+                            color: (double.tryParse(category.remaining) ?? 0.0) < 0
+                                ? Colors.red
+                                : AppTheme.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -876,31 +1218,285 @@ class _FinanceSectionsState extends State<FinanceSections> {
             ),
             const SizedBox(height: 16),
             // Progress Bar
-            Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurfaceVariant,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: 0.0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.orangeAccent,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '0% utilizado',
-              style: TextStyle(fontSize: 12, color: AppTheme.white),
-              textAlign: TextAlign.center,
+            Builder(
+              builder: (context) {
+                final budget = double.tryParse(category.budget) ?? 0.0;
+                final spent = double.tryParse(category.spent) ?? 0.0;
+                final percentage = budget > 0 ? (spent / budget * 100).clamp(0.0, 100.0) : 0.0;
+                final isOverBudget = spent > budget;
+                
+                return Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: isOverBudget ? 1.0 : percentage / 100,
+                        minHeight: 10,
+                        backgroundColor: AppTheme.darkSurfaceVariant,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isOverBudget
+                              ? Colors.red
+                              : percentage > 80
+                                  ? Colors.orange
+                                  : percentage > 50
+                                      ? Colors.yellow
+                                      : Colors.green,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${percentage.toStringAsFixed(1)}% utilizado',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isOverBudget
+                                ? Colors.red
+                                : percentage > 80
+                                    ? Colors.orange
+                                    : AppTheme.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (isOverBudget)
+                          Row(
+                            children: [
+                              const Icon(Icons.warning, size: 14, color: AppTheme.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Excedido',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildImprovedCategoryCard(BudgetCategory category) {
+    return _buildCategoryCard(category);
+  }
+
+  // Métodos para gestionar categorías de presupuesto
+  void _showAddCategoryDialog() {
+    _categoryNameController.clear();
+    _editingCategory = null;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text(
+          'Agregar Categoría',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        content: TextField(
+          controller: _categoryNameController,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'Nombre de la categoría',
+            labelStyle: const TextStyle(color: AppTheme.white),
+            hintText: 'Ej: Ropa, Educación, etc.',
+            hintStyle: const TextStyle(color: AppTheme.white60),
+            filled: true,
+            fillColor: AppTheme.darkBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF4A7C59),
+                width: 2,
+              ),
+            ),
+          ),
+          style: const TextStyle(color: AppTheme.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_categoryNameController.text.trim().isNotEmpty) {
+                final newCategory = BudgetCategory(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  name: _categoryNameController.text.trim(),
+                  budget: '',
+                  spent: '',
+                  remaining: '',
+                );
+                setState(() {
+                  _categories.add(newCategory);
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Categoría agregada exitosamente'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A7C59),
+            ),
+            child: const Text('Agregar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCategoryDialog(BudgetCategory category) {
+    _categoryNameController.text = category.name;
+    _editingCategory = category;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text(
+          'Editar Categoría',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        content: TextField(
+          controller: _categoryNameController,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'Nombre de la categoría',
+            labelStyle: const TextStyle(color: AppTheme.white),
+            hintText: 'Ej: Ropa, Educación, etc.',
+            hintStyle: const TextStyle(color: AppTheme.white60),
+            filled: true,
+            fillColor: AppTheme.darkBackground,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF4A7C59),
+                width: 2,
+              ),
+            ),
+          ),
+          style: const TextStyle(color: AppTheme.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_categoryNameController.text.trim().isNotEmpty) {
+                setState(() {
+                  final index = _categories.indexWhere((c) => c.id == category.id);
+                  if (index != -1) {
+                    _categories[index] = BudgetCategory(
+                      id: category.id,
+                      name: _categoryNameController.text.trim(),
+                      budget: category.budget,
+                      spent: category.spent,
+                      remaining: category.remaining,
+                    );
+                  }
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Categoría actualizada exitosamente'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A7C59),
+            ),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteCategoryDialog(BudgetCategory category) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text(
+          'Eliminar Categoría',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.',
+          style: const TextStyle(color: AppTheme.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _categories.removeWhere((c) => c.id == category.id);
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Categoría eliminada exitosamente'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
   }
@@ -911,6 +1507,17 @@ class _FinanceSectionsState extends State<FinanceSections> {
       (sum, expense) => sum + (double.tryParse(expense.amount) ?? 0.0),
     );
     final avgExpense = _expenses.isEmpty ? 0.0 : totalExpenses / _expenses.length;
+    
+    // Calcular gastos por categoría
+    final expensesByCategory = <String, double>{};
+    for (var expense in _expenses) {
+      final category = expense.category.isEmpty ? 'Sin categoría' : expense.category;
+      final amount = double.tryParse(expense.amount) ?? 0.0;
+      expensesByCategory[category] = (expensesByCategory[category] ?? 0.0) + amount;
+    }
+    final topCategory = expensesByCategory.entries.isNotEmpty
+        ? expensesByCategory.entries.reduce((a, b) => a.value > b.value ? a : b)
+        : null;
 
     return SingleChildScrollView(
       child: Column(
@@ -925,69 +1532,168 @@ class _FinanceSectionsState extends State<FinanceSections> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                // Summary Cards
+                // Summary Cards - Mejoradas
                 Row(
                   children: [
                     Expanded(
-                      child: _buildSummaryCard(
+                      child: _buildImprovedSummaryCard(
                         '\$${totalExpenses.toStringAsFixed(2)}',
                         'Total Gastado',
                         Icons.attach_money,
                         Colors.red,
+                        Icons.arrow_upward,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildSummaryCard(
+                      child: _buildImprovedSummaryCard(
                         '${_expenses.length}',
                         'Transacciones',
                         Icons.list,
                         Colors.blue,
+                        Icons.trending_up,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildSummaryCard(
+                      child: _buildImprovedSummaryCard(
                         '\$${avgExpense.toStringAsFixed(2)}',
                         'Promedio',
                         Icons.trending_up,
                         Colors.green,
+                        Icons.analytics,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Botón para agregar gasto
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _expenses.add(Expense(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          date: '',
-                          description: '',
-                          category: '',
-                          amount: '',
-                          paymentMethod: '',
-                        ));
-                      });
-                    },
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Agregar Gasto'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C59),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                const SizedBox(height: 20),
+                // Estadísticas adicionales
+                if (_expenses.isNotEmpty && topCategory != null)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.darkSurfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Estadísticas',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Categoría más usada',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    topCategory.key,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  'Gastado en esta categoría',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '\$${topCategory.value.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
+                if (_expenses.isNotEmpty && topCategory != null)
+                  const SizedBox(height: 20),
+                // Encabezado de gastos registrados
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Gastos Registrados',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Gestiona tus gastos diarios',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 // Lista de gastos
                 if (_expenses.isEmpty)
-                  _buildEmptyState('No hay gastos registrados', Icons.receipt)
+                  Container(
+                    padding: const EdgeInsets.all(40),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.darkSurfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: _buildEmptyState('No hay gastos registrados', Icons.receipt),
+                  )
                 else
-                  ..._expenses.map((expense) => _buildExpenseCard(expense)),
+                  ..._expenses.map((expense) => _buildImprovedExpenseCard(expense)),
               ],
             ),
           ),
@@ -1602,7 +2308,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                              icon: const Icon(Icons.close, size: 18, color: AppTheme.white),
                               onPressed: () {
                                 setState(() {
                                   items.remove(item);
@@ -1634,7 +2340,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   _newCategoryIconController.clear();
                   _showAddCategoryModal = true;
                 });
-                _showAddCategoryDialog();
+                _showAddShoppingCategoryDialog();
               },
               icon: const Icon(Icons.add_circle_outline),
               label: const Text('Agregar Nueva Categoría'),
@@ -1661,7 +2367,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
     );
   }
 
-  void _showAddCategoryDialog() {
+  void _showAddShoppingCategoryDialog() {
     showDialog(
       context: context,
       builder: (context) => _buildAddCategoryModal(),
@@ -2003,8 +2709,543 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       _expenses.removeWhere((e) => e.id == expense.id);
                     });
                   },
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
+                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddExpenseDialog({Expense? expense}) {
+    _editingExpense = expense;
+    if (expense != null) {
+      _expenseDescriptionController.text = expense.description;
+      _expenseAmountController.text = expense.amount;
+      _expenseCategoryController.text = expense.category;
+      _expensePaymentMethodController.text = expense.paymentMethod;
+      if (expense.date.isNotEmpty) {
+        try {
+          _expenseDate = DateFormat('dd/MM/yyyy').parse(expense.date);
+        } catch (e) {
+          _expenseDate = DateTime.now();
+        }
+      } else {
+        _expenseDate = DateTime.now();
+      }
+    } else {
+      _expenseDescriptionController.clear();
+      _expenseAmountController.clear();
+      _expenseCategoryController.clear();
+      _expensePaymentMethodController.clear();
+      _expenseDate = DateTime.now();
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4A7C59),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(28),
+                      topRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.receipt, color: AppTheme.white, size: 28),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          _editingExpense != null ? 'Editar Gasto' : 'Nuevo Gasto',
+                          style: const TextStyle(
+                            color: AppTheme.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: AppTheme.white),
+                      ),
+                    ],
+                  ),
+                ),
+                // Contenido
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Descripción
+                      TextFormField(
+                        controller: _expenseDescriptionController,
+                        decoration: InputDecoration(
+                          labelText: 'Descripción',
+                          labelStyle: const TextStyle(color: AppTheme.white),
+                          hintText: 'Ej: Almuerzo, Transporte, etc.',
+                          hintStyle: const TextStyle(color: AppTheme.white),
+                          filled: true,
+                          fillColor: AppTheme.darkSurfaceVariant,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(Icons.description, color: AppTheme.white),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Monto y Categoría
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _expenseAmountController,
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                labelText: 'Monto',
+                                labelStyle: const TextStyle(color: AppTheme.white),
+                                hintText: '0.00',
+                                hintStyle: const TextStyle(color: AppTheme.white),
+                                filled: true,
+                                fillColor: AppTheme.darkSurfaceVariant,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                prefixText: '\$ ',
+                                prefixStyle: const TextStyle(color: AppTheme.white),
+                                prefixIcon: const Icon(Icons.attach_money, color: AppTheme.white),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _expenseCategoryController,
+                              decoration: InputDecoration(
+                                labelText: 'Categoría',
+                                labelStyle: const TextStyle(color: AppTheme.white),
+                                hintText: 'Ej: Comida, Transporte',
+                                hintStyle: const TextStyle(color: AppTheme.white),
+                                filled: true,
+                                fillColor: AppTheme.darkSurfaceVariant,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                prefixIcon: const Icon(Icons.category, color: AppTheme.white),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Fecha y Método de pago
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _expenseDate ?? DateTime.now(),
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                );
+                                if (picked != null) {
+                                  setModalState(() {
+                                    _expenseDate = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.darkSurfaceVariant,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.calendar_today, color: AppTheme.white),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      _expenseDate != null
+                                          ? DateFormat('dd/MM/yyyy').format(_expenseDate!)
+                                          : 'Seleccionar fecha',
+                                      style: const TextStyle(color: AppTheme.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _expensePaymentMethodController,
+                              decoration: InputDecoration(
+                                labelText: 'Método de pago',
+                                labelStyle: const TextStyle(color: AppTheme.white),
+                                hintText: 'Efectivo/Tarjeta',
+                                hintStyle: const TextStyle(color: AppTheme.white),
+                                filled: true,
+                                fillColor: AppTheme.darkSurfaceVariant,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                prefixIcon: const Icon(Icons.payment, color: AppTheme.white),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              ),
+                              style: const TextStyle(color: AppTheme.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Botones
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _expenseDescriptionController.clear();
+                              _expenseAmountController.clear();
+                              _expenseCategoryController.clear();
+                              _expensePaymentMethodController.clear();
+                              _expenseDate = null;
+                              _editingExpense = null;
+                            },
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(color: AppTheme.white, fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_expenseDescriptionController.text.isNotEmpty &&
+                                  _expenseAmountController.text.isNotEmpty) {
+                                final dateStr = _expenseDate != null
+                                    ? DateFormat('dd/MM/yyyy').format(_expenseDate!)
+                                    : '';
+                                
+                                if (_editingExpense != null) {
+                                  setState(() {
+                                    final index = _expenses.indexWhere((e) => e.id == _editingExpense!.id);
+                                    if (index != -1) {
+                                      _expenses[index] = Expense(
+                                        id: _editingExpense!.id,
+                                        date: dateStr,
+                                        description: _expenseDescriptionController.text,
+                                        category: _expenseCategoryController.text,
+                                        amount: _expenseAmountController.text,
+                                        paymentMethod: _expensePaymentMethodController.text,
+                                      );
+                                    }
+                                  });
+                                } else {
+                                  setState(() {
+                                    _expenses.add(Expense(
+                                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                      date: dateStr,
+                                      description: _expenseDescriptionController.text,
+                                      category: _expenseCategoryController.text,
+                                      amount: _expenseAmountController.text,
+                                      paymentMethod: _expensePaymentMethodController.text,
+                                    ));
+                                  });
+                                }
+                                
+                                final wasEditing = _editingExpense != null;
+                                
+                                Navigator.pop(context);
+                                _expenseDescriptionController.clear();
+                                _expenseAmountController.clear();
+                                _expenseCategoryController.clear();
+                                _expensePaymentMethodController.clear();
+                                _expenseDate = null;
+                                _editingExpense = null;
+                                
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(wasEditing
+                                        ? 'Gasto actualizado exitosamente'
+                                        : 'Gasto agregado exitosamente'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Por favor completa la descripción y el monto'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4A7C59),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              _editingExpense != null ? 'Actualizar' : 'Agregar',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImprovedExpenseCard(Expense expense) {
+    final amount = double.tryParse(expense.amount) ?? 0.0;
+    final dateStr = expense.date.isNotEmpty ? expense.date : 'Sin fecha';
+    
+    // Iconos por categoría
+    IconData categoryIcon = Icons.category;
+    Color categoryColor = const Color(0xFF4A7C59);
+    if (expense.category.toLowerCase().contains('comida') || 
+        expense.category.toLowerCase().contains('alimento')) {
+      categoryIcon = Icons.restaurant;
+      categoryColor = Colors.orange;
+    } else if (expense.category.toLowerCase().contains('transporte')) {
+      categoryIcon = Icons.directions_car;
+      categoryColor = Colors.blue;
+    } else if (expense.category.toLowerCase().contains('salud')) {
+      categoryIcon = Icons.local_hospital;
+      categoryColor = Colors.red;
+    } else if (expense.category.toLowerCase().contains('entretenimiento')) {
+      categoryIcon = Icons.movie;
+      categoryColor = Colors.purple;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.darkSurfaceVariant,
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header con icono y monto
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: categoryColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    categoryIcon,
+                    color: categoryColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.description.isEmpty ? 'Sin descripción' : expense.description,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (expense.category.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                expense.category,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: categoryColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Icon(Icons.calendar_today, size: 12, color: AppTheme.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            dateStr,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.red.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '\$${amount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (expense.paymentMethod.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurfaceVariant,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.payment, size: 16, color: AppTheme.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Método: ${expense.paymentMethod}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            // Acciones
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    _showAddExpenseDialog(expense: expense);
+                  },
+                  icon: const Icon(Icons.edit, size: 18, color: AppTheme.white),
+                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: AppTheme.darkSurface,
+                        title: const Text(
+                          'Eliminar Gasto',
+                          style: TextStyle(color: AppTheme.white),
+                        ),
+                        content: const Text(
+                          '¿Estás seguro de que deseas eliminar este gasto?',
+                          style: TextStyle(color: AppTheme.white),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _expenses.removeWhere((e) => e.id == expense.id);
+                              });
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Gasto eliminado exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            child: const Text('Eliminar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.delete, size: 18, color: AppTheme.white),
+                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
                 ),
               ],
             ),
@@ -2423,8 +3664,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.visibility, size: 16, color: Colors.blue),
-                  label: const Text('Ver Detalles', style: TextStyle(color: Colors.blue)),
+                  icon: const Icon(Icons.visibility, size: 16, color: AppTheme.white),
+                  label: const Text('Ver Detalles', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -2433,8 +3674,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       _creditCards.removeWhere((c) => c.id == card.id);
                     });
                   },
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
+                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
                 ),
               ],
             ),
@@ -2768,8 +4009,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.visibility, size: 16, color: Colors.blue),
-                  label: const Text('Ver Detalles', style: TextStyle(color: Colors.blue)),
+                  icon: const Icon(Icons.visibility, size: 16, color: AppTheme.white),
+                  label: const Text('Ver Detalles', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -2778,8 +4019,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       _bills.removeWhere((b) => b.id == bill.id);
                     });
                   },
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
+                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
                 ),
               ],
             ),
@@ -3199,8 +4440,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.analytics, size: 16, color: Colors.blue),
-                  label: const Text('Análisis', style: TextStyle(color: Colors.blue)),
+                  icon: const Icon(Icons.analytics, size: 16, color: AppTheme.white),
+                  label: const Text('Análisis', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -3209,8 +4450,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       _investments.removeWhere((i) => i.id == investment.id);
                     });
                   },
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
+                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
                 ),
               ],
             ),
@@ -3532,7 +4773,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 ),
                 Text(
                   'Restante: \$${(target - current).toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.orange),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.white),
                 ),
               ],
             ),
@@ -3549,8 +4790,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.add, size: 16, color: Colors.green),
-                  label: const Text('Agregar', style: TextStyle(color: Colors.green)),
+                  icon: const Icon(Icons.add, size: 16, color: AppTheme.white),
+                  label: const Text('Agregar', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -3559,8 +4800,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       _savingsGoals.removeWhere((g) => g.id == goal.id);
                     });
                   },
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
+                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
                 ),
               ],
             ),
@@ -3771,7 +5012,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                        icon: const Icon(Icons.close, size: 18, color: AppTheme.white),
                         onPressed: () {
                           setState(() {
                             items.remove(item);
@@ -3860,7 +5101,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       decoration: InputDecoration(
                         labelText: 'Nombre del artículo *',
                         labelStyle: const TextStyle(color: AppTheme.white),
-                        prefixIcon: const Icon(Icons.shopping_bag, color: Colors.green),
+                        prefixIcon: const Icon(Icons.shopping_bag, color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(
@@ -3888,7 +5129,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             decoration: InputDecoration(
                               labelText: 'Cantidad',
                               labelStyle: const TextStyle(color: AppTheme.white),
-                              prefixIcon: const Icon(Icons.numbers, color: Colors.green),
+                              prefixIcon: const Icon(Icons.numbers, color: AppTheme.white),
                               filled: true,
                               fillColor: AppTheme.darkBackground.withOpacity(0.5),
                               border: OutlineInputBorder(
@@ -3916,7 +5157,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             decoration: InputDecoration(
                               labelText: 'Unidad',
                               labelStyle: const TextStyle(color: AppTheme.white),
-                              prefixIcon: const Icon(Icons.straighten, color: Colors.green),
+                              prefixIcon: const Icon(Icons.straighten, color: AppTheme.white),
                               filled: true,
                               fillColor: AppTheme.darkBackground.withOpacity(0.5),
                               border: OutlineInputBorder(
@@ -4093,7 +5334,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       decoration: InputDecoration(
                         labelText: 'Nombre de la categoría *',
                         labelStyle: const TextStyle(color: AppTheme.white),
-                        prefixIcon: const Icon(Icons.label, color: Colors.green),
+                        prefixIcon: const Icon(Icons.label, color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(
@@ -4119,7 +5360,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         labelStyle: const TextStyle(color: AppTheme.white),
                         hintText: '🍎',
                         hintStyle: const TextStyle(color: AppTheme.white, fontSize: 24),
-                        prefixIcon: const Icon(Icons.emoji_emotions, color: Colors.green),
+                        prefixIcon: const Icon(Icons.emoji_emotions, color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(

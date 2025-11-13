@@ -316,7 +316,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? AppTheme.white : color,
+          color: AppTheme.white,
           size: 22,
         ),
       ),

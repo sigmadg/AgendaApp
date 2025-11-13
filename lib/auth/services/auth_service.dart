@@ -393,6 +393,7 @@ class AuthService {
       await prefs.remove(_userKey);
       await prefs.remove(_rememberMeKey);
       await prefs.remove(_passwordKey);
+      await prefs.remove('remembered_email'); // Limpiar email guardado
 
       print('AuthService: Logout successful');
       return {'success': true};
@@ -577,14 +578,21 @@ class AuthService {
       await prefs.setString(_userKey, jsonEncode(user));
       await prefs.setBool(_rememberMeKey, rememberMe);
       
-      // Guardar contraseña solo si rememberMe es true
+      // SEGURIDAD: NO guardar la contraseña en texto plano
+      // En su lugar, solo guardamos el email para pre-llenar el campo
+      // La sesión de Supabase maneja la autenticación persistente
       if (rememberMe && password != null) {
-        await prefs.setString(_passwordKey, password);
-        print('AuthService: Password stored for remember me');
+        // Solo guardar el email, NO la contraseña
+        final userEmail = user['email'] as String?;
+        if (userEmail != null) {
+          await prefs.setString('remembered_email', userEmail);
+          print('AuthService: Email stored for remember me (password NOT stored for security)');
+        }
       } else {
-        // Limpiar contraseña guardada si rememberMe es false
-        await prefs.remove(_passwordKey);
-        print('AuthService: Password cleared (remember me disabled)');
+        // Limpiar email guardado si rememberMe es false
+        await prefs.remove('remembered_email');
+        await prefs.remove(_passwordKey); // Limpiar por si acaso existe
+        print('AuthService: Remember me data cleared');
       }
 
       print('AuthService: Auth data stored successfully');

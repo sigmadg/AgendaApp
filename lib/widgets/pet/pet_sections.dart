@@ -338,14 +338,14 @@ class _PetSectionsState extends State<PetSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? color : AppTheme.white,
+          color: AppTheme.white,
           size: 20,
         ),
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: isActive ? color : AppTheme.white,
+          color: AppTheme.white,
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           fontSize: 16,
         ),

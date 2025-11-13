@@ -622,7 +622,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? AppTheme.white : color,
+          color: AppTheme.white,
           size: 22,
         ),
       ),
@@ -673,9 +673,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     children: [
                       Icon(
                         section['icon'] as IconData,
-                        color: isActive 
-                            ? Colors.purple 
-                            : AppTheme.white,
+                        color: AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -684,9 +682,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           section['name'] as String,
                           style: TextStyle(
                             fontSize: 10,
-                            color: isActive 
-                                ? Colors.purple 
-                                : AppTheme.white,
+                            color: AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -2182,7 +2178,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
               color: color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: AppTheme.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -3185,7 +3181,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 width: 1,
               ),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: AppTheme.white, size: 20),
           ),
           const SizedBox(height: 8),
           Text(
@@ -4938,7 +4934,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 64, color: colors[0].withOpacity(0.6)),
+            child: Icon(icon, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           Text(
