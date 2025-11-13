@@ -74,6 +74,34 @@ class _HealthSectionsState extends State<HealthSections> {
   // Estados para rutinas de gimnasio
   List<GymRoutine> _gymRoutines = [];
   
+  // Controladores para rutinas de gimnasio
+  final TextEditingController _gymRoutineNameController = TextEditingController();
+  final TextEditingController _gymRoutineDescriptionController = TextEditingController();
+  final TextEditingController _gymRoutineDurationController = TextEditingController();
+  String _selectedGymRoutineDifficulty = 'Principiante';
+  GymRoutine? _editingGymRoutine; // Para editar rutina existente
+  bool _gymRoutineIsRecurring = false;
+  String? _gymRoutineRecurrenceType; // 'daily', 'weekly', 'monthly'
+  List<int> _gymRoutineRecurrenceDays = []; // Para weekly: [1,3,5] = lunes, miércoles, viernes
+  DateTime? _gymRoutineStartDate;
+  DateTime? _gymRoutineEndDate;
+  
+  // Controladores para entrenamientos
+  final TextEditingController _workoutNameController = TextEditingController();
+  final TextEditingController _workoutDurationController = TextEditingController();
+  final TextEditingController _workoutCaloriesController = TextEditingController();
+  DateTime _selectedWorkoutDate = DateTime.now();
+  String? _selectedWorkoutRoutineId; // ID de rutina seleccionada
+  bool _workoutIsRecurring = false;
+  String? _workoutRecurrenceType; // 'daily', 'weekly', 'monthly'
+  List<int> _workoutRecurrenceDays = [];
+  DateTime? _workoutStartDate;
+  DateTime? _workoutEndDate;
+  
+  // Estados para completar entrenamientos y rutinas
+  Set<String> _completedRoutines = {}; // IDs de rutinas completadas
+  Set<String> _completedWorkouts = {}; // IDs de entrenamientos completados
+  
   // Estados para objetivos deportivos
   List<SportsGoal> _sportsGoals = [];
   
@@ -107,6 +135,7 @@ class _HealthSectionsState extends State<HealthSections> {
   
   // Estados para Workout Tracker
   List<Map<String, dynamic>> _workouts = [];
+  Map<String, dynamic> _currentWeekWorkouts = {}; // Permite almacenar tanto días como _weekStart
   
   // Estados para Weight Loss
   Map<String, dynamic> _weightLossData = {};
@@ -204,6 +233,22 @@ class _HealthSectionsState extends State<HealthSections> {
           )).toList();
         });
       }
+
+      // Cargar rutinas de gimnasio
+      final routinesData = await _healthService.getGymRoutines();
+      if (mounted) {
+        setState(() {
+          _gymRoutines = routinesData.map((data) => GymRoutine.fromJson(data)).toList();
+        });
+      }
+
+      // Cargar entrenamientos
+      final workoutsData = await _healthService.getWorkouts();
+      if (mounted) {
+        setState(() {
+          _workouts = workoutsData;
+        });
+      }
     } catch (e) {
       print('HealthSections: Error cargando datos: $e');
     }
@@ -225,8 +270,13 @@ class _HealthSectionsState extends State<HealthSections> {
     _recipeServingsController.dispose();
     _recipeCaloriesController.dispose();
     _recipeIngredientsController.dispose();
-    _recipeInstructionsController.dispose();
     _recipeTagsController.dispose();
+    _gymRoutineNameController.dispose();
+    _gymRoutineDescriptionController.dispose();
+    _gymRoutineDurationController.dispose();
+    _workoutNameController.dispose();
+    _workoutDurationController.dispose();
+    _workoutCaloriesController.dispose();
     super.dispose();
   }
 
@@ -248,6 +298,7 @@ class _HealthSectionsState extends State<HealthSections> {
       floatingActionButton: _buildFloatingActionButton(),
     );
   }
+  
 
   Widget? _buildFloatingActionButton() {
     // No mostrar FloatingActionButton en meal-planner
@@ -4525,44 +4576,289 @@ class _HealthSectionsState extends State<HealthSections> {
   }
 
   Widget _buildGymRoutine() {
-    // Datos combinados de rutinas y entrenamientos
-    final weeklyStats = {
-      'totalWorkouts': 5,
-      'totalDuration': 420, // minutos
-      'totalCalories': 2840,
-      'totalExercises': 28,
-      'averageIntensity': 7.5,
-    };
+    // Calcular semana actual
+    final weekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 6));
     
-    final routines = _gymRoutines.isEmpty ? [] : _gymRoutines.map((r) => {
-      'name': r.name,
-      'difficulty': r.difficulty,
-      'duration': r.duration,
-      'completed': false,
+    // Obtener entrenamientos de la semana actual
+    final weekWorkouts = _workouts.where((w) {
+      final workoutDate = DateTime.tryParse(w['date'] as String? ?? '');
+      if (workoutDate == null) return false;
+      return workoutDate.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+             workoutDate.isBefore(weekEnd.add(const Duration(days: 1)));
     }).toList();
     
-    final currentWeek = {
-      'monday': {'workout': 'Cardio HIIT', 'duration': 45, 'calories': 520, 'completed': true},
-      'tuesday': {'workout': 'Fuerza Superior', 'duration': 60, 'calories': 480, 'completed': true},
-      'wednesday': {'workout': 'Descanso', 'duration': 0, 'calories': 0, 'completed': true},
-      'thursday': {'workout': 'Cardio LISS', 'duration': 30, 'calories': 300, 'completed': true},
-      'friday': {'workout': 'Fuerza Inferior', 'duration': 55, 'calories': 450, 'completed': true},
-      'saturday': {'workout': 'Yoga', 'duration': 40, 'calories': 200, 'completed': false},
-      'sunday': {'workout': 'Caminata', 'duration': 0, 'calories': 0, 'completed': false},
+    // Calcular estadísticas semanales basadas en entrenamientos reales
+    final totalWorkouts = weekWorkouts.length;
+    final totalDuration = weekWorkouts.fold<int>(0, (sum, w) => sum + (w['duration'] as int? ?? 0));
+    final totalCalories = weekWorkouts.fold<int>(0, (sum, w) => sum + (w['calories'] as int? ?? 0));
+    final totalExercises = weekWorkouts.fold<int>(0, (sum, w) {
+      // Si tiene una rutina asociada, contar ejercicios de la rutina
+      final routineId = w['routineId'] as String?;
+      if (routineId != null) {
+        final routine = _gymRoutines.firstWhere(
+          (r) => r.id == routineId,
+          orElse: () => GymRoutine(
+            id: '',
+            name: '',
+            description: '',
+            exercises: [],
+            duration: '',
+            difficulty: '',
+          ),
+        );
+        return sum + routine.exercises.length;
+      }
+      // Si no tiene rutina, asumir 1 ejercicio por entrenamiento
+      return sum + 1;
+    });
+    final averageIntensity = totalWorkouts > 0 ? (totalCalories / totalWorkouts / 10).clamp(0.0, 10.0) : 0.0;
+    
+    final weeklyStats = {
+      'totalWorkouts': totalWorkouts,
+      'totalDuration': totalDuration,
+      'totalCalories': totalCalories,
+      'totalExercises': totalExercises,
+      'averageIntensity': averageIntensity,
     };
     
+    // Recalcular semana actual basada en entrenamientos registrados
+    // Limpiar si cambió de semana
+    final lastWeekStart = _currentWeekWorkouts['_weekStart'] as DateTime?;
+    if (lastWeekStart == null || lastWeekStart != weekStart) {
+      _currentWeekWorkouts.clear();
+      _currentWeekWorkouts['_weekStart'] = weekStart; // Guardar inicio de semana para detectar cambios
+    }
+    
+    // Inicializar semana con datos de entrenamientos registrados o datos de ejemplo
+    if (_currentWeekWorkouts.length <= 1) { // Solo tiene _weekStart
+      
+      final weekDaysMap = {
+        'monday': 'Lunes',
+        'tuesday': 'Martes',
+        'wednesday': 'Miércoles',
+        'thursday': 'Jueves',
+        'friday': 'Viernes',
+        'saturday': 'Sábado',
+        'sunday': 'Domingo',
+      };
+      
+      for (var entry in weekDaysMap.entries) {
+        final dayKey = entry.key;
+        final dayIndex = weekDaysMap.keys.toList().indexOf(dayKey);
+        final dayDate = weekStart.add(Duration(days: dayIndex));
+        final dayDateStr = DateFormat('yyyy-MM-dd').format(dayDate);
+        final dayOfWeek = dayDate.weekday; // 1-7 (lunes-domingo)
+        
+        // Buscar entrenamiento registrado para este día
+        final workoutForDay = _workouts.firstWhere(
+          (w) => w['date'] == dayDateStr,
+          orElse: () => {},
+        );
+        
+        // Buscar rutina recurrente para este día
+        GymRoutine? recurringRoutineForDay;
+        for (final routine in _gymRoutines) {
+          if (routine.isRecurring) {
+            bool shouldShow = false;
+            
+            // Verificar si la rutina aplica para este día
+            if (routine.startDate != null && dayDate.isBefore(routine.startDate!)) {
+              continue;
+            }
+            if (routine.endDate != null && dayDate.isAfter(routine.endDate!)) {
+              continue;
+            }
+            
+            switch (routine.recurrenceType) {
+              case 'daily':
+                shouldShow = true;
+                break;
+              case 'weekly':
+                if (routine.recurrenceDays != null && routine.recurrenceDays!.contains(dayOfWeek)) {
+                  shouldShow = true;
+                }
+                break;
+              case 'monthly':
+                if (routine.startDate != null && dayDate.day == routine.startDate!.day) {
+                  shouldShow = true;
+                }
+                break;
+            }
+            
+            if (shouldShow) {
+              recurringRoutineForDay = routine;
+              break; // Priorizar la primera rutina encontrada
+            }
+          }
+        }
+        
+        // Priorizar entrenamiento registrado, luego rutina recurrente, luego datos de ejemplo
+        if (workoutForDay.isNotEmpty) {
+          final workoutId = workoutForDay['id'] as String? ?? '';
+          _currentWeekWorkouts[dayKey] = {
+            'workout': workoutForDay['name'] ?? 'Entrenamiento',
+            'duration': workoutForDay['duration'] ?? 0,
+            'calories': workoutForDay['calories'] ?? 0,
+            'completed': _completedWorkouts.contains(workoutId),
+            'workoutId': workoutId,
+            'type': 'workout',
+          };
+        } else if (recurringRoutineForDay != null) {
+          // Extraer duración numérica de la rutina (ej: "45 min" -> 45)
+          final durationMatch = RegExp(r'(\d+)').firstMatch(recurringRoutineForDay.duration);
+          final durationMinutes = durationMatch != null ? int.tryParse(durationMatch.group(1) ?? '0') ?? 0 : 0;
+          
+          _currentWeekWorkouts[dayKey] = {
+            'workout': recurringRoutineForDay.name,
+            'duration': durationMinutes,
+            'calories': 0, // Las rutinas no tienen calorías por defecto
+            'completed': _completedRoutines.contains(recurringRoutineForDay.id),
+            'routineId': recurringRoutineForDay.id,
+            'type': 'routine',
+          };
+        } else {
+          // Sin entrenamiento ni rutina para este día
+          _currentWeekWorkouts[dayKey] = {
+            'workout': '',
+            'duration': 0,
+            'calories': 0,
+            'completed': false,
+            'type': 'empty',
+          };
+        }
+      }
+    }
+    
+    // Filtrar solo los días de la semana (excluir _weekStart)
+    final currentWeek = <String, Map<String, dynamic>>{};
+    _currentWeekWorkouts.forEach((key, value) {
+      if (key != '_weekStart' && value is Map<String, dynamic>) {
+        currentWeek[key] = value;
+      }
+    });
+    
+    // Calcular objetivos semanales basados en entrenamientos y rutinas completados
+    final completedWorkoutDays = currentWeek.values.where((day) => 
+      day['completed'] == true && 
+      (day['workout'] as String).isNotEmpty
+    ).length;
+    
+    // Recalcular estadísticas basadas en entrenamientos y rutinas completados
+    final completedWeekWorkouts = weekWorkouts.where((w) {
+      final workoutId = w['id'] as String? ?? '';
+      return _completedWorkouts.contains(workoutId);
+    }).toList();
+    
+    // Calcular duración y calorías solo de los completados
+    final completedTotalDuration = completedWeekWorkouts.fold<int>(0, (sum, w) => sum + (w['duration'] as int? ?? 0));
+    final completedTotalCalories = completedWeekWorkouts.fold<int>(0, (sum, w) => sum + (w['calories'] as int? ?? 0));
+    
+    // Agregar duración de rutinas completadas en la semana
+    final completedRoutinesDuration = currentWeek.values.where((day) {
+      return day['type'] == 'routine' && day['completed'] == true;
+    }).fold<int>(0, (sum, day) {
+      return sum + (day['duration'] as int? ?? 0);
+    });
+    
+    final finalTotalDuration = completedTotalDuration + completedRoutinesDuration;
+    final finalTotalCalories = completedTotalCalories;
+    final finalTotalHours = finalTotalDuration / 60.0;
+    
+    // Recalcular ejercicios completados
+    final completedTotalExercises = completedWeekWorkouts.fold<int>(0, (sum, w) {
+      final routineId = w['routineId'] as String?;
+      if (routineId != null) {
+        try {
+          final routine = _gymRoutines.firstWhere((r) => r.id == routineId);
+          return sum + routine.exercises.length;
+        } catch (e) {
+          return sum + 1;
+        }
+      }
+      return sum + 1;
+    });
+    
+    // Agregar ejercicios de rutinas completadas en la semana
+    final completedRoutinesExercises = currentWeek.values.where((day) {
+      return day['type'] == 'routine' && day['completed'] == true;
+    }).fold<int>(0, (sum, day) {
+      final routineId = day['routineId'] as String?;
+      if (routineId != null) {
+        try {
+          final routine = _gymRoutines.firstWhere((r) => r.id == routineId);
+          return sum + routine.exercises.length;
+        } catch (e) {
+          return sum;
+        }
+      }
+      return sum;
+    });
+    
+    final finalTotalExercises = completedTotalExercises + completedRoutinesExercises;
+    
+    // Objetivos con progreso real basado en completados
     final goals = [
-      {'id': 1, 'title': 'Entrenar 5 días por semana', 'progress': 5, 'target': 5, 'completed': true},
-      {'id': 2, 'title': 'Quemar 3000 calorías', 'progress': 2840, 'target': 3000, 'completed': false},
-      {'id': 3, 'title': 'Completar 10 horas de ejercicio', 'progress': 7, 'target': 10, 'completed': false},
-      {'id': 4, 'title': 'Completar 20 ejercicios', 'progress': 19, 'target': 20, 'completed': false},
+      {
+        'id': 1, 
+        'title': 'Entrenar 5 días por semana', 
+        'progress': completedWorkoutDays, 
+        'target': 5, 
+        'completed': completedWorkoutDays >= 5
+      },
+      {
+        'id': 2, 
+        'title': 'Quemar 3000 calorías', 
+        'progress': finalTotalCalories, 
+        'target': 3000, 
+        'completed': finalTotalCalories >= 3000
+      },
+      {
+        'id': 3, 
+        'title': 'Completar 10 horas de ejercicio', 
+        'progress': finalTotalHours.round(), 
+        'target': 10, 
+        'completed': finalTotalHours >= 10
+      },
+      {
+        'id': 4, 
+        'title': 'Completar 20 ejercicios', 
+        'progress': finalTotalExercises, 
+        'target': 20, 
+        'completed': finalTotalExercises >= 20
+      },
     ];
     
+    // Logros basados en datos reales (solo completados)
     final achievements = [
-      {'id': 1, 'title': 'Primera Rutina', 'description': 'Completaste tu primera rutina de gimnasio', 'icon': '🏋️', 'unlocked': !_gymRoutines.isEmpty},
-      {'id': 2, 'title': 'Consistencia', 'description': '5 entrenamientos en una semana', 'icon': '💪', 'unlocked': true},
-      {'id': 3, 'title': 'Quemador de Calorías', 'description': 'Quemaste 2500+ calorías en una semana', 'icon': '🔥', 'unlocked': true},
-      {'id': 4, 'title': 'Maratón', 'description': '30 días consecutivos entrenando', 'icon': '🏃', 'unlocked': false},
+      {
+        'id': 1, 
+        'title': 'Primera Rutina', 
+        'description': 'Completaste tu primera rutina de gimnasio', 
+        'icon': '🏋️', 
+        'unlocked': _completedRoutines.isNotEmpty
+      },
+      {
+        'id': 2, 
+        'title': 'Consistencia', 
+        'description': '5 entrenamientos/rutinas completados en una semana', 
+        'icon': '💪', 
+        'unlocked': completedWorkoutDays >= 5
+      },
+      {
+        'id': 3, 
+        'title': 'Quemador de Calorías', 
+        'description': 'Quemaste 2500+ calorías en una semana', 
+        'icon': '🔥', 
+        'unlocked': finalTotalCalories >= 2500
+      },
+      {
+        'id': 4, 
+        'title': 'Maratón', 
+        'description': '30 entrenamientos/rutinas completados en total', 
+        'icon': '🏃', 
+        'unlocked': _completedWorkouts.length + _completedRoutines.length >= 30
+      },
     ];
     
     final unlockedAchievements = achievements.where((a) => a['unlocked'] == true).length;
@@ -4698,9 +4994,7 @@ class _HealthSectionsState extends State<HealthSections> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    setState(() {
-                      _showAddGymModal = true;
-                    });
+                    _showAddGymRoutineModal();
                   },
                   icon: const Icon(Icons.add_circle_outline, size: 20),
                   label: const Text('Crear Rutina'),
@@ -4717,9 +5011,7 @@ class _HealthSectionsState extends State<HealthSections> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    setState(() {
-                      _showAddWorkoutModal = true;
-                    });
+                    _showAddWorkoutModalDialog();
                   },
                   icon: const Icon(Icons.directions_run, size: 20),
                   label: const Text('Entrenamiento'),
@@ -4736,8 +5028,8 @@ class _HealthSectionsState extends State<HealthSections> {
           ),
           const SizedBox(height: 24),
           
-          // Lista de rutinas
-          if (routines.isEmpty)
+          // Lista de rutinas y entrenamientos
+          if (_gymRoutines.isEmpty && _workouts.isEmpty)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -4751,7 +5043,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     const Icon(Icons.fitness_center, size: 64, color: AppTheme.white40),
                     const SizedBox(height: 16),
                     const Text(
-                      'No hay rutinas de gimnasio',
+                      'No hay rutinas ni entrenamientos',
                       style: TextStyle(
                         fontSize: 16,
                         color: AppTheme.white60,
@@ -4772,7 +5064,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Mis Rutinas',
+                    'Rutinas y Entrenamientos',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -4780,7 +5072,24 @@ class _HealthSectionsState extends State<HealthSections> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ...routines.map((routine) => _buildGymRoutineCard(routine as GymRoutine)),
+                  // Mostrar rutinas (solo una instancia de cada rutina)
+                  ..._gymRoutines.map((routine) => _buildGymRoutineCard(routine)),
+                  // Mostrar entrenamientos únicos (sin duplicados por recurrencia)
+                  // Agrupar por nombre y mostrar solo uno de cada tipo
+                  ..._workouts.fold<Map<String, Map<String, dynamic>>>(
+                    {},
+                    (map, workout) {
+                      final workoutName = workout['name'] as String? ?? '';
+                      // Si no existe o este es más reciente, actualizar
+                      if (!map.containsKey(workoutName) || 
+                          (workout['timestamp'] as String? ?? '').compareTo(
+                            map[workoutName]!['timestamp'] as String? ?? ''
+                          ) > 0) {
+                        map[workoutName] = workout;
+                      }
+                      return map;
+                    },
+                  ).values.map((workout) => _buildWorkoutCard(workout)),
                 ],
               ),
             ),
@@ -4811,86 +5120,190 @@ class _HealthSectionsState extends State<HealthSections> {
                   final dayData = currentWeek[dayKey]!;
                   final isCompleted = dayData['completed'] == true;
                   
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isCompleted
-                          ? Colors.green.withOpacity(0.1)
-                          : AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
+                  return GestureDetector(
+                    onTap: () {
+                      if ((dayData['workout'] as String).isNotEmpty) {
+                        setState(() {
+                          final newCompleted = !isCompleted;
+                          _currentWeekWorkouts[dayKey]!['completed'] = newCompleted;
+                          
+                          // Actualizar sets de completados según el tipo
+                          final type = dayData['type'] as String?;
+                          if (type == 'workout') {
+                            final workoutId = dayData['workoutId'] as String?;
+                            if (workoutId != null) {
+                              if (newCompleted) {
+                                _completedWorkouts.add(workoutId);
+                              } else {
+                                _completedWorkouts.remove(workoutId);
+                              }
+                            }
+                          } else if (type == 'routine') {
+                            final routineId = dayData['routineId'] as String?;
+                            if (routineId != null) {
+                              if (newCompleted) {
+                                _completedRoutines.add(routineId);
+                              } else {
+                                _completedRoutines.remove(routineId);
+                              }
+                            }
+                          }
+                        });
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
                         color: isCompleted
-                            ? Colors.green.withOpacity(0.3)
-                            : AppTheme.darkSurfaceVariant,
+                            ? Colors.green.withOpacity(0.1)
+                            : AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isCompleted
+                              ? Colors.green.withOpacity(0.3)
+                              : AppTheme.darkSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          alignment: Alignment.center,
-                          child: Text(
-                            weekDays[index],
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: isCompleted ? Colors.green : AppTheme.white60,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            alignment: Alignment.center,
+                            child: Text(
+                              weekDays[index],
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isCompleted ? Colors.green : AppTheme.white60,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                dayData['workout'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isCompleted ? AppTheme.white : AppTheme.white60,
-                                ),
-                              ),
-                              if (dayData['duration'] as int > 0) ...[
-                                const SizedBox(height: 4),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.access_time, size: 12, color: AppTheme.white60),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${dayData['duration']} min',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppTheme.white60,
+                                    // Badge de tipo
+                                    if ((dayData['type'] == 'routine' || dayData['type'] == 'workout'))
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: (dayData['type'] == 'routine' 
+                                              ? Colors.green 
+                                              : Colors.blue).withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          dayData['type'] == 'routine' 
+                                              ? 'RUTINA' 
+                                              : 'ENTRENAMIENTO',
+                                          style: TextStyle(
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.bold,
+                                            color: dayData['type'] == 'routine' 
+                                                ? Colors.green 
+                                                : Colors.blue,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${dayData['calories']} cal',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppTheme.white60,
+                                    if ((dayData['type'] == 'routine' || dayData['type'] == 'workout'))
+                                      const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        dayData['workout'] as String,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isCompleted ? AppTheme.white : AppTheme.white60,
+                                          decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
+                                if (dayData['duration'] as int > 0) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.access_time, size: 12, color: AppTheme.white60),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${dayData['duration']} min',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppTheme.white60,
+                                        ),
+                                      ),
+                                      if (dayData['calories'] as int > 0) ...[
+                                        const SizedBox(width: 12),
+                                        const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${dayData['calories']} cal',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: AppTheme.white60,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
-                        ),
-                        if (isCompleted)
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.check, size: 16, color: Colors.green),
                           ),
-                      ],
+                          if ((dayData['workout'] as String).isNotEmpty)
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  final newCompleted = !isCompleted;
+                                  _currentWeekWorkouts[dayKey]!['completed'] = newCompleted;
+                                  
+                                  // Actualizar sets de completados según el tipo
+                                  final type = dayData['type'] as String?;
+                                  if (type == 'workout') {
+                                    final workoutId = dayData['workoutId'] as String?;
+                                    if (workoutId != null) {
+                                      if (newCompleted) {
+                                        _completedWorkouts.add(workoutId);
+                                      } else {
+                                        _completedWorkouts.remove(workoutId);
+                                      }
+                                    }
+                                  } else if (type == 'routine') {
+                                    final routineId = dayData['routineId'] as String?;
+                                    if (routineId != null) {
+                                      if (newCompleted) {
+                                        _completedRoutines.add(routineId);
+                                      } else {
+                                        _completedRoutines.remove(routineId);
+                                      }
+                                    }
+                                  }
+                                  
+                                  // Los objetivos y logros se recalcularán automáticamente en el próximo build
+                                });
+                              },
+                              icon: Icon(
+                                isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                size: 24,
+                              ),
+                            )
+                          else if (isCompleted)
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.check, size: 16, color: Colors.green),
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 }),
@@ -7891,12 +8304,36 @@ class _HealthSectionsState extends State<HealthSections> {
     );
   }
 
+  String _getRecurrenceText(GymRoutine routine) {
+    if (!routine.isRecurring) return '';
+    
+    switch (routine.recurrenceType) {
+      case 'daily':
+        return 'Diario';
+      case 'weekly':
+        if (routine.recurrenceDays != null && routine.recurrenceDays!.isNotEmpty) {
+          final dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+          final days = routine.recurrenceDays!.map((d) => dayNames[d - 1]).join(', ');
+          return 'Semanal: $days';
+        }
+        return 'Semanal';
+      case 'monthly':
+        return 'Mensual';
+      default:
+        return 'Recurrente';
+    }
+  }
+
   Widget _buildGymRoutineCard(GymRoutine routine) {
     return Card(
       color: AppTheme.darkSurface,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: Colors.green.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -7907,13 +8344,35 @@ class _HealthSectionsState extends State<HealthSections> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    routine.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.white,
-                    ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'RUTINA',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          routine.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Container(
@@ -7941,6 +8400,492 @@ class _HealthSectionsState extends State<HealthSections> {
                 color: AppTheme.orangeAccent,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+            if (routine.description.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                routine.description,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.white70,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            if (routine.isRecurring) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.repeat, size: 14, color: Colors.blue),
+                  const SizedBox(width: 4),
+                  Text(
+                    _getRecurrenceText(routine),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            // Botón para marcar como completada
+            if (!_completedRoutines.contains(routine.id))
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _completedRoutines.add(routine.id);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Rutina "${routine.name}" marcada como completada')),
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle, size: 18),
+                    label: const Text('Marcar como Completada'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Completada',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _completedRoutines.remove(routine.id);
+                        });
+                      },
+                      child: const Text('Desmarcar', style: TextStyle(color: Colors.green)),
+                    ),
+                  ],
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      _editingGymRoutine = routine;
+                      _gymRoutineNameController.text = routine.name;
+                      _gymRoutineDescriptionController.text = routine.description;
+                      _gymRoutineDurationController.text = routine.duration;
+                      _selectedGymRoutineDifficulty = routine.difficulty;
+                      _gymRoutineIsRecurring = routine.isRecurring;
+                      _gymRoutineRecurrenceType = routine.recurrenceType;
+                      _gymRoutineRecurrenceDays = routine.recurrenceDays ?? [];
+                      _gymRoutineStartDate = routine.startDate;
+                      _gymRoutineEndDate = routine.endDate;
+                      _showAddGymRoutineModal();
+                    },
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Editar'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      side: const BorderSide(color: Colors.blue),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: AppTheme.darkSurface,
+                          title: const Text(
+                            'Eliminar Rutina',
+                            style: TextStyle(color: AppTheme.white),
+                          ),
+                          content: Text(
+                            '¿Estás seguro de que deseas eliminar la rutina "${routine.name}"?',
+                            style: const TextStyle(color: AppTheme.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                setState(() {
+                                  _gymRoutines.removeWhere((r) => r.id == routine.id);
+                                  _completedRoutines.remove(routine.id);
+                                });
+                                // Eliminar de la base de datos
+                                await _healthService.deleteGymRoutine(routine.id);
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Rutina eliminada exitosamente')),
+                                );
+                              },
+                              child: const Text(
+                                'Eliminar',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Eliminar'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkoutCard(Map<String, dynamic> workout) {
+    final workoutDate = DateTime.tryParse(workout['date'] as String? ?? '');
+    final isCompleted = _completedWorkouts.contains(workout['id'] as String? ?? '');
+    final workoutName = workout['name'] as String? ?? 'Entrenamiento';
+    final duration = workout['duration'] as int? ?? 0;
+    final calories = workout['calories'] as int? ?? 0;
+    final routineId = workout['routineId'] as String?;
+    final isRecurring = workout['isRecurring'] == true;
+    
+    // Buscar la rutina asociada si existe
+    GymRoutine? associatedRoutine;
+    if (routineId != null) {
+      try {
+        associatedRoutine = _gymRoutines.firstWhere((r) => r.id == routineId);
+      } catch (e) {
+        associatedRoutine = null;
+      }
+    }
+    
+    return Card(
+      color: AppTheme.darkSurface,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isCompleted ? Colors.green.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'ENTRENAMIENTO',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          workoutName,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isCompleted ? Colors.green : AppTheme.white,
+                            decoration: isCompleted ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isCompleted)
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.check_circle, size: 20, color: Colors.green),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (workoutDate != null) ...[
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 14, color: AppTheme.white70),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat('dd/MM/yyyy').format(workoutDate),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.white70,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+            ],
+            Row(
+              children: [
+                if (duration > 0) ...[
+                  const Icon(Icons.access_time, size: 14, color: AppTheme.orangeAccent),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$duration min',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.orangeAccent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                ],
+                if (calories > 0) ...[
+                  const Icon(Icons.local_fire_department, size: 14, color: Colors.orange),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$calories cal',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (associatedRoutine != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.fitness_center, size: 14, color: Colors.green),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Rutina: ${associatedRoutine.name}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.green,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (isRecurring) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.repeat, size: 14, color: Colors.blue),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Recurrente',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            // Botón para marcar como completado
+            if (!isCompleted)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _completedWorkouts.add(workout['id'] as String);
+                        // Actualizar también en la semana actual si está ahí
+                        final dateKey = workout['date'] as String?;
+                        if (dateKey != null) {
+                          final weekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+                          final weekEnd = weekStart.add(const Duration(days: 6));
+                          final workoutDate = DateTime.tryParse(dateKey);
+                          if (workoutDate != null &&
+                              workoutDate.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+                              workoutDate.isBefore(weekEnd.add(const Duration(days: 1)))) {
+                            final dayOfWeek = workoutDate.weekday;
+                            final weekDaysKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                            if (dayOfWeek >= 1 && dayOfWeek <= 7) {
+                              final dayKey = weekDaysKeys[dayOfWeek - 1];
+                              if (_currentWeekWorkouts[dayKey] is Map<String, dynamic>) {
+                                (_currentWeekWorkouts[dayKey] as Map<String, dynamic>)['completed'] = true;
+                              }
+                            }
+                          }
+                        }
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Entrenamiento "$workoutName" marcado como completado')),
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle, size: 18),
+                    label: const Text('Marcar como Completado'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Completado',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _completedWorkouts.remove(workout['id'] as String);
+                          // Actualizar también en la semana actual
+                          final dateKey = workout['date'] as String?;
+                          if (dateKey != null) {
+                            final weekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+                            final weekEnd = weekStart.add(const Duration(days: 6));
+                            final workoutDate = DateTime.tryParse(dateKey);
+                            if (workoutDate != null &&
+                                workoutDate.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+                                workoutDate.isBefore(weekEnd.add(const Duration(days: 1)))) {
+                              final dayOfWeek = workoutDate.weekday;
+                              final weekDaysKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                              if (dayOfWeek >= 1 && dayOfWeek <= 7) {
+                                final dayKey = weekDaysKeys[dayOfWeek - 1];
+                                if (_currentWeekWorkouts[dayKey] is Map<String, dynamic>) {
+                                  (_currentWeekWorkouts[dayKey] as Map<String, dynamic>)['completed'] = false;
+                                }
+                              }
+                            }
+                          }
+                        });
+                      },
+                      child: const Text('Desmarcar', style: TextStyle(color: Colors.green)),
+                    ),
+                  ],
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: AppTheme.darkSurface,
+                          title: const Text(
+                            'Eliminar Entrenamiento',
+                            style: TextStyle(color: AppTheme.white),
+                          ),
+                          content: Text(
+                            '¿Estás seguro de que deseas eliminar el entrenamiento "$workoutName"?',
+                            style: const TextStyle(color: AppTheme.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                setState(() {
+                                  _workouts.removeWhere((w) => w['id'] == workout['id']);
+                                  _completedWorkouts.remove(workout['id'] as String);
+                                  // Limpiar semana actual para recalcular
+                                  _currentWeekWorkouts.clear();
+                                });
+                                // Eliminar de la base de datos
+                                await _healthService.deleteWorkout(workout['id'] as String);
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Entrenamiento eliminado exitosamente')),
+                                );
+                              },
+                              child: const Text(
+                                'Eliminar',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.delete, size: 16),
+                    label: const Text('Eliminar'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -8063,6 +9008,1124 @@ class _HealthSectionsState extends State<HealthSections> {
       default:
         return AppTheme.orangeAccent;
     }
+  }
+
+  void _showAddGymRoutineModal() {
+    // Limpiar controladores si no está editando
+    if (_editingGymRoutine == null) {
+      _gymRoutineNameController.clear();
+      _gymRoutineDescriptionController.clear();
+      _gymRoutineDurationController.clear();
+      _selectedGymRoutineDifficulty = 'Principiante';
+      _gymRoutineIsRecurring = false;
+      _gymRoutineRecurrenceType = null;
+      _gymRoutineRecurrenceDays = [];
+      _gymRoutineStartDate = null;
+      _gymRoutineEndDate = null;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddGymRoutineModal(),
+    ).then((_) {
+      setState(() {
+        _showAddGymModal = false;
+      });
+    });
+  }
+
+  Widget _buildAddGymRoutineModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green, Colors.green.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.fitness_center, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        _editingGymRoutine == null ? 'Nueva Rutina' : 'Editar Rutina',
+                        style: const TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Nombre
+                      TextField(
+                        controller: _gymRoutineNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nombre de la rutina *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.fitness_center, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Descripción
+                      TextField(
+                        controller: _gymRoutineDescriptionController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: 'Descripción',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.description, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Duración
+                      TextField(
+                        controller: _gymRoutineDurationController,
+                        keyboardType: TextInputType.text,
+                        decoration: InputDecoration(
+                          labelText: 'Duración (ej: 45 min) *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.access_time, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Dificultad
+                      DropdownButtonFormField<String>(
+                        value: _selectedGymRoutineDifficulty,
+                        decoration: InputDecoration(
+                          labelText: 'Dificultad *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.speed, color: Colors.green),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green),
+                          ),
+                        ),
+                        dropdownColor: AppTheme.darkSurface,
+                        style: const TextStyle(color: AppTheme.white),
+                        items: ['Principiante', 'Intermedio', 'Avanzado', 'Experto']
+                            .map((difficulty) => DropdownMenuItem(
+                                  value: difficulty,
+                                  child: Text(difficulty),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setModalState(() {
+                            _selectedGymRoutineDifficulty = value ?? 'Principiante';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Recurrencia
+                      CheckboxListTile(
+                        title: const Text(
+                          'Rutina Recurrente',
+                          style: TextStyle(color: AppTheme.white),
+                        ),
+                        subtitle: const Text(
+                          'Repetir esta rutina automáticamente',
+                          style: TextStyle(color: AppTheme.white70, fontSize: 12),
+                        ),
+                        value: _gymRoutineIsRecurring,
+                        onChanged: (value) {
+                          setModalState(() {
+                            _gymRoutineIsRecurring = value ?? false;
+                            if (!_gymRoutineIsRecurring) {
+                              _gymRoutineRecurrenceType = null;
+                              _gymRoutineRecurrenceDays = [];
+                            }
+                          });
+                        },
+                        activeColor: Colors.green,
+                        checkColor: AppTheme.white,
+                        tileColor: AppTheme.darkBackground.withOpacity(0.5),
+                      ),
+                      if (_gymRoutineIsRecurring) ...[
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _gymRoutineRecurrenceType,
+                          decoration: InputDecoration(
+                            labelText: 'Tipo de Recurrencia *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.repeat, color: Colors.green),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.green),
+                            ),
+                          ),
+                          dropdownColor: AppTheme.darkSurface,
+                          style: const TextStyle(color: AppTheme.white),
+                          items: [
+                            const DropdownMenuItem(value: 'daily', child: Text('Diario')),
+                            const DropdownMenuItem(value: 'weekly', child: Text('Semanal')),
+                            const DropdownMenuItem(value: 'monthly', child: Text('Mensual')),
+                          ],
+                          onChanged: (value) {
+                            setModalState(() {
+                              _gymRoutineRecurrenceType = value;
+                              if (value != 'weekly') {
+                                _gymRoutineRecurrenceDays = [];
+                              }
+                            });
+                          },
+                        ),
+                        if (_gymRoutineRecurrenceType == 'weekly') ...[
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Días de la semana:',
+                            style: TextStyle(color: AppTheme.white70, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'
+                            ].asMap().entries.map((entry) {
+                              final index = entry.key + 1; // 1-7
+                              final dayName = entry.value;
+                              final isSelected = _gymRoutineRecurrenceDays.contains(index);
+                              return FilterChip(
+                                label: Text(dayName),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    if (selected) {
+                                      _gymRoutineRecurrenceDays.add(index);
+                                    } else {
+                                      _gymRoutineRecurrenceDays.remove(index);
+                                    }
+                                  });
+                                },
+                                selectedColor: Colors.green.withOpacity(0.3),
+                                checkmarkColor: Colors.green,
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.green : AppTheme.white70,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        // Fecha de inicio
+                        GestureDetector(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _gymRoutineStartDate ?? DateTime.now(),
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (date != null) {
+                              setModalState(() {
+                                _gymRoutineStartDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkBackground.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, color: Colors.green),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _gymRoutineStartDate != null
+                                      ? DateFormat('dd/MM/yyyy').format(_gymRoutineStartDate!)
+                                      : 'Fecha de inicio (opcional)',
+                                  style: TextStyle(
+                                    color: _gymRoutineStartDate != null
+                                        ? AppTheme.white
+                                        : AppTheme.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Fecha de fin
+                        GestureDetector(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _gymRoutineEndDate ?? DateTime.now().add(const Duration(days: 30)),
+                              firstDate: _gymRoutineStartDate ?? DateTime.now(),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (date != null) {
+                              setModalState(() {
+                                _gymRoutineEndDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkBackground.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.event_busy, color: Colors.green),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _gymRoutineEndDate != null
+                                      ? DateFormat('dd/MM/yyyy').format(_gymRoutineEndDate!)
+                                      : 'Fecha de fin (opcional)',
+                                  style: TextStyle(
+                                    color: _gymRoutineEndDate != null
+                                        ? AppTheme.white
+                                        : AppTheme.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      // Botones
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.green,
+                                side: const BorderSide(color: Colors.green),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (_gymRoutineNameController.text.trim().isEmpty ||
+                                    _gymRoutineDurationController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Por favor completa todos los campos requeridos'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (_gymRoutineIsRecurring && _gymRoutineRecurrenceType == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Por favor selecciona un tipo de recurrencia'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                final newRoutine = GymRoutine(
+                                  id: _editingGymRoutine?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                                  name: _gymRoutineNameController.text.trim(),
+                                  description: _gymRoutineDescriptionController.text.trim(),
+                                  duration: _gymRoutineDurationController.text.trim(),
+                                  difficulty: _selectedGymRoutineDifficulty,
+                                  exercises: _editingGymRoutine?.exercises ?? [],
+                                  isRecurring: _gymRoutineIsRecurring,
+                                  recurrenceType: _gymRoutineIsRecurring ? _gymRoutineRecurrenceType : null,
+                                  recurrenceDays: _gymRoutineIsRecurring && _gymRoutineRecurrenceType == 'weekly' 
+                                      ? _gymRoutineRecurrenceDays 
+                                      : null,
+                                  startDate: _gymRoutineStartDate,
+                                  endDate: _gymRoutineEndDate,
+                                );
+                                
+                                setState(() {
+                                  if (_editingGymRoutine != null) {
+                                    final index = _gymRoutines.indexWhere((r) => r.id == _editingGymRoutine!.id);
+                                    if (index != -1) {
+                                      _gymRoutines[index] = newRoutine;
+                                    }
+                                  } else {
+                                    _gymRoutines.add(newRoutine);
+                                  }
+                                });
+                                
+                                // Guardar en la base de datos
+                                await _healthService.saveGymRoutine({
+                                  'id': newRoutine.id,
+                                  'name': newRoutine.name,
+                                  'description': newRoutine.description,
+                                  'duration': newRoutine.duration,
+                                  'difficulty': newRoutine.difficulty,
+                                  'exercises': newRoutine.exercises.map((e) => e.toJson()).toList(),
+                                  'isRecurring': newRoutine.isRecurring,
+                                  'recurrenceType': newRoutine.recurrenceType,
+                                  'recurrenceDays': newRoutine.recurrenceDays,
+                                  'startDate': newRoutine.startDate,
+                                  'endDate': newRoutine.endDate,
+                                });
+                                
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(_editingGymRoutine == null
+                                        ? 'Rutina creada exitosamente'
+                                        : 'Rutina actualizada exitosamente'),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(_editingGymRoutine == null ? 'Crear' : 'Actualizar'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddWorkoutModalDialog() {
+    // Limpiar controladores
+    _workoutNameController.clear();
+    _workoutDurationController.clear();
+    _workoutCaloriesController.clear();
+    _selectedWorkoutDate = DateTime.now();
+    _selectedWorkoutRoutineId = null;
+    _workoutIsRecurring = false;
+    _workoutRecurrenceType = null;
+    _workoutRecurrenceDays = [];
+    _workoutStartDate = null;
+    _workoutEndDate = null;
+    
+    showDialog(
+      context: context,
+      builder: (context) => _buildAddWorkoutModal(),
+    ).then((_) {
+      setState(() {
+        _showAddWorkoutModal = false;
+      });
+    });
+  }
+
+  Widget _buildAddWorkoutModal() {
+    return StatefulBuilder(
+      builder: (context, setModalState) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue, Colors.blue.shade700],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.directions_run, color: AppTheme.white, size: 28),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Registrar Entrenamiento',
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close, color: AppTheme.white),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenido
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Fecha
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedWorkoutDate,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setModalState(() {
+                              _selectedWorkoutDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkBackground.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: Colors.blue),
+                              const SizedBox(width: 12),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(_selectedWorkoutDate),
+                                style: const TextStyle(color: AppTheme.white, fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Nombre del entrenamiento
+                      TextField(
+                        controller: _workoutNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nombre del entrenamiento *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.fitness_center, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Rutina (opcional)
+                      if (_gymRoutines.isNotEmpty)
+                        DropdownButtonFormField<String>(
+                          value: _selectedWorkoutRoutineId,
+                          decoration: InputDecoration(
+                            labelText: 'Rutina (opcional)',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.list, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue),
+                            ),
+                          ),
+                          dropdownColor: AppTheme.darkSurface,
+                          style: const TextStyle(color: AppTheme.white),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('Ninguna'),
+                            ),
+                            ..._gymRoutines.map((routine) => DropdownMenuItem(
+                                  value: routine.id,
+                                  child: Text(routine.name),
+                                )),
+                          ],
+                          onChanged: (value) {
+                            setModalState(() {
+                              _selectedWorkoutRoutineId = value;
+                              if (value != null) {
+                                final routine = _gymRoutines.firstWhere((r) => r.id == value);
+                                _workoutNameController.text = routine.name;
+                                _workoutDurationController.text = routine.duration;
+                              }
+                            });
+                          },
+                        ),
+                      if (_gymRoutines.isNotEmpty) const SizedBox(height: 16),
+                      // Duración
+                      TextField(
+                        controller: _workoutDurationController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Duración (minutos) *',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.access_time, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Calorías
+                      TextField(
+                        controller: _workoutCaloriesController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Calorías quemadas (opcional)',
+                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          prefixIcon: const Icon(Icons.local_fire_department, color: Colors.blue),
+                          filled: true,
+                          fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.blue),
+                          ),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
+                      ),
+                      const SizedBox(height: 16),
+                      // Recurrencia
+                      CheckboxListTile(
+                        title: const Text(
+                          'Entrenamiento Recurrente',
+                          style: TextStyle(color: AppTheme.white),
+                        ),
+                        subtitle: const Text(
+                          'Repetir este entrenamiento automáticamente',
+                          style: TextStyle(color: AppTheme.white70, fontSize: 12),
+                        ),
+                        value: _workoutIsRecurring,
+                        onChanged: (value) {
+                          setModalState(() {
+                            _workoutIsRecurring = value ?? false;
+                            if (!_workoutIsRecurring) {
+                              _workoutRecurrenceType = null;
+                              _workoutRecurrenceDays = [];
+                            }
+                          });
+                        },
+                        activeColor: Colors.blue,
+                        checkColor: AppTheme.white,
+                        tileColor: AppTheme.darkBackground.withOpacity(0.5),
+                      ),
+                      if (_workoutIsRecurring) ...[
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _workoutRecurrenceType,
+                          decoration: InputDecoration(
+                            labelText: 'Tipo de Recurrencia *',
+                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            prefixIcon: const Icon(Icons.repeat, color: Colors.blue),
+                            filled: true,
+                            fillColor: AppTheme.darkBackground.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue),
+                            ),
+                          ),
+                          dropdownColor: AppTheme.darkSurface,
+                          style: const TextStyle(color: AppTheme.white),
+                          items: [
+                            const DropdownMenuItem(value: 'daily', child: Text('Diario')),
+                            const DropdownMenuItem(value: 'weekly', child: Text('Semanal')),
+                            const DropdownMenuItem(value: 'monthly', child: Text('Mensual')),
+                          ],
+                          onChanged: (value) {
+                            setModalState(() {
+                              _workoutRecurrenceType = value;
+                              if (value != 'weekly') {
+                                _workoutRecurrenceDays = [];
+                              }
+                            });
+                          },
+                        ),
+                        if (_workoutRecurrenceType == 'weekly') ...[
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Días de la semana:',
+                            style: TextStyle(color: AppTheme.white70, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'
+                            ].asMap().entries.map((entry) {
+                              final index = entry.key + 1;
+                              final dayName = entry.value;
+                              final isSelected = _workoutRecurrenceDays.contains(index);
+                              return FilterChip(
+                                label: Text(dayName),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setModalState(() {
+                                    if (selected) {
+                                      _workoutRecurrenceDays.add(index);
+                                    } else {
+                                      _workoutRecurrenceDays.remove(index);
+                                    }
+                                  });
+                                },
+                                selectedColor: Colors.blue.withOpacity(0.3),
+                                checkmarkColor: Colors.blue,
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.blue : AppTheme.white70,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        // Fecha de inicio
+                        GestureDetector(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _workoutStartDate ?? _selectedWorkoutDate,
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (date != null) {
+                              setModalState(() {
+                                _workoutStartDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkBackground.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, color: Colors.blue),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _workoutStartDate != null
+                                      ? DateFormat('dd/MM/yyyy').format(_workoutStartDate!)
+                                      : 'Fecha de inicio (opcional)',
+                                  style: TextStyle(
+                                    color: _workoutStartDate != null
+                                        ? AppTheme.white
+                                        : AppTheme.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Fecha de fin
+                        GestureDetector(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _workoutEndDate ?? (_workoutStartDate ?? _selectedWorkoutDate).add(const Duration(days: 30)),
+                              firstDate: _workoutStartDate ?? DateTime.now(),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (date != null) {
+                              setModalState(() {
+                                _workoutEndDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkBackground.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.event_busy, color: Colors.blue),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _workoutEndDate != null
+                                      ? DateFormat('dd/MM/yyyy').format(_workoutEndDate!)
+                                      : 'Fecha de fin (opcional)',
+                                  style: TextStyle(
+                                    color: _workoutEndDate != null
+                                        ? AppTheme.white
+                                        : AppTheme.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      // Botones
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.blue,
+                                side: const BorderSide(color: Colors.blue),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancelar'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (_workoutNameController.text.trim().isEmpty ||
+                                    _workoutDurationController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Por favor completa todos los campos requeridos'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (_workoutIsRecurring && _workoutRecurrenceType == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Por favor selecciona un tipo de recurrencia'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                // Crear entrenamiento(s) - si es recurrente, crear múltiples
+                                final workoutsToCreate = <Map<String, dynamic>>[];
+                                
+                                if (_workoutIsRecurring) {
+                                  // Generar entrenamientos recurrentes
+                                  final startDate = _workoutStartDate ?? _selectedWorkoutDate;
+                                  final endDate = _workoutEndDate ?? startDate.add(const Duration(days: 30));
+                                  DateTime currentDate = startDate;
+                                  
+                                  while (currentDate.isBefore(endDate) || currentDate.isAtSameMomentAs(endDate)) {
+                                    bool shouldCreate = false;
+                                    
+                                    switch (_workoutRecurrenceType) {
+                                      case 'daily':
+                                        shouldCreate = true;
+                                        break;
+                                      case 'weekly':
+                                        if (_workoutRecurrenceDays.contains(currentDate.weekday)) {
+                                          shouldCreate = true;
+                                        }
+                                        break;
+                                      case 'monthly':
+                                        if (currentDate.day == startDate.day) {
+                                          shouldCreate = true;
+                                        }
+                                        break;
+                                    }
+                                    
+                                    if (shouldCreate) {
+                                      workoutsToCreate.add({
+                                        'id': '${DateTime.now().millisecondsSinceEpoch}_${currentDate.millisecondsSinceEpoch}',
+                                        'name': _workoutNameController.text.trim(),
+                                        'date': DateFormat('yyyy-MM-dd').format(currentDate),
+                                        'duration': int.tryParse(_workoutDurationController.text.trim()) ?? 0,
+                                        'calories': int.tryParse(_workoutCaloriesController.text.trim()) ?? 0,
+                                        'routineId': _selectedWorkoutRoutineId,
+                                        'timestamp': currentDate.toIso8601String(),
+                                        'isRecurring': true,
+                                        'completed': false, // No marcar automáticamente
+                                      });
+                                    }
+                                    
+                                    currentDate = currentDate.add(const Duration(days: 1));
+                                  }
+                                } else {
+                                  // Entrenamiento único
+                                  workoutsToCreate.add({
+                                    'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                    'name': _workoutNameController.text.trim(),
+                                    'date': DateFormat('yyyy-MM-dd').format(_selectedWorkoutDate),
+                                    'duration': int.tryParse(_workoutDurationController.text.trim()) ?? 0,
+                                    'calories': int.tryParse(_workoutCaloriesController.text.trim()) ?? 0,
+                                    'routineId': _selectedWorkoutRoutineId,
+                                    'timestamp': DateTime.now().toIso8601String(),
+                                    'isRecurring': false,
+                                    'completed': false, // No marcar automáticamente
+                                  });
+                                }
+                                
+                                setState(() {
+                                  for (final workout in workoutsToCreate) {
+                                    _workouts.add(workout);
+                                    
+                                    // Actualizar datos de fitness (solo si no está completado)
+                                    final dateKey = workout['date'] as String;
+                                    if (_fitnessData[dateKey] == null) {
+                                      _fitnessData[dateKey] = {};
+                                    }
+                                    // No marcar automáticamente como completado
+                                    
+                                    // Actualizar semana actual si el entrenamiento es de esta semana
+                                    final workoutDate = DateTime.tryParse(workout['date'] as String);
+                                    if (workoutDate != null) {
+                                      final currentWeekStart = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+                                      final currentWeekEnd = currentWeekStart.add(const Duration(days: 6));
+                                      if (workoutDate.isAfter(currentWeekStart.subtract(const Duration(days: 1))) &&
+                                          workoutDate.isBefore(currentWeekEnd.add(const Duration(days: 1)))) {
+                                        final dayOfWeek = workoutDate.weekday;
+                                        final weekDaysKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                                        if (dayOfWeek >= 1 && dayOfWeek <= 7) {
+                                          final dayKey = weekDaysKeys[dayOfWeek - 1];
+                                          // Limpiar semana si cambió
+                                          if (_currentWeekWorkouts['_weekStart'] != currentWeekStart) {
+                                            _currentWeekWorkouts.clear();
+                                            _currentWeekWorkouts['_weekStart'] = currentWeekStart;
+                                          }
+                                          _currentWeekWorkouts[dayKey] = {
+                                            'workout': workout['name'] as String? ?? 'Entrenamiento',
+                                            'duration': workout['duration'] as int? ?? 0,
+                                            'calories': workout['calories'] as int? ?? 0,
+                                            'completed': false, // No marcar automáticamente
+                                            'workoutId': workout['id'] as String,
+                                          };
+                                        }
+                                      }
+                                    }
+                                  }
+                                });
+                                
+                                // Guardar todos los entrenamientos en la base de datos
+                                for (final workout in workoutsToCreate) {
+                                  await _healthService.saveWorkout({
+                                    'id': workout['id'],
+                                    'name': workout['name'],
+                                    'date': workout['date'],
+                                    'duration': workout['duration'],
+                                    'calories': workout['calories'],
+                                    'routineId': workout['routineId'],
+                                    'timestamp': workout['timestamp'],
+                                    'isRecurring': workout['isRecurring'],
+                                    'recurrenceType': _workoutIsRecurring ? _workoutRecurrenceType : null,
+                                    'recurrenceDays': _workoutIsRecurring && _workoutRecurrenceType == 'weekly' 
+                                        ? _workoutRecurrenceDays 
+                                        : null,
+                                    'startDate': _workoutStartDate,
+                                    'endDate': _workoutEndDate,
+                                    'completed': workout['completed'],
+                                  });
+                                }
+                                
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(workoutsToCreate.length > 1
+                                        ? '${workoutsToCreate.length} entrenamientos creados exitosamente'
+                                        : 'Entrenamiento registrado exitosamente'),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Registrar'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _formatDate(DateTime date) {

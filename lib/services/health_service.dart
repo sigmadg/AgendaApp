@@ -245,5 +245,195 @@ class HealthService {
       return {'success': false, 'error': e.toString()};
     }
   }
+
+  /// Obtener todas las rutinas de gimnasio del usuario
+  Future<List<Map<String, dynamic>>> getGymRoutines() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return [];
+      }
+
+      final response = await _supabase
+          .from('gym_routines')
+          .select()
+          .eq('user_id', userId)
+          .order('name', ascending: true);
+
+      // Convertir los datos de la base de datos al formato esperado
+      return response.map<Map<String, dynamic>>((row) {
+        return {
+          'id': row['id'],
+          'name': row['name'],
+          'description': row['description'] ?? '',
+          'duration': row['duration'] ?? '',
+          'difficulty': row['difficulty'] ?? 'Principiante',
+          'exercises': row['exercises'] ?? [],
+          'isRecurring': row['is_recurring'] ?? false,
+          'recurrenceType': row['recurrence_type'],
+          'recurrenceDays': row['recurrence_days'] != null 
+              ? List<int>.from(row['recurrence_days'])
+              : null,
+          'startDate': row['start_date'] != null 
+              ? (DateTime.tryParse(row['start_date'])?.toIso8601String() ?? null)
+              : null,
+          'endDate': row['end_date'] != null 
+              ? (DateTime.tryParse(row['end_date'])?.toIso8601String() ?? null)
+              : null,
+        };
+      }).toList();
+    } catch (e) {
+      print('HealthService: Error obteniendo rutinas: $e');
+      return [];
+    }
+  }
+
+  /// Guardar rutina de gimnasio
+  Future<Map<String, dynamic>> saveGymRoutine(Map<String, dynamic> routineData) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return {'success': false, 'error': 'Usuario no autenticado'};
+      }
+
+      final data = {
+        'user_id': userId,
+        'id': routineData['id'],
+        'name': routineData['name'],
+        'description': routineData['description'],
+        'duration': routineData['duration'],
+        'difficulty': routineData['difficulty'],
+        'exercises': routineData['exercises'],
+        'is_recurring': routineData['isRecurring'] ?? false,
+        'recurrence_type': routineData['recurrenceType'],
+        'recurrence_days': routineData['recurrenceDays'],
+        'start_date': routineData['startDate']?.toIso8601String(),
+        'end_date': routineData['endDate']?.toIso8601String(),
+      };
+
+      await _supabase.from('gym_routines').upsert(data);
+
+      return {'success': true};
+    } catch (e) {
+      print('HealthService: Error guardando rutina: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// Eliminar rutina de gimnasio
+  Future<Map<String, dynamic>> deleteGymRoutine(String routineId) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return {'success': false, 'error': 'Usuario no autenticado'};
+      }
+
+      await _supabase
+          .from('gym_routines')
+          .delete()
+          .eq('id', routineId)
+          .eq('user_id', userId);
+
+      return {'success': true};
+    } catch (e) {
+      print('HealthService: Error eliminando rutina: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// Obtener todos los entrenamientos del usuario
+  Future<List<Map<String, dynamic>>> getWorkouts() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return [];
+      }
+
+      final response = await _supabase
+          .from('workouts')
+          .select()
+          .eq('user_id', userId)
+          .order('date', ascending: false);
+
+      // Convertir los datos de la base de datos al formato esperado
+      return response.map<Map<String, dynamic>>((row) {
+        return {
+          'id': row['id'],
+          'name': row['name'],
+          'date': row['date'],
+          'duration': row['duration'] ?? 0,
+          'calories': row['calories'] ?? 0,
+          'routineId': row['routine_id'],
+          'timestamp': row['timestamp'] ?? DateTime.now().toIso8601String(),
+          'isRecurring': row['is_recurring'] ?? false,
+          'recurrenceType': row['recurrence_type'],
+          'recurrenceDays': row['recurrence_days'] != null 
+              ? List<int>.from(row['recurrence_days'])
+              : null,
+          'startDate': row['start_date'],
+          'endDate': row['end_date'],
+          'completed': row['completed'] ?? false,
+        };
+      }).toList();
+    } catch (e) {
+      print('HealthService: Error obteniendo entrenamientos: $e');
+      return [];
+    }
+  }
+
+  /// Guardar entrenamiento
+  Future<Map<String, dynamic>> saveWorkout(Map<String, dynamic> workoutData) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return {'success': false, 'error': 'Usuario no autenticado'};
+      }
+
+      final data = {
+        'user_id': userId,
+        'id': workoutData['id'],
+        'name': workoutData['name'],
+        'date': workoutData['date'],
+        'duration': workoutData['duration'],
+        'calories': workoutData['calories'],
+        'routine_id': workoutData['routineId'],
+        'timestamp': workoutData['timestamp'],
+        'is_recurring': workoutData['isRecurring'] ?? false,
+        'recurrence_type': workoutData['recurrenceType'],
+        'recurrence_days': workoutData['recurrenceDays'],
+        'start_date': workoutData['startDate']?.toIso8601String(),
+        'end_date': workoutData['endDate']?.toIso8601String(),
+        'completed': workoutData['completed'] ?? false,
+      };
+
+      await _supabase.from('workouts').upsert(data);
+
+      return {'success': true};
+    } catch (e) {
+      print('HealthService: Error guardando entrenamiento: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// Eliminar entrenamiento
+  Future<Map<String, dynamic>> deleteWorkout(String workoutId) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return {'success': false, 'error': 'Usuario no autenticado'};
+      }
+
+      await _supabase
+          .from('workouts')
+          .delete()
+          .eq('id', workoutId)
+          .eq('user_id', userId);
+
+      return {'success': true};
+    } catch (e) {
+      print('HealthService: Error eliminando entrenamiento: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
 }
 

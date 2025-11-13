@@ -10,6 +10,8 @@ import '../../services/event_service.dart';
 import '../../services/task_service.dart';
 import '../../services/settings_service.dart';
 import '../../services/class_schedule_service.dart';
+import '../../services/health_service.dart';
+import '../../models/exercise/gym_routine.dart';
 import '../../models/school/class_schedule.dart';
 import '../../models/school/academic_task.dart';
 import '../calendar/calendar_view.dart';
@@ -38,8 +40,13 @@ class _PersonalSectionsState extends State<PersonalSections> {
   final TaskService _taskService = TaskService();
   final SettingsService _settingsService = SettingsService();
   final ClassScheduleService _classScheduleService = ClassScheduleService();
+  final HealthService _healthService = HealthService();
   bool _isLoadingEvents = false;
   bool _isLoadingTasks = false;
+  
+  // Datos de rutinas y entrenamientos para el calendario
+  List<GymRoutine> _gymRoutines = [];
+  List<Map<String, dynamic>> _workouts = [];
   
   // Configuraciones de usuario
   Map<String, dynamic>? _userSettings;
@@ -72,6 +79,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
     _loadTasks();
     _loadSettings();
     _syncClassesToEvents(); // Sincronizar clases existentes como eventos
+    _loadGymRoutinesAndWorkouts(); // Cargar rutinas y entrenamientos para el calendario
   }
 
   @override
@@ -279,31 +287,169 @@ class _PersonalSectionsState extends State<PersonalSections> {
     return (daysDifference ~/ 7) + 1;
   }
 
+  // Cargar rutinas y entrenamientos para el calendario
+  Future<void> _loadGymRoutinesAndWorkouts() async {
+    try {
+      final routinesData = await _healthService.getGymRoutines();
+      final workoutsData = await _healthService.getWorkouts();
+      
+      setState(() {
+        _gymRoutines = routinesData.map((data) => GymRoutine.fromJson(data)).toList();
+        _workouts = workoutsData;
+      });
+    } catch (e) {
+      print('Error cargando rutinas y entrenamientos: $e');
+    }
+  }
+
+  // Generar tareas del calendario basadas en rutinas y entrenamientos recurrentes
+  List<CalendarTask> _generateRecurringTasksForDate(DateTime date) {
+    final tasks = <CalendarTask>[];
+    
+    // Generar tareas de rutinas recurrentes
+    for (final routine in _gymRoutines) {
+      if (!routine.isRecurring) continue;
+      
+      // Verificar si la rutina aplica para este día
+      if (routine.startDate != null && date.isBefore(routine.startDate!)) continue;
+      if (routine.endDate != null && date.isAfter(routine.endDate!)) continue;
+      
+      bool shouldCreate = false;
+      final dayOfWeek = date.weekday; // 1-7 (lunes-domingo)
+      
+      switch (routine.recurrenceType) {
+        case 'daily':
+          shouldCreate = true;
+          break;
+        case 'weekly':
+          if (routine.recurrenceDays != null && routine.recurrenceDays!.contains(dayOfWeek)) {
+            shouldCreate = true;
+          }
+          break;
+        case 'monthly':
+          if (routine.startDate != null && date.day == routine.startDate!.day) {
+            shouldCreate = true;
+          }
+          break;
+      }
+      
+      if (shouldCreate) {
+        tasks.add(CalendarTask(
+          id: 'routine_${routine.id}_${date.millisecondsSinceEpoch}',
+          title: '🏋️ ${routine.name}',
+          date: date,
+          completed: false,
+          category: 'Salud',
+          priority: 'medium',
+          time: null,
+        ));
+      }
+    }
+    
+    // Generar tareas de entrenamientos recurrentes
+    for (final workout in _workouts) {
+      if (workout['isRecurring'] != true) continue;
+      
+      final workoutDate = DateTime.tryParse(workout['date'] as String? ?? '');
+      if (workoutDate == null) continue;
+      
+      final recurrenceType = workout['recurrenceType'] as String?;
+      final recurrenceDays = workout['recurrenceDays'] as List<dynamic>?;
+      final startDate = workout['startDate'] != null 
+          ? DateTime.tryParse(workout['startDate'] as String) 
+          : null;
+      final endDate = workout['endDate'] != null 
+          ? DateTime.tryParse(workout['endDate'] as String) 
+          : null;
+      
+      // Verificar fechas de inicio y fin
+      if (startDate != null && date.isBefore(startDate)) continue;
+      if (endDate != null && date.isAfter(endDate)) continue;
+      
+      bool shouldCreate = false;
+      final dayOfWeek = date.weekday;
+      
+      switch (recurrenceType) {
+        case 'daily':
+          shouldCreate = true;
+          break;
+        case 'weekly':
+          if (recurrenceDays != null && recurrenceDays.contains(dayOfWeek)) {
+            shouldCreate = true;
+          }
+          break;
+        case 'monthly':
+          if (startDate != null && date.day == startDate.day) {
+            shouldCreate = true;
+          }
+          break;
+      }
+      
+      if (shouldCreate) {
+        final workoutName = workout['name'] as String? ?? 'Entrenamiento';
+        tasks.add(CalendarTask(
+          id: 'workout_${workout['id']}_${date.millisecondsSinceEpoch}',
+          title: '💪 $workoutName',
+          date: date,
+          completed: false,
+          category: 'Salud',
+          priority: 'medium',
+          time: null,
+        ));
+      }
+    }
+    
+    return tasks;
+  }
+
   List<CalendarTask> _getTasksForDate(DateTime date) {
-    return _tasks.where((task) {
+    final regularTasks = _tasks.where((task) {
       return task.date.year == date.year &&
              task.date.month == date.month &&
              task.date.day == date.day;
     }).toList();
+    
+    // Agregar tareas generadas de rutinas y entrenamientos recurrentes
+    final recurringTasks = _generateRecurringTasksForDate(date);
+    
+    return [...regularTasks, ...recurringTasks];
   }
 
   // Obtener tareas para una semana
   List<CalendarTask> _getTasksForWeek(DateTime startDate) {
     final endDate = startDate.add(const Duration(days: 6));
-    return _tasks.where((task) {
+    final regularTasks = _tasks.where((task) {
       return task.date.isAfter(startDate.subtract(const Duration(days: 1))) &&
              task.date.isBefore(endDate.add(const Duration(days: 1)));
     }).toList();
+    
+    // Agregar tareas generadas de rutinas y entrenamientos recurrentes para cada día de la semana
+    final recurringTasks = <CalendarTask>[];
+    for (int i = 0; i < 7; i++) {
+      final date = startDate.add(Duration(days: i));
+      recurringTasks.addAll(_generateRecurringTasksForDate(date));
+    }
+    
+    return [...regularTasks, ...recurringTasks];
   }
 
   // Obtener tareas para un mes
   List<CalendarTask> _getTasksForMonth(DateTime date) {
     final firstDay = DateTime(date.year, date.month, 1);
     final lastDay = DateTime(date.year, date.month + 1, 0);
-    return _tasks.where((task) {
+    final regularTasks = _tasks.where((task) {
       return task.date.isAfter(firstDay.subtract(const Duration(days: 1))) &&
              task.date.isBefore(lastDay.add(const Duration(days: 1)));
     }).toList();
+    
+    // Agregar tareas generadas de rutinas y entrenamientos recurrentes para cada día del mes
+    final recurringTasks = <CalendarTask>[];
+    for (int day = 1; day <= lastDay.day; day++) {
+      final currentDate = DateTime(date.year, date.month, day);
+      recurringTasks.addAll(_generateRecurringTasksForDate(currentDate));
+    }
+    
+    return [...regularTasks, ...recurringTasks];
   }
 
   // Cargar configuraciones desde Supabase
