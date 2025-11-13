@@ -297,7 +297,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -326,7 +326,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -347,7 +347,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -384,12 +384,12 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             },
                             decoration: InputDecoration(
                               hintText: 'Tu nombre completo',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              hintStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: Icon(
                                 Icons.person_outline,
                                 color: _hasNameText
                                     ? _carminePastel
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 22,
                               ),
                               border: InputBorder.none,
@@ -424,7 +424,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -465,12 +465,12 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             },
                             decoration: InputDecoration(
                               hintText: 'tu@email.com',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              hintStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: Icon(
                                 Icons.mail_outline,
                                 color: _hasEmailText
                                     ? _carminePastel
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 22,
                               ),
                               border: InputBorder.none,
@@ -505,7 +505,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -546,12 +546,12 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             },
                             decoration: InputDecoration(
                               hintText: 'Mínimo 6 caracteres',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              hintStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: _hasPasswordText
                                     ? _carminePastel
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 22,
                               ),
                               suffixIcon: IconButton(
@@ -561,7 +561,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                       : Icons.visibility_off_outlined,
                                   color: _hasPasswordText
                                       ? _carminePastel
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   size: 22,
                                 ),
                                 onPressed: () {
@@ -602,7 +602,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -643,12 +643,12 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                             },
                             decoration: InputDecoration(
                               hintText: 'Repite tu contraseña',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              hintStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: _hasConfirmPasswordText
                                     ? _carminePastel
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 22,
                               ),
                               suffixIcon: IconButton(
@@ -658,7 +658,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                       : Icons.visibility_off_outlined,
                                   color: _hasConfirmPasswordText
                                       ? _carminePastel
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   size: 22,
                                 ),
                                 onPressed: () {
@@ -719,7 +719,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                     border: Border.all(
                                       color: _acceptTerms
                                           ? _carminePastel
-                                          : AppTheme.white60,
+                                          : AppTheme.white,
                                       width: 2,
                                     ),
                                     borderRadius: BorderRadius.circular(4),
@@ -744,7 +744,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                               text: TextSpan(
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                                 children: [
                                   const TextSpan(text: 'Acepto los '),
@@ -900,7 +900,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             '¿Ya tienes cuenta?',
-                            style: TextStyle(color: AppTheme.white40, fontSize: 12),
+                            style: TextStyle(color: AppTheme.white, fontSize: 12),
                           ),
                         ),
                         Expanded(child: Divider(color: AppTheme.darkSurfaceVariant)),
@@ -953,11 +953,11 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.shield_outlined, size: 16, color: AppTheme.white60),
+                        const Icon(Icons.shield_outlined, size: 16, color: AppTheme.white),
                         const SizedBox(width: 8),
                         Text(
                           'Tus datos están protegidos y seguros',
-                          style: TextStyle(color: AppTheme.white60, fontSize: 12),
+                          style: TextStyle(color: AppTheme.white, fontSize: 12),
                         ),
                       ],
                     ),

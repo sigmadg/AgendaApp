@@ -219,7 +219,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -360,7 +360,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
             context,
             icon: Icons.settings_outlined,
             title: 'Configuración',
-            color: AppTheme.white60,
+            color: AppTheme.white,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=settings');
@@ -451,7 +451,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                     section['icon'] as IconData,
                     color: isActive 
                         ? Colors.deepPurple 
-                        : AppTheme.white60,
+                        : AppTheme.white,
                     size: 20,
                   ),
                   const SizedBox(height: 2),
@@ -462,7 +462,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                         fontSize: 9,
                         color: isActive 
                             ? Colors.deepPurple 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontWeight: isActive 
                             ? FontWeight.w600 
                             : FontWeight.normal,
@@ -588,7 +588,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -641,7 +641,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               'Agrega tus ideas de negocio para desarrollarlas',
               style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -702,7 +702,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppTheme.white60),
+                  icon: const Icon(Icons.edit, color: AppTheme.white),
                   onPressed: () {},
                 ),
                 IconButton(
@@ -721,7 +721,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                 idea['description'],
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                 ),
               ),
             ],
@@ -729,13 +729,13 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.category, size: 16, color: AppTheme.white60),
+                  Icon(Icons.category, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     'Categoría: ${idea['category']}',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -1065,7 +1065,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppTheme.white60),
+                  icon: const Icon(Icons.edit, color: AppTheme.white),
                   onPressed: () {},
                 ),
                 IconButton(
@@ -1085,7 +1085,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                 ),
               ),
               const SizedBox(height: 4),
@@ -1093,7 +1093,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                 plan['executiveSummary'],
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                 ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -1336,7 +1336,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                       finance['description'],
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                 ],
@@ -1616,20 +1616,20 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                 campaign['description'],
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                 ),
               ),
             ],
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.monetization_on, size: 16, color: AppTheme.white60),
+                Icon(Icons.monetization_on, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   'Presupuesto: \$${(campaign['budget'] ?? 0.0).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1890,7 +1890,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                           contact['company'],
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                     ],
@@ -1910,13 +1910,13 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.email, size: 16, color: AppTheme.white60),
+                  Icon(Icons.email, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     contact['email'],
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -1926,13 +1926,13 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.phone, size: 16, color: AppTheme.white60),
+                  Icon(Icons.phone, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     contact['phone'],
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -2106,7 +2106,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
             'Dashboard de métricas en desarrollo',
             style: TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -2218,7 +2218,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                     'Cantidad: ${resource['quantity'] ?? 0}',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -2495,7 +2495,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
                 task['description'],
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                 ),
               ),
             ],
@@ -2503,13 +2503,13 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                  Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     'Fecha límite: ${task['deadline']}',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -2695,7 +2695,7 @@ class _EntrepreneurshipSectionsState extends State<EntrepreneurshipSections> {
               subtitle,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),

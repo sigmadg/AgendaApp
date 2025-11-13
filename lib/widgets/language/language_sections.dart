@@ -177,7 +177,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -377,14 +377,14 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     children: [
                       Icon(
                         section['icon'] as IconData,
-                        color: isActive ? AppTheme.white : AppTheme.white60,
+                        color: isActive ? AppTheme.white : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         section['name'] as String,
                         style: TextStyle(
-                          color: isActive ? AppTheme.white : AppTheme.white60,
+                          color: isActive ? AppTheme.white : AppTheme.white,
                           fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                         ),
                       ),
@@ -601,7 +601,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               '${langStats['mastered']}/${langStats['total']}',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -626,7 +626,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.search, color: AppTheme.white60, size: 20),
+                        Icon(Icons.search, color: AppTheme.white, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -635,14 +635,14 @@ class _LanguageSectionsState extends State<LanguageSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               hintText: 'Buscar palabras...',
-                              hintStyle: TextStyle(color: AppTheme.white60),
+                              hintStyle: TextStyle(color: AppTheme.white),
                               border: InputBorder.none,
                             ),
                           ),
                         ),
                         if (_vocabularySearchQuery.isNotEmpty)
                           IconButton(
-                            icon: const Icon(Icons.close, color: AppTheme.white60, size: 20),
+                            icon: const Icon(Icons.close, color: AppTheme.white, size: 20),
                             onPressed: () => setState(() => _vocabularySearchQuery = ''),
                           ),
                       ],
@@ -668,7 +668,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               },
                               selectedColor: const Color(0xFF06B6D4),
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : AppTheme.white70,
+                                color: isSelected ? Colors.white : AppTheme.white,
                                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                               ),
                               backgroundColor: AppTheme.darkSurfaceVariant,
@@ -850,7 +850,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -864,7 +864,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.book, size: 64, color: AppTheme.white40),
+          Icon(Icons.book, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             _vocabularySearchQuery.isNotEmpty
@@ -873,7 +873,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -884,7 +884,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                 : 'Agrega tu primera palabra para comenzar a estudiar',
             style: const TextStyle(
               fontSize: 14,
-              color: AppTheme.white40,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1057,7 +1057,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                           system['description'] as String,
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -1076,7 +1076,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                           '${systemStats['completed']}/${systemStats['total']}',
                           style: TextStyle(
                             fontSize: 10,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1120,7 +1120,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   'Selecciona una plantilla para comenzar a practicar',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1373,7 +1373,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                                 'Precisión: ${session['accuracy']}%',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white60,
+                                  color: AppTheme.white,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -1383,7 +1383,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                                 ),
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: AppTheme.white40,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ],
@@ -1425,7 +1425,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.refresh, color: AppTheme.white60),
+                    icon: const Icon(Icons.refresh, color: AppTheme.white),
                     onPressed: () {
                       // Limpiar canvas (implementar si es necesario)
                     },
@@ -1484,7 +1484,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   'Guía de caracteres',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1505,7 +1505,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   Icon(
                     Icons.edit,
                     size: 64,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1513,7 +1513,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1521,7 +1521,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     'Dibuja los caracteres aquí',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white40,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1529,7 +1529,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     'Nota: Para una implementación completa, se requiere un widget de dibujo personalizado',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white40,
+                      color: AppTheme.white,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1590,7 +1590,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1769,7 +1769,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               '${langStats['mastered']}/${langStats['total']}',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1794,7 +1794,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.search, color: AppTheme.white60, size: 20),
+                        Icon(Icons.search, color: AppTheme.white, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -1803,14 +1803,14 @@ class _LanguageSectionsState extends State<LanguageSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               hintText: 'Buscar notas de gramática...',
-                              hintStyle: TextStyle(color: AppTheme.white60),
+                              hintStyle: TextStyle(color: AppTheme.white),
                               border: InputBorder.none,
                             ),
                           ),
                         ),
                         if (_grammarSearchQuery.isNotEmpty)
                           IconButton(
-                            icon: const Icon(Icons.close, color: AppTheme.white60, size: 20),
+                            icon: const Icon(Icons.close, color: AppTheme.white, size: 20),
                             onPressed: () => setState(() => _grammarSearchQuery = ''),
                           ),
                       ],
@@ -1836,7 +1836,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               },
                               selectedColor: const Color(0xFF8B5CF6),
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : AppTheme.white70,
+                                color: isSelected ? Colors.white : AppTheme.white,
                                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                               ),
                               backgroundColor: AppTheme.darkSurfaceVariant,
@@ -1986,7 +1986,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -2003,7 +2003,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.text_fields_outlined, size: 64, color: AppTheme.white40),
+          Icon(Icons.text_fields_outlined, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             _grammarSearchQuery.isNotEmpty
@@ -2012,7 +2012,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2186,7 +2186,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               '${langStats['mastered']}/${langStats['total']}',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -2211,7 +2211,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.search, color: AppTheme.white60, size: 20),
+                        Icon(Icons.search, color: AppTheme.white, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -2220,14 +2220,14 @@ class _LanguageSectionsState extends State<LanguageSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               hintText: 'Buscar ejercicios de pronunciación...',
-                              hintStyle: TextStyle(color: AppTheme.white60),
+                              hintStyle: TextStyle(color: AppTheme.white),
                               border: InputBorder.none,
                             ),
                           ),
                         ),
                         if (_pronunciationSearchQuery.isNotEmpty)
                           IconButton(
-                            icon: const Icon(Icons.close, color: AppTheme.white60, size: 20),
+                            icon: const Icon(Icons.close, color: AppTheme.white, size: 20),
                             onPressed: () => setState(() => _pronunciationSearchQuery = ''),
                           ),
                       ],
@@ -2253,7 +2253,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               },
                               selectedColor: const Color(0xFFF59E0B),
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : AppTheme.white70,
+                                color: isSelected ? Colors.white : AppTheme.white,
                                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                               ),
                               backgroundColor: AppTheme.darkSurfaceVariant,
@@ -2324,7 +2324,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       'Practica tu pronunciación grabándote',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -2499,7 +2499,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -2516,7 +2516,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.mic_outlined, size: 64, color: AppTheme.white40),
+          Icon(Icons.mic_outlined, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             _pronunciationSearchQuery.isNotEmpty
@@ -2525,7 +2525,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2585,7 +2585,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                         exercise.phonetic,
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -2636,7 +2636,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                 exercise.description,
                 style: const TextStyle(
                   fontSize: 16,
-                  color: AppTheme.white70,
+                  color: AppTheme.white,
                   height: 1.5,
                 ),
               ),
@@ -2736,7 +2736,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       exercise.mastered ? 'Dominada' : 'En práctica',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2744,7 +2744,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       '${exercise.practiceCount} intentos',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -2768,7 +2768,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     'Última práctica: ${DateFormat('dd/MM/yyyy').format(exercise.lastPracticed!)}',
                     style: TextStyle(
                       fontSize: 10,
-                      color: AppTheme.white40,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -3086,7 +3086,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
           style: const TextStyle(color: AppTheme.white),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: AppTheme.white60),
+            hintStyle: TextStyle(color: AppTheme.white),
             prefixIcon: Icon(icon, color: const Color(0xFFF59E0B)),
             filled: true,
             fillColor: AppTheme.darkSurface.withOpacity(0.6),
@@ -3278,7 +3278,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               '${langStats['mastered']}/${langStats['total']}',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -3303,7 +3303,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.search, color: AppTheme.white60, size: 20),
+                        Icon(Icons.search, color: AppTheme.white, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -3312,14 +3312,14 @@ class _LanguageSectionsState extends State<LanguageSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               hintText: 'Buscar conversaciones...',
-                              hintStyle: TextStyle(color: AppTheme.white60),
+                              hintStyle: TextStyle(color: AppTheme.white),
                               border: InputBorder.none,
                             ),
                           ),
                         ),
                         if (_conversationSearchQuery.isNotEmpty)
                           IconButton(
-                            icon: const Icon(Icons.close, color: AppTheme.white60, size: 20),
+                            icon: const Icon(Icons.close, color: AppTheme.white, size: 20),
                             onPressed: () => setState(() => _conversationSearchQuery = ''),
                           ),
                       ],
@@ -3345,7 +3345,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                               },
                               selectedColor: const Color(0xFFEC4899),
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : AppTheme.white70,
+                                color: isSelected ? Colors.white : AppTheme.white,
                                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                               ),
                               backgroundColor: AppTheme.darkSurfaceVariant,
@@ -3500,7 +3500,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -3517,7 +3517,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.chat_bubble_outline, size: 64, color: AppTheme.white40),
+          Icon(Icons.chat_bubble_outline, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             _conversationSearchQuery.isNotEmpty
@@ -3526,7 +3526,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -3588,7 +3588,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                           conversation.description,
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                             height: 1.5,
                           ),
                         ),
@@ -3638,35 +3638,35 @@ class _LanguageSectionsState extends State<LanguageSections> {
               // Info
               Row(
                 children: [
-                  Icon(Icons.people, size: 16, color: AppTheme.white60),
+                  Icon(Icons.people, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     '${conversation.participants} personas',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.access_time, size: 16, color: AppTheme.white60),
+                  Icon(Icons.access_time, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     conversation.duration,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.chat_bubble, size: 16, color: AppTheme.white60),
+                  Icon(Icons.chat_bubble, size: 16, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     '${conversation.phrases.length} frases',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -3686,7 +3686,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                         conversation.mastered ? 'Dominada' : 'En práctica',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -3694,7 +3694,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                         '${conversation.practiceCount} intentos',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -3718,7 +3718,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       'Última práctica: ${DateFormat('dd/MM/yyyy').format(conversation.lastPracticed!)}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppTheme.white40,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -3790,7 +3790,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
             conversation.description,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               height: 1.5,
             ),
           ),
@@ -3844,7 +3844,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       phrase.translation,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontStyle: FontStyle.italic,
                         height: 1.5,
                       ),
@@ -3854,7 +3854,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.volume_up, color: AppTheme.white60, size: 20),
+                          icon: const Icon(Icons.volume_up, color: AppTheme.white, size: 20),
                           onPressed: () {},
                         ),
                       ],
@@ -3885,7 +3885,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     icon: const Icon(Icons.refresh, size: 18),
                     label: const Text('Repetir'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.white70,
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -3900,7 +3900,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     icon: const Icon(Icons.mic, size: 18),
                     label: const Text('Practicar'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.white70,
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -3915,7 +3915,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     icon: const Icon(Icons.bookmark, size: 18),
                     label: const Text('Guardar'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.white70,
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -4244,7 +4244,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
           style: const TextStyle(color: AppTheme.white),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: AppTheme.white60),
+            hintStyle: TextStyle(color: AppTheme.white),
             prefixIcon: Icon(icon, color: const Color(0xFFEC4899)),
             filled: true,
             fillColor: AppTheme.darkSurface.withOpacity(0.6),
@@ -4271,13 +4271,13 @@ class _LanguageSectionsState extends State<LanguageSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -4362,7 +4362,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                             vocabulary.phonetics,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -4372,7 +4372,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                           vocabulary.meaning.isNotEmpty ? vocabulary.meaning : vocabulary.translation,
                           style: const TextStyle(
                             fontSize: 16,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -4382,7 +4382,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                             vocabulary.translation,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -4430,7 +4430,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                           vocabulary.example,
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -4483,13 +4483,13 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     ),
                     child: Row(
                       children: [
-                        Icon(_getCategoryIcon(vocabulary.category), size: 14, color: AppTheme.white60),
+                        Icon(_getCategoryIcon(vocabulary.category), size: 14, color: AppTheme.white),
                         const SizedBox(width: 4),
                         Text(
                           vocabulary.category,
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -4527,7 +4527,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                         'Progreso de Estudio',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -4535,7 +4535,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                         '${vocabulary.studyCount} estudios',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -4559,7 +4559,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       'Último estudio: ${DateFormat('dd/MM/yyyy').format(vocabulary.lastStudied!)}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppTheme.white40,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -4637,7 +4637,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
               label,
               style: TextStyle(
                 fontSize: 10,
-                color: AppTheme.white70,
+                color: AppTheme.white,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -4716,7 +4716,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
           ],
@@ -4835,7 +4835,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
               note.content,
               style: const TextStyle(
                 fontSize: 16,
-                color: AppTheme.white70,
+                color: AppTheme.white,
                 height: 1.5,
               ),
             ),
@@ -4867,7 +4867,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                           '• $example',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                             height: 1.5,
                           ),
                         ),
@@ -4894,7 +4894,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       tag,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -4916,7 +4916,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       note.mastered ? 'Dominada' : 'En estudio',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -4924,7 +4924,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                       '${note.studyCount} repasos',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -4948,7 +4948,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
                     'Último estudio: ${DateFormat('dd/MM/yyyy').format(note.lastStudied!)}',
                     style: TextStyle(
                       fontSize: 10,
-                      color: AppTheme.white40,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -5336,7 +5336,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
           style: const TextStyle(color: AppTheme.white),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: AppTheme.white60),
+            hintStyle: TextStyle(color: AppTheme.white),
             prefixIcon: Icon(icon, color: const Color(0xFF06B6D4)),
             filled: true,
             fillColor: AppTheme.darkSurface.withOpacity(0.6),
@@ -5662,7 +5662,7 @@ class _LanguageSectionsState extends State<LanguageSections> {
           style: const TextStyle(color: AppTheme.white),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(color: AppTheme.white60),
+            hintStyle: TextStyle(color: AppTheme.white),
             prefixIcon: Icon(icon, color: const Color(0xFF8B5CF6)),
             filled: true,
             fillColor: AppTheme.darkSurface.withOpacity(0.6),

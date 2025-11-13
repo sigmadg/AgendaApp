@@ -134,7 +134,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -270,7 +270,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
               context.go('/selfcare');
             },
           ),
-          Divider(color: AppTheme.white60.withOpacity(0.3), height: 32),
+          Divider(color: AppTheme.white.withOpacity(0.3), height: 32),
           _buildDrawerItem(
             context,
             icon: Icons.logout,
@@ -305,7 +305,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? color : AppTheme.white60,
+          color: isActive ? color : AppTheme.white,
           size: 22,
         ),
       ),
@@ -358,7 +358,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? AppTheme.orangeAccent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -369,7 +369,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? AppTheme.orangeAccent 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -471,7 +471,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                           'Tu colección personal de experiencias cinematográficas',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -649,7 +649,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                           'Seguimiento detallado de tu experiencia cinematográfica',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -822,7 +822,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                           'Las frases más memorables del cine que me inspiran',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -995,7 +995,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                           'Colección de sagas cinematográficas que me han marcado',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -1168,7 +1168,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                           'Mi colección personal de películas favoritas',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -1290,13 +1290,13 @@ class _MoviesSectionsState extends State<MoviesSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -1336,7 +1336,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         '${movie.director} • ${movie.year}',
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1381,7 +1381,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                   ),
                   child: Text(
                     movie.genre,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                    style: const TextStyle(fontSize: 12, color: AppTheme.white),
                   ),
                 ),
               ],
@@ -1443,7 +1443,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         quote.character,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -1555,7 +1555,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       quote.notes!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -1586,7 +1586,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    bottom: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -1617,7 +1617,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _quoteTextController,
                         decoration: InputDecoration(
                           labelText: 'Cita',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1633,7 +1633,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _quoteMovieController,
                         decoration: InputDecoration(
                           labelText: 'Película',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1648,7 +1648,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _quoteCharacterController,
                         decoration: InputDecoration(
                           labelText: 'Personaje',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1666,7 +1666,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                               value: _selectedQuoteCategory,
                               decoration: InputDecoration(
                                 labelText: 'Categoría',
-                                labelStyle: const TextStyle(color: AppTheme.white60),
+                                labelStyle: const TextStyle(color: AppTheme.white),
                                 filled: true,
                                 fillColor: AppTheme.darkSurfaceVariant,
                                 border: OutlineInputBorder(
@@ -1695,7 +1695,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                               value: _selectedQuoteGenre,
                               decoration: InputDecoration(
                                 labelText: 'Género',
-                                labelStyle: const TextStyle(color: AppTheme.white60),
+                                labelStyle: const TextStyle(color: AppTheme.white),
                                 filled: true,
                                 fillColor: AppTheme.darkSurfaceVariant,
                                 border: OutlineInputBorder(
@@ -1725,7 +1725,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _quoteContextController,
                         decoration: InputDecoration(
                           labelText: 'Contexto',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1745,7 +1745,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -1754,8 +1754,8 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddQuoteModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.white60),
-                          foregroundColor: AppTheme.white70,
+                          side: const BorderSide(color: AppTheme.white),
+                          foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -1903,13 +1903,13 @@ class _MoviesSectionsState extends State<MoviesSections> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.movie_outlined, size: 16, color: AppTheme.white60),
+                const Icon(Icons.movie_outlined, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   '$watchedMovies/${series.movies.length} películas',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1940,7 +1940,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
               '${progress.toStringAsFixed(0)}% completado',
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
             if (series.notes != null && series.notes!.isNotEmpty) ...[
@@ -1967,7 +1967,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       series.notes!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -1997,7 +1997,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    bottom: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -2023,7 +2023,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                   padding: const EdgeInsets.all(20),
                   child: const Text(
                     'Funcionalidad de agregar sagas próximamente',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
               ),
@@ -2031,7 +2031,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -2040,8 +2040,8 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddSeriesModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.white60),
-                          foregroundColor: AppTheme.white70,
+                          side: const BorderSide(color: AppTheme.white),
+                          foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -2111,7 +2111,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         movie.director,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -2147,7 +2147,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                             '${movie.year}',
                             style: const TextStyle(
                               fontSize: 12,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -2211,7 +2211,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       movie.review!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2241,7 +2241,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    bottom: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -2269,14 +2269,14 @@ class _MoviesSectionsState extends State<MoviesSections> {
                     children: [
                       const Text(
                         'Selecciona una película de tu colección para agregar a la estantería',
-                        style: TextStyle(color: AppTheme.white60),
+                        style: TextStyle(color: AppTheme.white),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
                       if (_movies.isEmpty)
                         const Text(
                           'No hay películas disponibles',
-                          style: TextStyle(color: AppTheme.white60),
+                          style: TextStyle(color: AppTheme.white),
                         )
                       else
                         ..._movies.map((movie) {
@@ -2285,11 +2285,11 @@ class _MoviesSectionsState extends State<MoviesSections> {
                             title: Text(movie.title, style: const TextStyle(color: AppTheme.white)),
                             subtitle: Text(
                               '${movie.director} • ${movie.year}',
-                              style: const TextStyle(color: AppTheme.white60),
+                              style: const TextStyle(color: AppTheme.white),
                             ),
                             trailing: isInShelf
                                 ? const Icon(Icons.check, color: Colors.green)
-                                : const Icon(Icons.add, color: AppTheme.white60),
+                                : const Icon(Icons.add, color: AppTheme.white),
                             onTap: () {
                               if (!isInShelf) {
                                 setState(() {
@@ -2308,7 +2308,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -2317,8 +2317,8 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddMovieshelfModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.white60),
-                          foregroundColor: AppTheme.white70,
+                          side: const BorderSide(color: AppTheme.white),
+                          foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -2392,7 +2392,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2493,7 +2493,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         movie.director,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -2561,13 +2561,13 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 ),
                 if (movie.watchedDate != null) ...[
                   const SizedBox(width: 16),
-                  const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
+                  const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     DateFormat('dd/MM/yyyy').format(movie.watchedDate!),
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -2597,7 +2597,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       movie.review!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2628,7 +2628,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    bottom: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -2659,7 +2659,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _movieTitleController,
                         decoration: InputDecoration(
                           labelText: 'Título',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2674,7 +2674,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _movieDirectorController,
                         decoration: InputDecoration(
                           labelText: 'Director',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2692,7 +2692,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                               controller: _movieYearController,
                               decoration: InputDecoration(
                                 labelText: 'Año',
-                                labelStyle: const TextStyle(color: AppTheme.white60),
+                                labelStyle: const TextStyle(color: AppTheme.white),
                                 filled: true,
                                 fillColor: AppTheme.darkSurfaceVariant,
                                 border: OutlineInputBorder(
@@ -2710,7 +2710,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                               controller: _movieGenreController,
                               decoration: InputDecoration(
                                 labelText: 'Género',
-                                labelStyle: const TextStyle(color: AppTheme.white60),
+                                labelStyle: const TextStyle(color: AppTheme.white),
                                 filled: true,
                                 fillColor: AppTheme.darkSurfaceVariant,
                                 border: OutlineInputBorder(
@@ -2728,7 +2728,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         value: _selectedMovieStatus,
                         decoration: InputDecoration(
                           labelText: 'Estado',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2755,7 +2755,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                         controller: _movieNotesController,
                         decoration: InputDecoration(
                           labelText: 'Notas',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2775,7 +2775,7 @@ class _MoviesSectionsState extends State<MoviesSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -2784,8 +2784,8 @@ class _MoviesSectionsState extends State<MoviesSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddMovieModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.white60),
-                          foregroundColor: AppTheme.white70,
+                          side: const BorderSide(color: AppTheme.white),
+                          foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

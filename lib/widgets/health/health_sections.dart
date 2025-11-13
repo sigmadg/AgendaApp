@@ -263,6 +263,14 @@ class _HealthSectionsState extends State<HealthSections> {
           _workouts = workoutsData;
         });
       }
+
+      // Cargar objetivos deportivos
+      final sportsGoalsData = await _healthService.getSportsGoals();
+      if (mounted) {
+        setState(() {
+          _sportsGoals = sportsGoalsData.map((data) => SportsGoal.fromJson(data)).toList();
+        });
+      }
     } catch (e) {
       print('HealthSections: Error cargando datos: $e');
     }
@@ -357,14 +365,10 @@ class _HealthSectionsState extends State<HealthSections> {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.orangeAccent.withOpacity(0.3),
-                  AppTheme.darkBackground,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
             ),
             child: Column(
@@ -398,7 +402,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -612,7 +616,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? AppTheme.orangeAccent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -623,7 +627,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? AppTheme.orangeAccent 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -690,23 +694,12 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
-              ),
+              color: AppTheme.darkSurface,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
@@ -714,7 +707,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -741,7 +734,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Organiza tu alimentación saludable',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -751,7 +744,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.calendar_today, size: 16, color: Colors.green),
@@ -813,7 +806,7 @@ class _HealthSectionsState extends State<HealthSections> {
             decoration: BoxDecoration(
               color: AppTheme.darkSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -835,7 +828,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       DateFormat('EEEE, d \'de\' MMMM', 'es').format(DateTime.now()),
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -1028,7 +1021,7 @@ class _HealthSectionsState extends State<HealthSections> {
             decoration: BoxDecoration(
               color: AppTheme.darkSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1052,7 +1045,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   'Meta: 8 vasos de agua al día',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1088,7 +1081,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: isFilled
-                                    ? Colors.blue.withOpacity(0.2)
+                                    ? AppTheme.darkSurfaceVariant
                                     : AppTheme.darkBackground,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
@@ -1104,7 +1097,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   Icon(
                                     Icons.water_drop,
                                     size: 16,
-                                    color: isFilled ? Colors.blue : AppTheme.white60,
+                                    color: isFilled ? Colors.blue : AppTheme.white,
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
@@ -1112,7 +1105,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: isFilled ? Colors.blue : AppTheme.white60,
+                                      color: isFilled ? Colors.blue : AppTheme.white,
                                     ),
                                   ),
                                 ],
@@ -1139,7 +1132,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   '$waterGlasses de 8 vasos completados',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1377,7 +1370,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       time,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -1415,7 +1408,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       content,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ),
@@ -1436,7 +1429,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           ),
                           content: Text(
                             '¿Estás seguro de que quieres eliminar esta comida?',
-                            style: const TextStyle(color: AppTheme.white70),
+                            style: const TextStyle(color: AppTheme.white),
                           ),
                           actions: [
                             TextButton(
@@ -1468,13 +1461,13 @@ class _HealthSectionsState extends State<HealthSections> {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.restaurant, size: 24, color: AppTheme.white40),
+                  const Icon(Icons.restaurant, size: 24, color: AppTheme.white),
                   const SizedBox(height: 8),
                   const Text(
                     'No planificado',
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -1537,14 +1530,10 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
             ),
@@ -1554,7 +1543,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -1581,7 +1570,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Organiza tus compras saludables',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1603,7 +1592,7 @@ class _HealthSectionsState extends State<HealthSections> {
               decoration: BoxDecoration(
                 color: AppTheme.darkSurface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1657,13 +1646,13 @@ class _HealthSectionsState extends State<HealthSections> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white40),
+                          const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white),
                           const SizedBox(height: 8),
                           const Text(
                             'No hay artículos en esta categoría',
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -1677,12 +1666,12 @@ class _HealthSectionsState extends State<HealthSections> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isPurchased
-                              ? Colors.green.withOpacity(0.1)
+                              ? AppTheme.darkSurfaceVariant
                               : AppTheme.darkBackground,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isPurchased
-                                ? Colors.green.withOpacity(0.3)
+                                ? AppTheme.darkSurfaceVariant
                                 : AppTheme.darkSurfaceVariant,
                           ),
                         ),
@@ -1706,7 +1695,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   border: Border.all(
                                     color: isPurchased
                                         ? Colors.green
-                                        : AppTheme.white60,
+                                        : AppTheme.white,
                                     width: 2,
                                   ),
                                 ),
@@ -1730,7 +1719,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: isPurchased
-                                          ? AppTheme.white60
+                                          ? AppTheme.white
                                           : AppTheme.white,
                                       decoration: isPurchased
                                           ? TextDecoration.lineThrough
@@ -1743,8 +1732,8 @@ class _HealthSectionsState extends State<HealthSections> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: isPurchased
-                                          ? AppTheme.white40
-                                          : AppTheme.white60,
+                                          ? AppTheme.white
+                                          : AppTheme.white,
                                       decoration: isPurchased
                                           ? TextDecoration.lineThrough
                                           : null,
@@ -1785,12 +1774,12 @@ class _HealthSectionsState extends State<HealthSections> {
               icon: const Icon(Icons.add_circle_outline),
               label: const Text('Agregar Nueva Categoría'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.withOpacity(0.2),
+                backgroundColor: AppTheme.darkSurfaceVariant,
                 foregroundColor: Colors.green,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.green.withOpacity(0.5)),
+                  side: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                 ),
               ),
             ),
@@ -1862,8 +1851,12 @@ class _HealthSectionsState extends State<HealthSections> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.green, Colors.green.shade700],
+                        color: AppTheme.darkSurface,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: AppTheme.darkSurfaceVariant,
+                            width: 1,
+                          ),
                         ),
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(28),
@@ -1911,9 +1904,9 @@ class _HealthSectionsState extends State<HealthSections> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: AppTheme.darkSurfaceVariant,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                          border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         child: Row(
                           children: [
@@ -1933,12 +1926,12 @@ class _HealthSectionsState extends State<HealthSections> {
                       const SizedBox(height: 12),
                       _buildRecipeSelector(setModalState),
                       const SizedBox(height: 16),
-                      const Divider(color: AppTheme.white40),
+                      const Divider(color: AppTheme.white),
                       const SizedBox(height: 16),
                       const Text(
                         'Nombre de la comida:',
                         style: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1948,17 +1941,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         controller: _mealNameController,
                         decoration: InputDecoration(
                           labelText: 'Nombre de la comida *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.restaurant_menu, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -2009,20 +2002,20 @@ class _HealthSectionsState extends State<HealthSections> {
                           controller: _mealTimeController,
                           decoration: InputDecoration(
                             labelText: 'Hora estimada',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             hintText: 'Toca para seleccionar hora',
-                            hintStyle: const TextStyle(color: AppTheme.white40),
+                            hintStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.access_time, color: Colors.green),
                             suffixIcon: const Icon(Icons.schedule, color: Colors.green),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -2043,7 +2036,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           },
                           child: const Text(
                             'Cancelar',
-                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                            style: TextStyle(color: AppTheme.white, fontSize: 16),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -2274,7 +2267,7 @@ class _HealthSectionsState extends State<HealthSections> {
         decoration: BoxDecoration(
           color: AppTheme.darkBackground.withOpacity(0.5),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withOpacity(0.2)),
+              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
         ),
         child: const Row(
           children: [
@@ -2284,7 +2277,7 @@ class _HealthSectionsState extends State<HealthSections> {
               child: Text(
                 'No hay recetas guardadas. Ve a la sección "Recetas" para agregar recetas.',
                 style: TextStyle(
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                   fontSize: 12,
                 ),
               ),
@@ -2298,23 +2291,23 @@ class _HealthSectionsState extends State<HealthSections> {
       decoration: BoxDecoration(
         color: AppTheme.darkBackground.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
       ),
       child: DropdownButtonFormField<String>(
         value: validSelectedId,
         decoration: InputDecoration(
           labelText: 'Seleccionar receta',
-          labelStyle: const TextStyle(color: AppTheme.white70),
+          labelStyle: const TextStyle(color: AppTheme.white),
           prefixIcon: const Icon(Icons.menu_book, color: Colors.orange),
           filled: true,
           fillColor: Colors.transparent,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -2333,10 +2326,10 @@ class _HealthSectionsState extends State<HealthSections> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.restaurant, color: Colors.orange, size: 16),
+                  child: const Icon(Icons.restaurant, color: AppTheme.white, size: 16),
                 ),
                 const SizedBox(width: 8),
                 Flexible(
@@ -2389,13 +2382,10 @@ class _HealthSectionsState extends State<HealthSections> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 400),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface,
-                AppTheme.darkSurfaceVariant,
-              ],
+            color: AppTheme.darkSurface,
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(28),
           ),
@@ -2406,8 +2396,12 @@ class _HealthSectionsState extends State<HealthSections> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green, Colors.green.shade700],
+                  color: AppTheme.darkSurface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
+                    ),
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(28),
@@ -2447,17 +2441,17 @@ class _HealthSectionsState extends State<HealthSections> {
                       controller: _itemNameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre del artículo *',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         prefixIcon: const Icon(Icons.shopping_bag, color: Colors.green),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2475,17 +2469,17 @@ class _HealthSectionsState extends State<HealthSections> {
                             controller: _itemQuantityController,
                             decoration: InputDecoration(
                               labelText: 'Cantidad',
-                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: const Icon(Icons.numbers, color: Colors.green),
                               filled: true,
                               fillColor: AppTheme.darkBackground.withOpacity(0.5),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -2503,17 +2497,17 @@ class _HealthSectionsState extends State<HealthSections> {
                             controller: _itemUnitController,
                             decoration: InputDecoration(
                               labelText: 'Unidad',
-                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: const Icon(Icons.straighten, color: Colors.green),
                               filled: true,
                               fillColor: AppTheme.darkBackground.withOpacity(0.5),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -2535,7 +2529,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           },
                           child: const Text(
                             'Cancelar',
-                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                            style: TextStyle(color: AppTheme.white, fontSize: 16),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -2622,13 +2616,10 @@ class _HealthSectionsState extends State<HealthSections> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 400),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface,
-                AppTheme.darkSurfaceVariant,
-              ],
+            color: AppTheme.darkSurface,
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(28),
           ),
@@ -2680,17 +2671,17 @@ class _HealthSectionsState extends State<HealthSections> {
                       controller: _newCategoryNameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre de la categoría *',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         prefixIcon: const Icon(Icons.label, color: Colors.green),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2704,19 +2695,19 @@ class _HealthSectionsState extends State<HealthSections> {
                       controller: _newCategoryIconController,
                       decoration: InputDecoration(
                         labelText: 'Icono (emoji) *',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         hintText: '🍎',
-                        hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 24),
+                        hintStyle: const TextStyle(color: AppTheme.white, fontSize: 24),
                         prefixIcon: const Icon(Icons.emoji_emotions, color: Colors.green),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                          borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2736,7 +2727,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           },
                           child: const Text(
                             'Cancelar',
-                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                            style: TextStyle(color: AppTheme.white, fontSize: 16),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -2867,23 +2858,12 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
-              ),
+              color: AppTheme.darkSurface,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.green.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
@@ -2891,7 +2871,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -2918,7 +2898,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Descubre nuevas recetas nutritivas',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2928,7 +2908,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.local_fire_department, size: 16, color: Colors.green),
@@ -3074,13 +3054,10 @@ class _HealthSectionsState extends State<HealthSections> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface,
-                AppTheme.darkSurfaceVariant,
-              ],
+            color: AppTheme.darkSurface,
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(28),
           ),
@@ -3134,17 +3111,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         controller: _recipeNameController,
                         decoration: InputDecoration(
                           labelText: 'Nombre de la receta *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.restaurant, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3159,18 +3136,18 @@ class _HealthSectionsState extends State<HealthSections> {
                         controller: _recipeCategoryController,
                         decoration: InputDecoration(
                           labelText: 'Categoría *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           hintText: 'Ej: Ensaladas, Pescados, Bowls',
                           prefixIcon: const Icon(Icons.category, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3185,17 +3162,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         value: _selectedRecipeDifficulty,
                         decoration: InputDecoration(
                           labelText: 'Dificultad *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.speed, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3225,18 +3202,18 @@ class _HealthSectionsState extends State<HealthSections> {
                               controller: _recipePrepTimeController,
                               decoration: InputDecoration(
                                 labelText: 'Tiempo de preparación *',
-                                labelStyle: const TextStyle(color: AppTheme.white70),
+                                labelStyle: const TextStyle(color: AppTheme.white),
                                 hintText: 'Ej: 15 min',
                                 prefixIcon: const Icon(Icons.access_time, color: Colors.green),
                                 filled: true,
                                 fillColor: AppTheme.darkBackground.withOpacity(0.5),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                  borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                  borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -3253,17 +3230,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'Porciones *',
-                                labelStyle: const TextStyle(color: AppTheme.white70),
+                                labelStyle: const TextStyle(color: AppTheme.white),
                                 prefixIcon: const Icon(Icons.people, color: Colors.green),
                                 filled: true,
                                 fillColor: AppTheme.darkBackground.withOpacity(0.5),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                  borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                  borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -3282,17 +3259,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Calorías',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.local_fire_department, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3308,18 +3285,18 @@ class _HealthSectionsState extends State<HealthSections> {
                         maxLines: 3,
                         decoration: InputDecoration(
                           labelText: 'Ingredientes *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           hintText: 'Lista los ingredientes separados por comas',
                           prefixIcon: const Icon(Icons.shopping_basket, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3335,18 +3312,18 @@ class _HealthSectionsState extends State<HealthSections> {
                         maxLines: 4,
                         decoration: InputDecoration(
                           labelText: 'Instrucciones *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           hintText: 'Describe los pasos para preparar la receta',
                           prefixIcon: const Icon(Icons.list, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3361,18 +3338,18 @@ class _HealthSectionsState extends State<HealthSections> {
                         controller: _recipeTagsController,
                         decoration: InputDecoration(
                           labelText: 'Tags',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           hintText: 'Ej: proteína, vegetales, bajo en calorías',
                           prefixIcon: const Icon(Icons.label, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -3392,7 +3369,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             },
                             child: const Text(
                               'Cancelar',
-                              style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                              style: TextStyle(color: AppTheme.white, fontSize: 16),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -3515,7 +3492,7 @@ class _HealthSectionsState extends State<HealthSections> {
       decoration: BoxDecoration(
         color: AppTheme.darkBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3527,7 +3504,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: AppTheme.darkSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -3551,14 +3528,14 @@ class _HealthSectionsState extends State<HealthSections> {
                       recipe.category,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20, color: AppTheme.white60),
+                icon: const Icon(Icons.more_vert, size: 20, color: AppTheme.white),
                 color: AppTheme.darkSurface,
                 onSelected: (value) {
                   switch (value) {
@@ -3690,7 +3667,7 @@ class _HealthSectionsState extends State<HealthSections> {
             recipe.instructions,
             style: const TextStyle(
               fontSize: 14,
-              color: AppTheme.white70,
+              color: AppTheme.white,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -3705,15 +3682,15 @@ class _HealthSectionsState extends State<HealthSections> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: AppTheme.darkSurfaceVariant,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                 ),
                 child: Text(
                   tag,
                   style: const TextStyle(
                     fontSize: 11,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               );
@@ -3767,13 +3744,10 @@ class _HealthSectionsState extends State<HealthSections> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface,
-                AppTheme.darkSurfaceVariant,
-              ],
+            color: AppTheme.darkSurface,
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(28),
           ),
@@ -3860,7 +3834,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             recipe.category,
                             style: const TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -3892,13 +3866,13 @@ class _HealthSectionsState extends State<HealthSections> {
                         decoration: BoxDecoration(
                           color: AppTheme.darkBackground,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         child: Text(
                           recipe.ingredients,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                       ),
@@ -3918,13 +3892,13 @@ class _HealthSectionsState extends State<HealthSections> {
                         decoration: BoxDecoration(
                           color: AppTheme.darkBackground,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                         ),
                         child: Text(
                           recipe.instructions,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                             height: 1.5,
                           ),
                         ),
@@ -3947,15 +3921,15 @@ class _HealthSectionsState extends State<HealthSections> {
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.2),
+                                color: AppTheme.darkSurfaceVariant,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                                border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                               ),
                               child: Text(
                                 tag,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             );
@@ -4015,7 +3989,7 @@ class _HealthSectionsState extends State<HealthSections> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
           ),
         ],
       ),
@@ -4146,17 +4120,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               controller: _recipeNameController,
                               decoration: InputDecoration(
                             labelText: 'Nombre de la receta *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.restaurant, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4171,17 +4145,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               controller: _recipeCategoryController,
                               decoration: InputDecoration(
                             labelText: 'Categoría *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.category, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4196,17 +4170,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               value: _selectedRecipeDifficulty,
                               decoration: InputDecoration(
                             labelText: 'Dificultad *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.speed, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4236,17 +4210,17 @@ class _HealthSectionsState extends State<HealthSections> {
                                 controller: _recipePrepTimeController,
                                 decoration: InputDecoration(
                                   labelText: 'Tiempo de preparación *',
-                                  labelStyle: const TextStyle(color: AppTheme.white70),
+                                  labelStyle: const TextStyle(color: AppTheme.white),
                                   prefixIcon: const Icon(Icons.access_time, color: Colors.blue),
                                   filled: true,
                                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -4263,17 +4237,17 @@ class _HealthSectionsState extends State<HealthSections> {
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: 'Porciones *',
-                                  labelStyle: const TextStyle(color: AppTheme.white70),
+                                  labelStyle: const TextStyle(color: AppTheme.white),
                                   prefixIcon: const Icon(Icons.people, color: Colors.blue),
                                   filled: true,
                                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -4292,17 +4266,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                             labelText: 'Calorías',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.local_fire_department, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4318,17 +4292,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               maxLines: 3,
                               decoration: InputDecoration(
                             labelText: 'Ingredientes *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.shopping_basket, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4344,17 +4318,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               maxLines: 4,
                               decoration: InputDecoration(
                             labelText: 'Instrucciones *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.list, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4369,17 +4343,17 @@ class _HealthSectionsState extends State<HealthSections> {
                               controller: _recipeTagsController,
                               decoration: InputDecoration(
                             labelText: 'Tags',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.label, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -4399,7 +4373,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   },
                                   child: const Text(
                                     'Cancelar',
-                                    style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                                    style: TextStyle(color: AppTheme.white, fontSize: 16),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -4527,12 +4501,12 @@ class _HealthSectionsState extends State<HealthSections> {
         ),
         content: Text(
           '¿Estás seguro de que deseas eliminar "${recipe.name}"? Esta acción no se puede deshacer.',
-          style: const TextStyle(color: AppTheme.white70),
+          style: const TextStyle(color: AppTheme.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -4588,13 +4562,13 @@ class _HealthSectionsState extends State<HealthSections> {
   Widget _buildMetaItem(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppTheme.white60),
+        Icon(icon, size: 14, color: AppTheme.white),
         const SizedBox(width: 4),
         Text(
           text,
           style: const TextStyle(
             fontSize: 12,
-            color: AppTheme.white60,
+            color: AppTheme.white,
           ),
         ),
       ],
@@ -4919,14 +4893,10 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
             ),
@@ -4936,7 +4906,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -4963,7 +4933,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Planifica rutinas y registra tus entrenamientos',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -4973,7 +4943,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.fitness_center, size: 16, color: Colors.green),
@@ -5081,13 +5051,13 @@ class _HealthSectionsState extends State<HealthSections> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.fitness_center, size: 64, color: AppTheme.white40),
+                    const Icon(Icons.fitness_center, size: 64, color: AppTheme.white),
                     const SizedBox(height: 16),
                     const Text(
                       'No hay rutinas ni entrenamientos',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -5216,7 +5186,7 @@ class _HealthSectionsState extends State<HealthSections> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                               ),
                             ),
                           ),
@@ -5258,7 +5228,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: isCompleted ? AppTheme.white : AppTheme.white60,
+                                          color: isCompleted ? AppTheme.white : AppTheme.white,
                                           decoration: isCompleted ? TextDecoration.lineThrough : null,
                                         ),
                                       ),
@@ -5269,13 +5239,13 @@ class _HealthSectionsState extends State<HealthSections> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const Icon(Icons.access_time, size: 12, color: AppTheme.white60),
+                                      const Icon(Icons.access_time, size: 12, color: AppTheme.white),
                                       const SizedBox(width: 4),
                                       Text(
                                         '${dayData['duration']} min',
                                         style: const TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.white60,
+                                          color: AppTheme.white,
                                         ),
                                       ),
                                       if (dayData['calories'] as int > 0) ...[
@@ -5286,7 +5256,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                           '${dayData['calories']} cal',
                                           style: const TextStyle(
                                             fontSize: 11,
-                                            color: AppTheme.white60,
+                                            color: AppTheme.white,
                                           ),
                                         ),
                                       ],
@@ -5330,7 +5300,7 @@ class _HealthSectionsState extends State<HealthSections> {
                               },
                               icon: Icon(
                                 isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                                 size: 24,
                               ),
                             )
@@ -5338,7 +5308,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.2),
+                                color: AppTheme.darkSurfaceVariant,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(Icons.check, size: 16, color: Colors.green),
@@ -5378,7 +5348,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${goals.where((g) => g['completed'] == true).length}/${goals.length} completados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -5403,7 +5373,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             Icon(
                               isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
                               size: 20,
-                              color: isCompleted ? Colors.green : AppTheme.white60,
+                              color: isCompleted ? Colors.green : AppTheme.white,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -5412,7 +5382,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: isCompleted ? AppTheme.white : AppTheme.white70,
+                                  color: isCompleted ? AppTheme.white : AppTheme.white,
                                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                                 ),
                               ),
@@ -5421,7 +5391,7 @@ class _HealthSectionsState extends State<HealthSections> {
                               '${goal['progress']}/${goal['target']}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                               ),
                             ),
                           ],
@@ -5472,7 +5442,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '$unlockedAchievements/${achievements.length} desbloqueados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -5517,7 +5487,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -5526,7 +5496,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             achievement['description'] as String,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
@@ -5631,14 +5601,10 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
             ),
@@ -5648,7 +5614,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.track_changes, size: 24, color: Colors.green),
@@ -5671,7 +5637,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Monitorea tu actividad y alcanza tus metas',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -5681,7 +5647,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.fitness_center, size: 16, color: Colors.green),
@@ -5796,7 +5762,7 @@ class _HealthSectionsState extends State<HealthSections> {
             decoration: BoxDecoration(
               color: AppTheme.darkSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.green.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -5884,7 +5850,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           day['day'] as String,
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -5909,7 +5875,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                 fontSize: 10,
                                 color: (day['steps'] as int) >= dailyGoals['steps']!
                                     ? Colors.green
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -5960,7 +5926,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${categories.length} categorías activas',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -6006,7 +5972,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   '${category['count']} objetivos',
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -6047,7 +6013,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${goals.where((g) => g['completed'] == true).length}/${goals.length} completados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -6058,13 +6024,13 @@ class _HealthSectionsState extends State<HealthSections> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.emoji_events, size: 64, color: AppTheme.white40),
+                        const Icon(Icons.emoji_events, size: 64, color: AppTheme.white),
                         const SizedBox(height: 16),
                         const Text(
                           'No hay objetivos deportivos',
                           style: TextStyle(
                             fontSize: 16,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -6110,7 +6076,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                       goalObj['objective'] ?? '',
                                       style: const TextStyle(
                                         fontSize: 14,
-                                        color: AppTheme.white70,
+                                        color: AppTheme.white,
                                       ),
                                     ),
                                   ],
@@ -6119,20 +6085,20 @@ class _HealthSectionsState extends State<HealthSections> {
                               Icon(
                                 isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
                                 size: 24,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
+                              const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                               const SizedBox(width: 4),
                               Text(
                                 DateFormat('dd/MM/yyyy').format(goalObj['targetDate'] as DateTime? ?? DateTime.now()),
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white60,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ],
@@ -6154,7 +6120,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             '$progress%',
                             style: TextStyle(
                               fontSize: 12,
-                              color: isCompleted ? Colors.green : AppTheme.white60,
+                              color: isCompleted ? Colors.green : AppTheme.white,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -6162,8 +6128,82 @@ class _HealthSectionsState extends State<HealthSections> {
                             children: [
                               Expanded(
                                 child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    // TODO: Actualizar progreso
+                                  onPressed: () async {
+                                    // Buscar el objetivo en _sportsGoals
+                                    final goalId = goalObj['id'] as String?;
+                                    if (goalId == null) return;
+                                    
+                                    final goalIndex = _sportsGoals.indexWhere((g) => g.id == goalId);
+                                    if (goalIndex == -1) return;
+                                    
+                                    final goal = _sportsGoals[goalIndex];
+                                    
+                                    // Mostrar diálogo para actualizar progreso
+                                    final progressController = TextEditingController(text: goal.currentProgress);
+                                    
+                                    final updatedProgress = await showDialog<String>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        backgroundColor: AppTheme.darkSurface,
+                                        title: const Text(
+                                          'Actualizar Progreso',
+                                          style: TextStyle(color: AppTheme.white),
+                                        ),
+                                        content: TextField(
+                                          controller: progressController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Progreso actual',
+                                            hintText: 'Ej: 3km en 20 minutos',
+                                            labelStyle: TextStyle(color: AppTheme.white),
+                                            hintStyle: TextStyle(color: AppTheme.white60),
+                                          ),
+                                          style: const TextStyle(color: AppTheme.white),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => Navigator.pop(context, progressController.text),
+                                            child: const Text('Guardar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    
+                                    if (updatedProgress != null && updatedProgress.trim().isNotEmpty) {
+                                      final updatedGoal = SportsGoal(
+                                        id: goal.id,
+                                        sport: goal.sport,
+                                        objective: goal.objective,
+                                        targetDate: goal.targetDate,
+                                        currentProgress: updatedProgress.trim(),
+                                        notes: goal.notes,
+                                      );
+                                      
+                                      // Guardar en Supabase
+                                      final result = await _healthService.saveSportsGoal(updatedGoal.toJson());
+                                      
+                                      if (result['success'] == true) {
+                                        setState(() {
+                                          _sportsGoals[goalIndex] = updatedGoal;
+                                        });
+                                        
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Progreso actualizado exitosamente'),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error: ${result['error'] ?? 'No se pudo actualizar el progreso'}'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
                                   },
                                   icon: const Icon(Icons.trending_up, size: 16),
                                   label: const Text('Actualizar'),
@@ -6177,7 +6217,20 @@ class _HealthSectionsState extends State<HealthSections> {
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: () {
-                                    // TODO: Editar objetivo
+                                    // Buscar el objetivo en _sportsGoals
+                                    final goalId = goalObj['id'] as String?;
+                                    if (goalId == null) return;
+                                    
+                                    final goal = _sportsGoals.firstWhere(
+                                      (g) => g.id == goalId,
+                                      orElse: () => _sportsGoals.first,
+                                    );
+                                    
+                                    // Establecer el objetivo a editar y abrir el modal
+                                    setState(() {
+                                      _editingSportsGoal = goal;
+                                      _showAddSportsModal = true;
+                                    });
                                   },
                                   icon: const Icon(Icons.edit, size: 16),
                                   label: const Text('Editar'),
@@ -6224,7 +6277,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${achievements.where((a) => a['unlocked'] == true).length}/${achievements.length} desbloqueados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -6269,7 +6322,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -6278,7 +6331,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             achievement['description'] as String,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
@@ -6352,7 +6405,7 @@ class _HealthSectionsState extends State<HealthSections> {
             'Meta: $goal',
             style: const TextStyle(
               fontSize: 11,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -6397,7 +6450,7 @@ class _HealthSectionsState extends State<HealthSections> {
             title,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -6548,14 +6601,10 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
             ),
@@ -6565,7 +6614,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.health_and_safety, size: 24, color: Colors.green),
@@ -6588,7 +6637,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Monitorea tu peso y medidas corporales',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -6668,7 +6717,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   '${currentWeight.toStringAsFixed(1)}kg de ${targetWeight.toStringAsFixed(1)}kg',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -6700,7 +6749,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           'Inicio',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -6720,7 +6769,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           'Actual',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -6740,7 +6789,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           'Meta',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -6853,14 +6902,14 @@ class _HealthSectionsState extends State<HealthSections> {
                                 Icon(
                                   isNegative ? Icons.trending_down : isPositive ? Icons.trending_up : Icons.remove,
                                   size: 14,
-                                  color: isNegative ? Colors.green : isPositive ? Colors.red : AppTheme.white60,
+                                  color: isNegative ? Colors.green : isPositive ? Colors.red : AppTheme.white,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${isNegative ? '' : isPositive ? '+' : ''}${change.toStringAsFixed(1)}kg',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isNegative ? Colors.green : isPositive ? Colors.red : AppTheme.white60,
+                                    color: isNegative ? Colors.green : isPositive ? Colors.red : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -6901,7 +6950,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${weightGoals.where((g) => g['completed'] == true).length}/${weightGoals.length} completados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -6929,7 +6978,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             Icon(
                               isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
                               size: 20,
-                              color: isCompleted ? Colors.green : AppTheme.white60,
+                              color: isCompleted ? Colors.green : AppTheme.white,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -6938,7 +6987,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: isCompleted ? AppTheme.white : AppTheme.white70,
+                                  color: isCompleted ? AppTheme.white : AppTheme.white,
                                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                                 ),
                               ),
@@ -6947,7 +6996,7 @@ class _HealthSectionsState extends State<HealthSections> {
                               '${(goal['current'] as num).toStringAsFixed(1)}/${(goal['target'] as num).toStringAsFixed(1)}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                               ),
                             ),
                           ],
@@ -7002,7 +7051,7 @@ class _HealthSectionsState extends State<HealthSections> {
               decoration: BoxDecoration(
                 color: AppTheme.darkSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
               ),
               child: Row(
                 children: [
@@ -7038,7 +7087,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 decoration: BoxDecoration(
                   color: AppTheme.darkSurface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -7070,10 +7119,10 @@ class _HealthSectionsState extends State<HealthSections> {
                             style: const TextStyle(color: AppTheme.white, fontSize: 18),
                             decoration: InputDecoration(
                               hintText: '0',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              hintStyle: const TextStyle(color: AppTheme.white),
                               border: InputBorder.none,
                               suffixText: measurement['unit'] as String,
-                              suffixStyle: const TextStyle(color: AppTheme.white60),
+                              suffixStyle: const TextStyle(color: AppTheme.white),
                             ),
                           ),
                         ),
@@ -7094,7 +7143,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       'Meta: ${goal}${measurement['unit']}',
                       style: const TextStyle(
                         fontSize: 11,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -7177,7 +7226,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,
@@ -7196,7 +7245,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             ),
                             decoration: InputDecoration(
                               hintText: '0',
-                              hintStyle: const TextStyle(color: AppTheme.white40),
+                              hintStyle: const TextStyle(color: AppTheme.white),
                               border: InputBorder.none,
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(vertical: 4),
@@ -7208,7 +7257,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             measurement['unit'] as String,
                             style: TextStyle(
                               fontSize: 10,
-                              color: Colors.green.withOpacity(0.8),
+                              color: AppTheme.white,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -7293,16 +7342,16 @@ class _HealthSectionsState extends State<HealthSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     hintText: '¿Cómo te sientes hoy? ¿Algún cambio notable?',
-                    hintStyle: const TextStyle(color: AppTheme.white40),
+                    hintStyle: const TextStyle(color: AppTheme.white),
                     filled: true,
                     fillColor: AppTheme.darkBackground,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                                borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -7340,7 +7389,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '$unlockedAchievements/${achievements.length} desbloqueados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -7385,7 +7434,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -7394,7 +7443,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             achievement['description'] as String,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
@@ -7542,14 +7591,10 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.green.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                  AppTheme.darkSurfaceVariant,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
             ),
@@ -7559,7 +7604,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: AppTheme.darkSurfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.local_dining, size: 24, color: Colors.green),
@@ -7582,7 +7627,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         'Monitorea tu alimentación y macronutrientes',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -7681,7 +7726,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   '${dailyStats['water']!.toStringAsFixed(1)}L / ${dailyStats['targetWater']}L',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -7747,7 +7792,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${meals.where((m) => m['completed'] == true).length}/${meals.length} completadas',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -7773,10 +7818,10 @@ class _HealthSectionsState extends State<HealthSections> {
                         Icon(
                           isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
                           size: 20,
-                          color: isCompleted ? Colors.green : AppTheme.white60,
+                          color: isCompleted ? Colors.green : AppTheme.white,
                         ),
                         const SizedBox(width: 12),
-                        Icon(meal['icon'] as IconData, size: 20, color: AppTheme.white70),
+                        Icon(meal['icon'] as IconData, size: 20, color: AppTheme.white),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -7787,7 +7832,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: isCompleted ? AppTheme.white : AppTheme.white70,
+                                  color: isCompleted ? AppTheme.white : AppTheme.white,
                                 ),
                               ),
                               if (meal['calories'] as int > 0) ...[
@@ -7796,7 +7841,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   '${meal['calories']} kcal',
                                   style: const TextStyle(
                                     fontSize: 12,
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -7890,7 +7935,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${supplements.where((s) => s['taken'] == true).length}/${supplements.length} tomados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -7927,7 +7972,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             Icon(
                               isTaken ? Icons.check_circle : Icons.radio_button_unchecked,
                               size: 16,
-                              color: isTaken ? Colors.green : AppTheme.white60,
+                              color: isTaken ? Colors.green : AppTheme.white,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -7939,14 +7984,14 @@ class _HealthSectionsState extends State<HealthSections> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: isTaken ? AppTheme.white : AppTheme.white70,
+                                      color: isTaken ? AppTheme.white : AppTheme.white,
                                     ),
                                   ),
                                   Text(
                                     supplement['time'] as String,
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: isTaken ? AppTheme.white60 : AppTheme.white40,
+                                      color: isTaken ? AppTheme.white : AppTheme.white,
                                     ),
                                   ),
                                 ],
@@ -7988,7 +8033,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '${goals.where((g) => getProgressPercentage((g['current'] as num).toDouble(), (g['target'] as num).toDouble()) >= 100).length}/${goals.length} completados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -8026,7 +8071,7 @@ class _HealthSectionsState extends State<HealthSections> {
                               '${goal['current']}/${goal['target']} ${goal['unit']}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                               ),
                             ),
                           ],
@@ -8052,7 +8097,7 @@ class _HealthSectionsState extends State<HealthSections> {
                               '${progress.toStringAsFixed(0)}%',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isCompleted ? Colors.green : AppTheme.white60,
+                                color: isCompleted ? Colors.green : AppTheme.white,
                               ),
                             ),
                           ],
@@ -8091,7 +8136,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       '$unlockedAchievements/${achievements.length} desbloqueados',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -8136,7 +8181,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: isUnlocked ? AppTheme.white : AppTheme.white60,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -8145,7 +8190,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             achievement['description'] as String,
                             style: TextStyle(
                               fontSize: 11,
-                              color: isUnlocked ? AppTheme.white70 : AppTheme.white40,
+                              color: isUnlocked ? AppTheme.white : AppTheme.white,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 2,
@@ -8169,13 +8214,13 @@ class _HealthSectionsState extends State<HealthSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -8232,7 +8277,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           '${items.length} artículos',
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -8251,13 +8296,13 @@ class _HealthSectionsState extends State<HealthSections> {
                 child: Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white40),
+                      const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white),
                       const SizedBox(height: 8),
                       Text(
                         'No hay artículos en esta categoría',
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -8319,21 +8364,21 @@ class _HealthSectionsState extends State<HealthSections> {
                 const SizedBox(width: 4),
                 Text(
                   '${recipe.calories} cal',
-                  style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 const SizedBox(width: 16),
                 const Icon(Icons.star, size: 16, color: Colors.amber),
                 const SizedBox(width: 4),
                 Text(
                   recipe.rating.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.access_time, size: 16, color: AppTheme.white60),
+                const Icon(Icons.access_time, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   recipe.prepTime,
-                  style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
               ],
             ),
@@ -8388,7 +8433,7 @@ class _HealthSectionsState extends State<HealthSections> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.2),
+                          color: AppTheme.darkSurfaceVariant,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
@@ -8446,7 +8491,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 routine.description,
                 style: const TextStyle(
                   fontSize: 12,
-                  color: AppTheme.white70,
+                  color: AppTheme.white,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -8501,7 +8546,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -8567,7 +8612,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           ),
                           content: Text(
                             '¿Estás seguro de que deseas eliminar la rutina "${routine.name}"?',
-                            style: const TextStyle(color: AppTheme.white70),
+                            style: const TextStyle(color: AppTheme.white),
                           ),
                           actions: [
                             TextButton(
@@ -8687,7 +8732,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
+                      color: AppTheme.darkSurfaceVariant,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.check_circle, size: 20, color: Colors.green),
@@ -8698,13 +8743,13 @@ class _HealthSectionsState extends State<HealthSections> {
             if (workoutDate != null) ...[
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 14, color: AppTheme.white70),
+                  const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                   const SizedBox(width: 4),
                   Text(
                     DateFormat('dd/MM/yyyy').format(workoutDate),
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -8824,7 +8869,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -8884,7 +8929,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           ),
                           content: Text(
                             '¿Estás seguro de que deseas eliminar el entrenamiento "$workoutName"?',
-                            style: const TextStyle(color: AppTheme.white70),
+                            style: const TextStyle(color: AppTheme.white),
                           ),
                           actions: [
                             TextButton(
@@ -8967,7 +9012,7 @@ class _HealthSectionsState extends State<HealthSections> {
                     _formatDate(goal.targetDate),
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                 ),
@@ -8978,7 +9023,7 @@ class _HealthSectionsState extends State<HealthSections> {
               goal.objective,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
           ],
@@ -9015,7 +9060,7 @@ class _HealthSectionsState extends State<HealthSections> {
                   _formatDate(measurement.date),
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -9080,13 +9125,10 @@ class _HealthSectionsState extends State<HealthSections> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface,
-                AppTheme.darkSurfaceVariant,
-              ],
+            color: AppTheme.darkSurface,
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(28),
           ),
@@ -9097,8 +9139,12 @@ class _HealthSectionsState extends State<HealthSections> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green, Colors.green.shade700],
+                  color: AppTheme.darkSurface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
+                    ),
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(28),
@@ -9140,17 +9186,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         controller: _gymRoutineNameController,
                         decoration: InputDecoration(
                           labelText: 'Nombre de la rutina *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.fitness_center, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -9166,17 +9212,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         maxLines: 3,
                         decoration: InputDecoration(
                           labelText: 'Descripción',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.description, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -9192,17 +9238,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         keyboardType: TextInputType.text,
                         decoration: InputDecoration(
                           labelText: 'Duración (ej: 45 min) *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.access_time, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -9217,17 +9263,17 @@ class _HealthSectionsState extends State<HealthSections> {
                         value: _selectedGymRoutineDifficulty,
                         decoration: InputDecoration(
                           labelText: 'Dificultad *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.speed, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                            borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -9257,7 +9303,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ),
                         subtitle: const Text(
                           'Repetir esta rutina automáticamente',
-                          style: TextStyle(color: AppTheme.white70, fontSize: 12),
+                          style: TextStyle(color: AppTheme.white, fontSize: 12),
                         ),
                         value: _gymRoutineIsRecurring,
                         onChanged: (value) {
@@ -9279,17 +9325,17 @@ class _HealthSectionsState extends State<HealthSections> {
                           value: _gymRoutineRecurrenceType,
                           decoration: InputDecoration(
                             labelText: 'Tipo de Recurrencia *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.repeat, color: Colors.green),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.green.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -9316,7 +9362,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           const SizedBox(height: 16),
                           const Text(
                             'Días de la semana:',
-                            style: TextStyle(color: AppTheme.white70, fontSize: 14),
+                            style: TextStyle(color: AppTheme.white, fontSize: 14),
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -9342,7 +9388,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                 selectedColor: Colors.green.withOpacity(0.3),
                                 checkmarkColor: Colors.green,
                                 labelStyle: TextStyle(
-                                  color: isSelected ? Colors.green : AppTheme.white70,
+                                  color: isSelected ? Colors.green : AppTheme.white,
                                 ),
                               );
                             }).toList(),
@@ -9369,7 +9415,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             decoration: BoxDecoration(
                               color: AppTheme.darkBackground.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.green.withOpacity(0.3)),
+                              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             child: Row(
                               children: [
@@ -9382,7 +9428,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   style: TextStyle(
                                     color: _gymRoutineStartDate != null
                                         ? AppTheme.white
-                                        : AppTheme.white70,
+                                        : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -9410,7 +9456,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             decoration: BoxDecoration(
                               color: AppTheme.darkBackground.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.green.withOpacity(0.3)),
+                              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             child: Row(
                               children: [
@@ -9423,7 +9469,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   style: TextStyle(
                                     color: _gymRoutineEndDate != null
                                         ? AppTheme.white
-                                        : AppTheme.white70,
+                                        : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -9577,13 +9623,10 @@ class _HealthSectionsState extends State<HealthSections> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface,
-                AppTheme.darkSurfaceVariant,
-              ],
+            color: AppTheme.darkSurface,
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(28),
           ),
@@ -9594,8 +9637,12 @@ class _HealthSectionsState extends State<HealthSections> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue, Colors.blue.shade700],
+                  color: AppTheme.darkSurface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
+                    ),
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(28),
@@ -9652,7 +9699,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           decoration: BoxDecoration(
                             color: AppTheme.darkBackground.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                            border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           child: Row(
                             children: [
@@ -9672,7 +9719,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         controller: _workoutNameController,
                         decoration: InputDecoration(
                           labelText: 'Nombre del entrenamiento *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.fitness_center, color: Colors.blue),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9698,17 +9745,17 @@ class _HealthSectionsState extends State<HealthSections> {
                           value: _selectedWorkoutRoutineId,
                           decoration: InputDecoration(
                             labelText: 'Rutina (opcional)',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.list, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -9745,7 +9792,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Duración (minutos) *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.access_time, color: Colors.blue),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9771,7 +9818,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Calorías quemadas (opcional)',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.local_fire_department, color: Colors.blue),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9799,7 +9846,7 @@ class _HealthSectionsState extends State<HealthSections> {
                         ),
                         subtitle: const Text(
                           'Repetir este entrenamiento automáticamente',
-                          style: TextStyle(color: AppTheme.white70, fontSize: 12),
+                          style: TextStyle(color: AppTheme.white, fontSize: 12),
                         ),
                         value: _workoutIsRecurring,
                         onChanged: (value) {
@@ -9821,17 +9868,17 @@ class _HealthSectionsState extends State<HealthSections> {
                           value: _workoutRecurrenceType,
                           decoration: InputDecoration(
                             labelText: 'Tipo de Recurrencia *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.repeat, color: Colors.blue),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.blue.withOpacity(0.3)),
+                              borderSide: BorderSide(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -9858,7 +9905,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           const SizedBox(height: 16),
                           const Text(
                             'Días de la semana:',
-                            style: TextStyle(color: AppTheme.white70, fontSize: 14),
+                            style: TextStyle(color: AppTheme.white, fontSize: 14),
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -9884,7 +9931,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                 selectedColor: Colors.blue.withOpacity(0.3),
                                 checkmarkColor: Colors.blue,
                                 labelStyle: TextStyle(
-                                  color: isSelected ? Colors.blue : AppTheme.white70,
+                                  color: isSelected ? Colors.blue : AppTheme.white,
                                 ),
                               );
                             }).toList(),
@@ -9911,7 +9958,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             decoration: BoxDecoration(
                               color: AppTheme.darkBackground.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             child: Row(
                               children: [
@@ -9924,7 +9971,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   style: TextStyle(
                                     color: _workoutStartDate != null
                                         ? AppTheme.white
-                                        : AppTheme.white70,
+                                        : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -9952,7 +9999,7 @@ class _HealthSectionsState extends State<HealthSections> {
                             decoration: BoxDecoration(
                               color: AppTheme.darkBackground.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                              border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                             ),
                             child: Row(
                               children: [
@@ -9965,7 +10012,7 @@ class _HealthSectionsState extends State<HealthSections> {
                                   style: TextStyle(
                                     color: _workoutEndDate != null
                                         ? AppTheme.white
-                                        : AppTheme.white70,
+                                        : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -10206,8 +10253,12 @@ class _HealthSectionsState extends State<HealthSections> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green.withOpacity(0.3), Colors.green.withOpacity(0.1)],
+                  color: AppTheme.darkSurface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
+                    ),
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
@@ -10216,7 +10267,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.add_circle_outline, color: Colors.green, size: 28),
+                    const Icon(Icons.add_circle_outline, color: AppTheme.white, size: 28),
                     const SizedBox(width: 16),
                     const Expanded(
                       child: Text(
@@ -10268,7 +10319,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           decoration: BoxDecoration(
                             color: AppTheme.darkBackground.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.green.withOpacity(0.3)),
+                            border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           child: Row(
                             children: [
@@ -10475,8 +10526,12 @@ class _HealthSectionsState extends State<HealthSections> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.withOpacity(0.3), Colors.blue.withOpacity(0.1)],
+                  color: AppTheme.darkSurface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
+                    ),
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
@@ -10485,7 +10540,7 @@ class _HealthSectionsState extends State<HealthSections> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.emoji_events, color: Colors.blue, size: 28),
+                    const Icon(Icons.emoji_events, color: AppTheme.white, size: 28),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
@@ -10572,7 +10627,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           decoration: BoxDecoration(
                             color: AppTheme.darkBackground.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                            border: Border.all(color: AppTheme.darkSurfaceVariant, width: 1),
                           ),
                           child: Row(
                             children: [
@@ -10655,7 +10710,7 @@ class _HealthSectionsState extends State<HealthSections> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_sportsGoalSportController.text.trim().isEmpty ||
                                     _sportsGoalObjectiveController.text.trim().isEmpty ||
                                     _sportsGoalTargetDate == null) {
@@ -10680,27 +10735,39 @@ class _HealthSectionsState extends State<HealthSections> {
                                       : null,
                                 );
                                 
-                                final isEditing = _editingSportsGoal != null;
-                                setState(() {
-                                  if (isEditing) {
-                                    final index = _sportsGoals.indexWhere((g) => g.id == _editingSportsGoal!.id);
-                                    if (index != -1) {
-                                      _sportsGoals[index] = newGoal;
-                                    }
-                                  } else {
-                                    _sportsGoals.add(newGoal);
-                                  }
-                                  _editingSportsGoal = null;
-                                });
+                                // Guardar en Supabase
+                                final result = await _healthService.saveSportsGoal(newGoal.toJson());
                                 
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(isEditing
-                                        ? 'Objetivo actualizado exitosamente'
-                                        : 'Objetivo creado exitosamente'),
-                                  ),
-                                );
+                                if (result['success'] == true) {
+                                  final isEditing = _editingSportsGoal != null;
+                                  setState(() {
+                                    if (isEditing) {
+                                      final index = _sportsGoals.indexWhere((g) => g.id == _editingSportsGoal!.id);
+                                      if (index != -1) {
+                                        _sportsGoals[index] = newGoal;
+                                      }
+                                    } else {
+                                      _sportsGoals.add(newGoal);
+                                    }
+                                    _editingSportsGoal = null;
+                                  });
+                                  
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(isEditing
+                                          ? 'Objetivo actualizado exitosamente'
+                                          : 'Objetivo creado exitosamente'),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${result['error'] ?? 'No se pudo guardar el objetivo'}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,

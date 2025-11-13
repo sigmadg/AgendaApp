@@ -64,7 +64,7 @@ class TabNavigation extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isActive ? AppTheme.white : AppTheme.white60,
+              color: isActive ? AppTheme.white : AppTheme.white,
             ),
             const SizedBox(width: 8),
             Text(
@@ -72,7 +72,7 @@ class TabNavigation extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: isActive ? AppTheme.white : AppTheme.white60,
+                color: isActive ? AppTheme.white : AppTheme.white,
               ),
             ),
           ],

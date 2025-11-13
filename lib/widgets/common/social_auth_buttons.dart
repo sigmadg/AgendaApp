@@ -62,7 +62,7 @@ class SocialAuthButtons extends StatelessWidget {
                 child: Text(
                   'o continúa con',
                   style: TextStyle(
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),

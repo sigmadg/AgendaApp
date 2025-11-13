@@ -66,7 +66,7 @@ part of 'work_sections.dart';
                       'Organiza tus reuniones y citas profesionales.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -133,7 +133,7 @@ part of 'work_sections.dart';
                               '${todayMeetings.length} evento${todayMeetings.length == 1 ? '' : 's'}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                               ),
                             ),
                           ),
@@ -227,7 +227,7 @@ part of 'work_sections.dart';
               style: TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? context.pro.accent : AppTheme.white60,
+                color: isSelected ? context.pro.accent : AppTheme.white,
                 height: 1.0,
               ),
             ),
@@ -446,7 +446,7 @@ part of 'work_sections.dart';
                             meeting.time!,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                           if (meeting.location != null) const SizedBox(width: 16),
@@ -459,7 +459,7 @@ part of 'work_sections.dart';
                               meeting.location!,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -545,9 +545,9 @@ part of 'work_sections.dart';
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Nombre',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -561,9 +561,9 @@ part of 'work_sections.dart';
                       value: selectedType,
                       decoration: InputDecoration(
                         labelText: 'Tipo',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -594,9 +594,9 @@ part of 'work_sections.dart';
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Hora',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -640,9 +640,9 @@ part of 'work_sections.dart';
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Ubicación (opcional)',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -659,7 +659,7 @@ part of 'work_sections.dart';
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(

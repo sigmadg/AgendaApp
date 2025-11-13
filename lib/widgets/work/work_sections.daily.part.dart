@@ -65,7 +65,7 @@ part of 'work_sections.dart';
                         'Organiza tu trabajo día a día',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -226,9 +226,9 @@ part of 'work_sections.dart';
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Tarea',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -247,16 +247,16 @@ part of 'work_sections.dart';
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Fecha',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: context.pro.accent),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white60),
+                              suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white),
                             ),
                             onTap: () async {
                               final date = await showDatePicker(
@@ -295,9 +295,9 @@ part of 'work_sections.dart';
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Hora',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -340,9 +340,9 @@ part of 'work_sections.dart';
                       value: selectedPriority,
                       decoration: InputDecoration(
                         labelText: 'Prioridad',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -419,7 +419,7 @@ part of 'work_sections.dart';
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(

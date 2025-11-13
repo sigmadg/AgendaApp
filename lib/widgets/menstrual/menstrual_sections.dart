@@ -135,7 +135,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -276,7 +276,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
             context,
             icon: Icons.settings_outlined,
             title: 'Configuración',
-            color: AppTheme.white60,
+            color: AppTheme.white,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=settings');
@@ -369,7 +369,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                         section['icon'] as IconData,
                         color: isActive
                             ? Colors.pink
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -380,7 +380,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                             fontSize: 10,
                             color: isActive
                                 ? Colors.pink
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -497,7 +497,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                         'Rastrea tu ciclo menstrual',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -609,7 +609,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                   controller: _notesController,
                   decoration: const InputDecoration(
                     hintText: 'Escribe tus observaciones sobre tu ciclo menstrual...',
-                    hintStyle: TextStyle(color: AppTheme.white60),
+                    hintStyle: TextStyle(color: AppTheme.white),
                     border: InputBorder.none,
                   ),
                   style: const TextStyle(color: AppTheme.white),
@@ -664,7 +664,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -727,7 +727,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ),
@@ -793,7 +793,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: hasEntry ? AppTheme.white : AppTheme.white60,
+                            color: hasEntry ? AppTheme.white : AppTheme.white,
                           ),
                         ),
                         if (hasEntry && entry.symptoms.isNotEmpty)
@@ -827,7 +827,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
           label,
           style: const TextStyle(
             fontSize: 12,
-            color: AppTheme.white60,
+            color: AppTheme.white,
           ),
         ),
       ],
@@ -892,14 +892,14 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                 const SizedBox(width: 8),
                 Text(
                   _getMoodLabel(entry.mood),
-                  style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 const SizedBox(width: 16),
                 const Icon(Icons.favorite, size: 16, color: Colors.purple),
                 const SizedBox(width: 4),
                 Text(
                   '${entry.painLevel}/10',
-                  style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
               ],
             ),
@@ -920,7 +920,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
               const SizedBox(height: 12),
               Text(
                 entry.notes!,
-                style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                style: const TextStyle(fontSize: 14, color: AppTheme.white),
               ),
             ],
           ],
@@ -973,7 +973,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                       title: const Text('Fecha', style: TextStyle(color: AppTheme.white)),
                       subtitle: Text(
                         DateFormat('d MMMM yyyy', 'es').format(selectedDate),
-                        style: const TextStyle(color: AppTheme.white70),
+                        style: const TextStyle(color: AppTheme.white),
                       ),
                       onTap: () async {
                         final picked = await showDatePicker(
@@ -1096,7 +1096,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                                     _getMoodLabel(mood),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isSelected ? _getMoodColor(mood) : AppTheme.white60,
+                                      color: isSelected ? _getMoodColor(mood) : AppTheme.white,
                                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                     ),
                                     textAlign: TextAlign.center,
@@ -1135,7 +1135,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                       controller: nameController,
                       decoration: const InputDecoration(
                         labelText: 'Notas',
-                        labelStyle: TextStyle(color: AppTheme.white70),
+                        labelStyle: TextStyle(color: AppTheme.white),
                         border: OutlineInputBorder(),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: AppTheme.darkSurfaceVariant),
@@ -1153,7 +1153,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
               actions: [
                 TextButton(
                   onPressed: isSaving ? null : () => Navigator.pop(context),
-                  child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+                  child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
                 ),
                 ElevatedButton(
                   onPressed: isSaving || selectedFlow == null
@@ -1214,7 +1214,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? AppTheme.white : AppTheme.white60,
+            color: isSelected ? AppTheme.white : AppTheme.white,
           ),
           textAlign: TextAlign.center,
         ),
@@ -1455,7 +1455,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                   description,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1501,7 +1501,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
       ),
       child: Row(
         children: [
-          Icon(_getSymptomIcon(item['symptom'] as String), color: AppTheme.white60, size: 16),
+          Icon(_getSymptomIcon(item['symptom'] as String), color: AppTheme.white, size: 16),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -1517,7 +1517,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
             '${item['count']} días',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
           const SizedBox(width: 12),
@@ -1551,7 +1551,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
               text,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
                 height: 1.4,
               ),
             ),
@@ -1612,7 +1612,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                   subtitle,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1758,7 +1758,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                                 entry.key.substring(0, 3),
                                 style: const TextStyle(
                                   fontSize: 10,
-                                  color: AppTheme.white60,
+                                  color: AppTheme.white,
                                 ),
                               ),
                               Text(
@@ -1965,7 +1965,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2007,7 +2007,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
               label,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
           ),
@@ -2240,7 +2240,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                         reminder.description,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2266,25 +2266,25 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
+                const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   reminder.date,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.white60),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.white),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.access_time, size: 14, color: AppTheme.white60),
+                const Icon(Icons.access_time, size: 14, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   reminder.time,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.white60),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.white),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.repeat, size: 14, color: AppTheme.white60),
+                const Icon(Icons.repeat, size: 14, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   _getRepeatLabel(reminder.repeat),
-                  style: const TextStyle(fontSize: 12, color: AppTheme.white60),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.white),
                 ),
               ],
             ),
@@ -2323,7 +2323,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                       controller: _reminderTitleController,
                       decoration: const InputDecoration(
                         labelText: 'Título *',
-                        labelStyle: TextStyle(color: AppTheme.white70),
+                        labelStyle: TextStyle(color: AppTheme.white),
                         border: OutlineInputBorder(),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: AppTheme.darkSurfaceVariant),
@@ -2339,7 +2339,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                       controller: _reminderDescriptionController,
                       decoration: const InputDecoration(
                         labelText: 'Descripción',
-                        labelStyle: TextStyle(color: AppTheme.white70),
+                        labelStyle: TextStyle(color: AppTheme.white),
                         border: OutlineInputBorder(),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: AppTheme.darkSurfaceVariant),
@@ -2357,7 +2357,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                       title: const Text('Fecha', style: TextStyle(color: AppTheme.white)),
                       subtitle: Text(
                         DateFormat('d MMMM yyyy', 'es').format(selectedDate),
-                        style: const TextStyle(color: AppTheme.white70),
+                        style: const TextStyle(color: AppTheme.white),
                       ),
                       onTap: () async {
                         final picked = await showDatePicker(
@@ -2379,7 +2379,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
                       title: const Text('Hora', style: TextStyle(color: AppTheme.white)),
                       subtitle: Text(
                         selectedTime?.format(context) ?? 'Seleccionar hora',
-                        style: const TextStyle(color: AppTheme.white70),
+                        style: const TextStyle(color: AppTheme.white),
                       ),
                       onTap: () async {
                         final picked = await showTimePicker(
@@ -2467,7 +2467,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
               actions: [
                 TextButton(
                   onPressed: isSaving ? null : () => Navigator.pop(context),
-                  child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+                  child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
                 ),
                 ElevatedButton(
                   onPressed: isSaving || _reminderTitleController.text.isEmpty
@@ -2769,7 +2769,7 @@ class _MenstrualSectionsState extends State<MenstrualSections> {
               '$count días',
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
           ],

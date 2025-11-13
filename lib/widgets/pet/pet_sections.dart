@@ -167,7 +167,7 @@ class _PetSectionsState extends State<PetSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -308,7 +308,7 @@ class _PetSectionsState extends State<PetSections> {
             context,
             icon: Icons.settings_outlined,
             title: 'Configuración',
-            color: AppTheme.white60,
+            color: AppTheme.white,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=settings');
@@ -338,7 +338,7 @@ class _PetSectionsState extends State<PetSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? color : AppTheme.white60,
+          color: isActive ? color : AppTheme.white,
           size: 20,
         ),
       ),
@@ -391,7 +391,7 @@ class _PetSectionsState extends State<PetSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? AppTheme.orangeAccent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -402,7 +402,7 @@ class _PetSectionsState extends State<PetSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? AppTheme.orangeAccent 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -746,14 +746,14 @@ class _PetSectionsState extends State<PetSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.favorite, size: 64, color: AppTheme.white40),
+          Icon(Icons.favorite, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           const Text(
             'No hay planes de cachorro',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -762,7 +762,7 @@ class _PetSectionsState extends State<PetSections> {
             'Crea tu primer plan de cuidado para tu cachorro',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.white40,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -835,7 +835,7 @@ class _PetSectionsState extends State<PetSections> {
                         '${plan.breed} • ${plan.age} • ${plan.sex}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -915,7 +915,7 @@ class _PetSectionsState extends State<PetSections> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -938,7 +938,7 @@ class _PetSectionsState extends State<PetSections> {
                               cmd,
                               style: const TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                               ),
                             ),
                           ],
@@ -1060,7 +1060,7 @@ class _PetSectionsState extends State<PetSections> {
                   color: AppTheme.darkSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                   border: Border(
-                    left: BorderSide(color: AppTheme.white60, width: 4),
+                    left: BorderSide(color: AppTheme.white, width: 4),
                   ),
                 ),
                 child: Column(
@@ -1068,7 +1068,7 @@ class _PetSectionsState extends State<PetSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.note, size: 16, color: AppTheme.white60),
+                        Icon(Icons.note, size: 16, color: AppTheme.white),
                         const SizedBox(width: 8),
                         const Text(
                           'Notas del Entrenador',
@@ -1085,7 +1085,7 @@ class _PetSectionsState extends State<PetSections> {
                       plan.notes!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         height: 1.5,
                       ),
                     ),
@@ -1105,8 +1105,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.edit, size: 18),
                     label: const Text('Editar'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1121,8 +1121,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.share, size: 18),
                     label: const Text('Compartir'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1160,7 +1160,7 @@ class _PetSectionsState extends State<PetSections> {
             activity,
             style: const TextStyle(
               fontSize: 14,
-              color: AppTheme.white70,
+              color: AppTheme.white,
             ),
           ),
         ),
@@ -1273,7 +1273,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _puppyNameController,
                           decoration: InputDecoration(
                             labelText: 'Nombre del Cachorro',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -1288,7 +1288,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _puppyBreedController,
                           decoration: InputDecoration(
                             labelText: 'Raza',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -1303,7 +1303,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _puppyAgeController,
                           decoration: InputDecoration(
                             labelText: 'Edad',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -1318,7 +1318,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _puppyOwnerNameController,
                           decoration: InputDecoration(
                             labelText: 'Nombre del Dueño',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -1333,7 +1333,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _puppyPhoneController,
                           decoration: InputDecoration(
                             labelText: 'Teléfono',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -1348,7 +1348,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _puppyAddressController,
                           decoration: InputDecoration(
                             labelText: 'Dirección',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -1369,7 +1369,7 @@ class _PetSectionsState extends State<PetSections> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                      top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                     ),
                   ),
                   child: Row(
@@ -1378,8 +1378,8 @@ class _PetSectionsState extends State<PetSections> {
                         child: OutlinedButton(
                           onPressed: () => setState(() => _showAddPuppyModal = false),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppTheme.white60),
-                            foregroundColor: AppTheme.white70,
+                            side: BorderSide(color: AppTheme.white),
+                            foregroundColor: AppTheme.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -1630,14 +1630,14 @@ class _PetSectionsState extends State<PetSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.medical_services, size: 64, color: AppTheme.white40),
+          Icon(Icons.medical_services, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           const Text(
             'No hay planes de bienestar',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1646,7 +1646,7 @@ class _PetSectionsState extends State<PetSections> {
             'Crea tu primer plan de bienestar para tu mascota',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.white40,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1719,7 +1719,7 @@ class _PetSectionsState extends State<PetSections> {
                         '${plan.petType} • ${plan.breed} • ${plan.age}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1748,23 +1748,23 @@ class _PetSectionsState extends State<PetSections> {
             // Información básica
             Row(
               children: [
-                Icon(Icons.person, size: 16, color: AppTheme.white60),
+                Icon(Icons.person, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   plan.petOwner,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.scale, size: 16, color: AppTheme.white60),
+                Icon(Icons.scale, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   plan.health['weight']?.toString() ?? '',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1867,7 +1867,7 @@ class _PetSectionsState extends State<PetSections> {
                                       'Última: ${vax['date']?.toString() ?? ''} | Próxima: ${vax['next']?.toString() ?? ''}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: AppTheme.white60,
+                                        color: AppTheme.white,
                                       ),
                                     ),
                                   ],
@@ -1972,7 +1972,7 @@ class _PetSectionsState extends State<PetSections> {
                                 med['dosage']?.toString() ?? '',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white60,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ],
@@ -1993,7 +1993,7 @@ class _PetSectionsState extends State<PetSections> {
                   color: AppTheme.darkSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                   border: Border(
-                    left: BorderSide(color: AppTheme.white60, width: 4),
+                    left: BorderSide(color: AppTheme.white, width: 4),
                   ),
                 ),
                 child: Column(
@@ -2001,7 +2001,7 @@ class _PetSectionsState extends State<PetSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.note, size: 16, color: AppTheme.white60),
+                        Icon(Icons.note, size: 16, color: AppTheme.white),
                         const SizedBox(width: 8),
                         const Text(
                           'Notas del Veterinario',
@@ -2018,7 +2018,7 @@ class _PetSectionsState extends State<PetSections> {
                       plan.notes!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         height: 1.5,
                       ),
                     ),
@@ -2038,8 +2038,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.edit, size: 18),
                     label: const Text('Editar'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2054,8 +2054,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.share, size: 18),
                     label: const Text('Compartir'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2132,7 +2132,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _wellnessPetNameController,
                           decoration: InputDecoration(
                             labelText: 'Nombre de la Mascota',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -2147,7 +2147,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _wellnessPetOwnerController,
                           decoration: InputDecoration(
                             labelText: 'Dueño',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -2162,14 +2162,14 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _wellnessBirthController,
                           decoration: InputDecoration(
                             labelText: 'Fecha de Nacimiento',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            suffixIcon: Icon(Icons.calendar_today, color: AppTheme.white60),
+                            suffixIcon: Icon(Icons.calendar_today, color: AppTheme.white),
                           ),
                           style: const TextStyle(color: AppTheme.white),
                           readOnly: true,
@@ -2190,7 +2190,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _wellnessClinicController,
                           decoration: InputDecoration(
                             labelText: 'Clínica',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -2210,7 +2210,7 @@ class _PetSectionsState extends State<PetSections> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                      top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                     ),
                   ),
                   child: Row(
@@ -2219,8 +2219,8 @@ class _PetSectionsState extends State<PetSections> {
                         child: OutlinedButton(
                           onPressed: () => setState(() => _showAddWellnessModal = false),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppTheme.white60),
-                            foregroundColor: AppTheme.white70,
+                            side: BorderSide(color: AppTheme.white),
+                            foregroundColor: AppTheme.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -2463,14 +2463,14 @@ class _PetSectionsState extends State<PetSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.list, size: 64, color: AppTheme.white40),
+          Icon(Icons.list, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           const Text(
             'No hay animales registrados',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2479,7 +2479,7 @@ class _PetSectionsState extends State<PetSections> {
             'Agrega tu primer animal al organizador',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.white40,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2553,7 +2553,7 @@ class _PetSectionsState extends State<PetSections> {
                         '${animal.type} • ${animal.breed} • ${animal.age}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2597,7 +2597,7 @@ class _PetSectionsState extends State<PetSections> {
                       animal.gender,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2605,13 +2605,13 @@ class _PetSectionsState extends State<PetSections> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.scale, size: 16, color: AppTheme.white60),
+                    Icon(Icons.scale, size: 16, color: AppTheme.white),
                     const SizedBox(width: 4),
                     Text(
                       animal.health['weight']?.toString() ?? '',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2619,13 +2619,13 @@ class _PetSectionsState extends State<PetSections> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.verified, size: 16, color: AppTheme.white60),
+                    Icon(Icons.verified, size: 16, color: AppTheme.white),
                     const SizedBox(width: 4),
                     Text(
                       animal.microchip,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2787,7 +2787,7 @@ class _PetSectionsState extends State<PetSections> {
                               taskName,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: completed ? AppTheme.white60 : AppTheme.white,
+                                color: completed ? AppTheme.white : AppTheme.white,
                                 decoration: completed ? TextDecoration.lineThrough : null,
                               ),
                             ),
@@ -2835,7 +2835,7 @@ class _PetSectionsState extends State<PetSections> {
                   color: AppTheme.darkSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                   border: Border(
-                    left: BorderSide(color: AppTheme.white60, width: 4),
+                    left: BorderSide(color: AppTheme.white, width: 4),
                   ),
                 ),
                 child: Column(
@@ -2843,7 +2843,7 @@ class _PetSectionsState extends State<PetSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.note, size: 16, color: AppTheme.white60),
+                        Icon(Icons.note, size: 16, color: AppTheme.white),
                         const SizedBox(width: 8),
                         const Text(
                           'Notas',
@@ -2860,7 +2860,7 @@ class _PetSectionsState extends State<PetSections> {
                       animal.notes!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         height: 1.5,
                       ),
                     ),
@@ -2880,8 +2880,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.edit, size: 18),
                     label: const Text('Editar'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2896,8 +2896,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.share, size: 18),
                     label: const Text('Compartir'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2923,7 +2923,7 @@ class _PetSectionsState extends State<PetSections> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: AppTheme.white60,
+            color: AppTheme.white,
           ),
         ),
         Text(
@@ -3025,7 +3025,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _organizerNameController,
                           decoration: InputDecoration(
                             labelText: 'Nombre del Animal',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -3040,7 +3040,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _organizerBreedController,
                           decoration: InputDecoration(
                             labelText: 'Raza',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -3055,14 +3055,14 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _organizerBirthController,
                           decoration: InputDecoration(
                             labelText: 'Fecha de Nacimiento',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            suffixIcon: Icon(Icons.calendar_today, color: AppTheme.white60),
+                            suffixIcon: Icon(Icons.calendar_today, color: AppTheme.white),
                           ),
                           style: const TextStyle(color: AppTheme.white),
                           readOnly: true,
@@ -3083,7 +3083,7 @@ class _PetSectionsState extends State<PetSections> {
                           controller: _organizerGenderController,
                           decoration: InputDecoration(
                             labelText: 'Género',
-                            labelStyle: TextStyle(color: AppTheme.white60),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             filled: true,
                             fillColor: AppTheme.darkSurfaceVariant,
                             border: OutlineInputBorder(
@@ -3103,7 +3103,7 @@ class _PetSectionsState extends State<PetSections> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                      top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                     ),
                   ),
                   child: Row(
@@ -3112,8 +3112,8 @@ class _PetSectionsState extends State<PetSections> {
                         child: OutlinedButton(
                           onPressed: () => setState(() => _showAddOrganizerModal = false),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppTheme.white60),
-                            foregroundColor: AppTheme.white70,
+                            side: BorderSide(color: AppTheme.white),
+                            foregroundColor: AppTheme.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -3404,7 +3404,7 @@ class _PetSectionsState extends State<PetSections> {
                       color: isSelected ? Colors.blue : AppTheme.darkSurface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.blue : AppTheme.white60,
+                        color: isSelected ? Colors.blue : AppTheme.white,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -3413,7 +3413,7 @@ class _PetSectionsState extends State<PetSections> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.white : AppTheme.white70,
+                        color: isSelected ? Colors.white : AppTheme.white,
                       ),
                     ),
                   ),
@@ -3477,14 +3477,14 @@ class _PetSectionsState extends State<PetSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.calendar_today, size: 64, color: AppTheme.white40),
+          Icon(Icons.calendar_today, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           const Text(
             'No hay actividades programadas',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -3493,7 +3493,7 @@ class _PetSectionsState extends State<PetSections> {
             'Agrega actividades para este día',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.white40,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -3570,7 +3570,7 @@ class _PetSectionsState extends State<PetSections> {
                     activity.activity,
                     style: TextStyle(
                       fontSize: 14,
-                      color: activity.completed ? AppTheme.white60 : AppTheme.white,
+                      color: activity.completed ? AppTheme.white : AppTheme.white,
                       decoration: activity.completed ? TextDecoration.lineThrough : null,
                     ),
                   ),
@@ -3705,13 +3705,13 @@ class _PetSectionsState extends State<PetSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -3754,7 +3754,7 @@ class _PetSectionsState extends State<PetSections> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -3771,14 +3771,14 @@ class _PetSectionsState extends State<PetSections> {
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(Icons.pets, size: 64, color: AppTheme.white40),
+          Icon(Icons.pets, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           const Text(
             'No hay planes de cuidado',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -3787,7 +3787,7 @@ class _PetSectionsState extends State<PetSections> {
             'Crea tu primer plan de cuidado para tu mascota',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.white40,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -3856,7 +3856,7 @@ class _PetSectionsState extends State<PetSections> {
                         plan.date,
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -3864,7 +3864,7 @@ class _PetSectionsState extends State<PetSections> {
                         '${plan.petType} • ${plan.breed} • ${plan.age}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3893,13 +3893,13 @@ class _PetSectionsState extends State<PetSections> {
             // Información de la mascota
             Row(
               children: [
-                Icon(Icons.person, size: 16, color: AppTheme.white60),
+                Icon(Icons.person, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   plan.ownerName,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -4013,7 +4013,7 @@ class _PetSectionsState extends State<PetSections> {
                       plan.treats,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -4058,7 +4058,7 @@ class _PetSectionsState extends State<PetSections> {
                               activity,
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                               ),
                             ),
                           ),
@@ -4107,7 +4107,7 @@ class _PetSectionsState extends State<PetSections> {
                               reminder,
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                               ),
                             ),
                           ),
@@ -4127,7 +4127,7 @@ class _PetSectionsState extends State<PetSections> {
                   color: AppTheme.darkSurfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                   border: Border(
-                    left: BorderSide(color: AppTheme.white60, width: 4),
+                    left: BorderSide(color: AppTheme.white, width: 4),
                   ),
                 ),
                 child: Column(
@@ -4135,7 +4135,7 @@ class _PetSectionsState extends State<PetSections> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.note, size: 16, color: AppTheme.white60),
+                        Icon(Icons.note, size: 16, color: AppTheme.white),
                         const SizedBox(width: 8),
                         const Text(
                           'Notas del Día',
@@ -4152,7 +4152,7 @@ class _PetSectionsState extends State<PetSections> {
                       plan.notes!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         height: 1.5,
                       ),
                     ),
@@ -4172,8 +4172,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.edit, size: 18),
                     label: const Text('Editar'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -4188,8 +4188,8 @@ class _PetSectionsState extends State<PetSections> {
                     icon: const Icon(Icons.share, size: 18),
                     label: const Text('Compartir'),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppTheme.white60),
-                      foregroundColor: AppTheme.white70,
+                      side: BorderSide(color: AppTheme.white),
+                      foregroundColor: AppTheme.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -4214,7 +4214,7 @@ class _PetSectionsState extends State<PetSections> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: AppTheme.white60,
+            color: AppTheme.white,
           ),
         ),
         Text(
@@ -4251,7 +4251,7 @@ class _PetSectionsState extends State<PetSections> {
             meal,
             style: const TextStyle(
               fontSize: 14,
-              color: AppTheme.white70,
+              color: AppTheme.white,
             ),
           ),
         ),
@@ -4357,7 +4357,7 @@ class _PetSectionsState extends State<PetSections> {
                     '${pet.type} • ${pet.breed}',
                     style: const TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -4365,7 +4365,7 @@ class _PetSectionsState extends State<PetSections> {
                     pet.gender,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -4438,7 +4438,7 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCarePetNameController,
                         decoration: InputDecoration(
                           labelText: 'Nombre de la Mascota',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -4453,7 +4453,7 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCareOwnerNameController,
                         decoration: InputDecoration(
                           labelText: 'Nombre del Dueño',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -4468,14 +4468,14 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCareDateController,
                         decoration: InputDecoration(
                           labelText: 'Fecha',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          suffixIcon: Icon(Icons.calendar_today, color: AppTheme.white60),
+                          suffixIcon: Icon(Icons.calendar_today, color: AppTheme.white),
                         ),
                         style: const TextStyle(color: AppTheme.white),
                         readOnly: true,
@@ -4496,7 +4496,7 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCareMorningMealController,
                         decoration: InputDecoration(
                           labelText: 'Comida de la Mañana',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -4512,7 +4512,7 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCareEveningMealController,
                         decoration: InputDecoration(
                           labelText: 'Comida de la Noche',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -4528,7 +4528,7 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCareTreatsController,
                         decoration: InputDecoration(
                           labelText: 'Premios',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -4543,7 +4543,7 @@ class _PetSectionsState extends State<PetSections> {
                         controller: _petCareNotesController,
                         decoration: InputDecoration(
                           labelText: 'Notas',
-                          labelStyle: TextStyle(color: AppTheme.white60),
+                          labelStyle: TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -4564,7 +4564,7 @@ class _PetSectionsState extends State<PetSections> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: AppTheme.white60.withOpacity(0.2)),
+                    top: BorderSide(color: AppTheme.white.withOpacity(0.2)),
                   ),
                 ),
                 child: Row(
@@ -4573,8 +4573,8 @@ class _PetSectionsState extends State<PetSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddPetCareModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppTheme.white60),
-                          foregroundColor: AppTheme.white70,
+                          side: BorderSide(color: AppTheme.white),
+                          foregroundColor: AppTheme.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

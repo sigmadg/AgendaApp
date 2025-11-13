@@ -122,7 +122,7 @@ class NavigationHeader extends StatelessWidget implements PreferredSizeWidget {
                           _getGreeting(),
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -146,7 +146,7 @@ class NavigationHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined, color: AppTheme.white60),
+                  icon: const Icon(Icons.notifications_outlined, color: AppTheme.white),
                   onPressed: () {},
                 ),
               ],

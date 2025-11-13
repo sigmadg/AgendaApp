@@ -200,7 +200,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
       case 'low':
         return Colors.green;
       default:
-        return AppTheme.white60;
+        return AppTheme.white;
     }
   }
 
@@ -744,7 +744,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
           children: [
             const Text(
               'Ya existe un evento a la misma hora y fecha:',
-              style: TextStyle(color: AppTheme.white70),
+              style: TextStyle(color: AppTheme.white),
             ),
             const SizedBox(height: 12),
             ...overlappingEvents.map((event) => Container(
@@ -774,7 +774,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             const SizedBox(height: 12),
             const Text(
               '¿Deseas crear el evento de todas formas?',
-              style: TextStyle(color: AppTheme.white70, fontWeight: FontWeight.w500),
+              style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -782,8 +782,8 @@ class _PersonalSectionsState extends State<PersonalSections> {
           OutlinedButton(
             onPressed: () => Navigator.pop(context, false),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.white60,
-              side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+              foregroundColor: AppTheme.white,
+              side: BorderSide(color: AppTheme.white.withOpacity(0.3)),
             ),
             child: const Text('Cancelar'),
           ),
@@ -1011,7 +1011,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1154,7 +1154,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             context,
             icon: Icons.settings_outlined,
             title: 'Configuración',
-            color: AppTheme.white60,
+            color: AppTheme.white,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=settings');
@@ -1255,7 +1255,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     section['icon'] as IconData,
                       color: isActive 
                           ? rainbowColor 
-                          : AppTheme.white60,
+                          : AppTheme.white,
                     size: 20,
                   ),
                     const SizedBox(height: 2),
@@ -1266,7 +1266,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           fontSize: 10,
                           color: isActive 
                               ? rainbowColor 
-                              : AppTheme.white60,
+                              : AppTheme.white,
                           fontWeight: isActive 
                               ? FontWeight.w600 
                               : FontWeight.normal,
@@ -1402,7 +1402,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
           color: isSelected ? null : AppTheme.darkSurfaceVariant.withOpacity(0.6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? _carminePastel.withOpacity(0.6) : AppTheme.white60.withOpacity(0.3),
+            color: isSelected ? _carminePastel.withOpacity(0.6) : AppTheme.white.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
@@ -1418,14 +1418,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? _carminePastel : AppTheme.white70),
+            Icon(icon, size: 18, color: isSelected ? _carminePastel : AppTheme.white),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? _carminePastel : AppTheme.white70,
+                color: isSelected ? _carminePastel : AppTheme.white,
               ),
             ),
           ],
@@ -1515,7 +1515,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: AppTheme.white70),
+                    icon: const Icon(Icons.chevron_left, color: AppTheme.white),
                     onPressed: () {
                       setState(() {
                         if (_viewMode == 'week') {
@@ -1528,7 +1528,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     tooltip: _viewMode == 'week' ? 'Semana anterior' : 'Mes anterior',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.today, color: AppTheme.white70),
+                    icon: const Icon(Icons.today, color: AppTheme.white),
                     onPressed: () {
                       setState(() {
                         _selectedDate = DateTime.now();
@@ -1537,7 +1537,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     tooltip: 'Hoy',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right, color: AppTheme.white70),
+                    icon: const Icon(Icons.chevron_right, color: AppTheme.white),
                     onPressed: () {
                       setState(() {
                         if (_viewMode == 'week') {
@@ -1569,7 +1569,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               '$eventCount ${eventCount == 1 ? 'evento' : 'eventos'}',
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
           ),
@@ -1701,7 +1701,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isToday ? Colors.red : AppTheme.white70,
+                            color: isToday ? Colors.red : AppTheme.white,
                           ),
                         ),
                       ),
@@ -1900,7 +1900,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 style: TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? _carminePastel : AppTheme.white60,
+                  color: isSelected ? _carminePastel : AppTheme.white,
                   height: 1.0,
                 ),
                 maxLines: 1,
@@ -2089,7 +2089,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: AppTheme.white70),
+                    icon: const Icon(Icons.chevron_left, color: AppTheme.white),
                     onPressed: () {
                       setState(() {
                         if (_viewMode == 'week') {
@@ -2102,7 +2102,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     tooltip: _viewMode == 'week' ? 'Semana anterior' : 'Mes anterior',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.today, color: AppTheme.white70),
+                    icon: const Icon(Icons.today, color: AppTheme.white),
                     onPressed: () {
                       setState(() {
                         _selectedDate = DateTime.now();
@@ -2111,7 +2111,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     tooltip: 'Hoy',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right, color: AppTheme.white70),
+                    icon: const Icon(Icons.chevron_right, color: AppTheme.white),
                     onPressed: () {
                       setState(() {
                         if (_viewMode == 'week') {
@@ -2308,7 +2308,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isToday ? Colors.blue : AppTheme.white70,
+                            color: isToday ? Colors.blue : AppTheme.white,
                           ),
                         ),
                       ),
@@ -2509,36 +2509,15 @@ class _PersonalSectionsState extends State<PersonalSections> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Header mejorado con gradiente arcoíris
+          // Header
           Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.red.withOpacity(0.3),
-                  _carminePastel.withOpacity(0.25),
-                  Colors.amber.withOpacity(0.2),
-                  Colors.green.withOpacity(0.15),
-                  Colors.blue.withOpacity(0.1),
-                  Colors.indigo.withOpacity(0.1),
-                  Colors.purple.withOpacity(0.1),
-                  AppTheme.darkSurface,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Colors.red.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -2629,13 +2608,13 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.email_outlined, size: 16, color: AppTheme.white60),
+                      Icon(Icons.email_outlined, size: 16, color: AppTheme.white),
                       const SizedBox(width: 8),
                         Text(
                           user?.email ?? 'usuario@ejemplo.com',
                           style: const TextStyle(
                           fontSize: 15,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                     ],
@@ -2790,27 +2769,12 @@ class _PersonalSectionsState extends State<PersonalSections> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colors[0].withOpacity(0.15),
-            colors.length > 1 ? colors[1].withOpacity(0.1) : colors[0].withOpacity(0.05),
-            AppTheme.darkSurface,
-          ],
-        ),
+        color: AppTheme.darkSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: AppTheme.darkSurfaceVariant,
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -2844,7 +2808,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -2913,14 +2877,10 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     width: 52,
                     height: 52,
                 decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: colors.map((c) => c.withOpacity(0.4)).toList(),
-                      ),
+                      color: AppTheme.darkSurfaceVariant,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: color.withOpacity(0.4),
+                        color: AppTheme.darkSurfaceVariant,
                         width: 1,
                       ),
                     ),
@@ -2945,7 +2905,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       subtitle,
                       style: const TextStyle(
                             fontSize: 13,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -3004,9 +2964,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Nombre',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -3021,9 +2981,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -3040,7 +3000,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(
@@ -3164,9 +3124,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Contraseña Actual',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -3182,9 +3142,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Nueva Contraseña',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -3200,9 +3160,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Confirmar Nueva Contraseña',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -3219,7 +3179,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(
@@ -3337,7 +3297,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       child: Text(
                         'Hecho con ❤️ para organizar tu vida',
                         style: TextStyle(
-                color: AppTheme.white60,
+                color: AppTheme.white,
                           fontSize: 13,
                         ),
                       ),
@@ -3381,7 +3341,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                   fontSize: 12,
                 ),
               ),
@@ -3447,7 +3407,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     const Text(
                       'Controla quién puede ver tu información y cómo se utilizan tus datos.',
                       style: TextStyle(
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontSize: 14,
                       ),
                     ),
@@ -3589,7 +3549,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(
@@ -3688,7 +3648,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                   fontSize: 12,
                 ),
               ),
@@ -3747,7 +3707,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                 Text(
                   description,
                   style: const TextStyle(
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                     fontSize: 12,
                   ),
                 ),
@@ -3760,7 +3720,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             onChanged: onChanged,
             activeColor: Colors.green,
             activeTrackColor: Colors.green.withOpacity(0.5),
-            inactiveThumbColor: AppTheme.white60,
+            inactiveThumbColor: AppTheme.white,
             inactiveTrackColor: AppTheme.darkSurfaceVariant,
           ),
         ],
@@ -3829,7 +3789,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     'Personaliza tu experiencia',
             style: TextStyle(
                       fontSize: 15,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
             ),
           ),
           const SizedBox(height: 16),
@@ -3915,7 +3875,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             'Activa solo las secciones que necesitas',
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -4022,7 +3982,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     'Sal de tu cuenta de forma segura',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -4114,7 +4074,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                             child: Text(
                                               'Tendrás que iniciar sesión nuevamente para acceder a tu cuenta.',
                                               style: TextStyle(
-                                                color: AppTheme.white70,
+                                                color: AppTheme.white,
                                                 fontSize: 14,
                                                 height: 1.4,
                                               ),
@@ -4131,9 +4091,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                   child: OutlinedButton(
                                     onPressed: () => Navigator.of(dialogContext).pop(false),
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppTheme.white60,
+                                      foregroundColor: AppTheme.white,
                                       side: BorderSide(
-                                        color: AppTheme.white60.withOpacity(0.3),
+                                        color: AppTheme.white.withOpacity(0.3),
                                       ),
                                       padding: const EdgeInsets.symmetric(vertical: 16),
                                       shape: RoundedRectangleBorder(
@@ -4395,7 +4355,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     ),
                     child: Icon(
                       icon,
-                      color: isActive ? sectionColor : AppTheme.white60,
+                      color: isActive ? sectionColor : AppTheme.white,
                       size: 28,
                     ),
           ),
@@ -4419,7 +4379,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   description,
                   style: const TextStyle(
                             fontSize: 13,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -4463,7 +4423,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       },
                       activeColor: Colors.green,
                       activeTrackColor: Colors.green.withOpacity(0.5),
-                      inactiveThumbColor: AppTheme.white60,
+                      inactiveThumbColor: AppTheme.white,
                       inactiveTrackColor: AppTheme.darkSurfaceVariant,
             ),
           ),
@@ -4499,53 +4459,24 @@ class _PersonalSectionsState extends State<PersonalSections> {
       child: Container(
       margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              rainbowColor1.withOpacity(0.15),
-              rainbowColor2.withOpacity(0.1),
-              rainbowColor3.withOpacity(0.05),
-              AppTheme.darkSurface,
-            ],
-          ),
-        borderRadius: BorderRadius.circular(20),
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: rainbowColor1.withOpacity(0.4),
+            color: AppTheme.darkSurfaceVariant,
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: rainbowColor1.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: rainbowColor2.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Stack(
           children: [
-            // Barra lateral con gradiente arcoíris
+            // Barra lateral
             Positioned(
               left: 0,
               top: 0,
               bottom: 0,
               child: Container(
-                width: 6,
+                width: 4,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      rainbowColor1,
-                      rainbowColor2,
-                      rainbowColor3,
-                    ],
-                  ),
+                  color: AppTheme.darkSurfaceVariant,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     bottomLeft: Radius.circular(20),
@@ -4641,7 +4572,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       ),
                       // Botón de opciones
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 20),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -4658,14 +4589,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                 ),
                                 content: Text(
                                   '¿Estás seguro de que quieres eliminar "${event.eventName}"?',
-                                  style: const TextStyle(color: AppTheme.white60),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     child: const Text(
                                       'Cancelar',
-                                      style: TextStyle(color: AppTheme.white60),
+                                      style: TextStyle(color: AppTheme.white),
                                     ),
                                   ),
                                   ElevatedButton(
@@ -4797,7 +4728,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         'Hora',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.white60,
+                                          color: AppTheme.white,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -4852,7 +4783,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         'Ubicación',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.white60,
+                                          color: AppTheme.white,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -4908,53 +4839,24 @@ class _PersonalSectionsState extends State<PersonalSections> {
       child: Container(
       margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              rainbowColor1.withOpacity(0.15),
-              rainbowColor2.withOpacity(0.1),
-              rainbowColor3.withOpacity(0.05),
-              AppTheme.darkSurface,
-            ],
-          ),
-        borderRadius: BorderRadius.circular(20),
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: rainbowColor1.withOpacity(0.4),
+            color: AppTheme.darkSurfaceVariant,
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: rainbowColor1.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: rainbowColor2.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Stack(
           children: [
-            // Barra lateral con gradiente arcoíris
+            // Barra lateral
             Positioned(
               left: 0,
               top: 0,
               bottom: 0,
               child: Container(
-                width: 6,
+                width: 4,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      rainbowColor1,
-                      rainbowColor2,
-                      rainbowColor3,
-                    ],
-                  ),
+                  color: AppTheme.darkSurfaceVariant,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     bottomLeft: Radius.circular(20),
@@ -5076,7 +4978,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                     style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                      color: task.completed ? AppTheme.white40 : AppTheme.white,
+                      color: task.completed ? AppTheme.white : AppTheme.white,
                       decoration: task.completed ? TextDecoration.lineThrough : null,
                     ),
                   ),
@@ -5124,7 +5026,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             ),
                       // Botón de opciones
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 20),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -5141,14 +5043,14 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                 ),
                                 content: Text(
                                   '¿Estás seguro de que quieres eliminar "${task.title}"?',
-                                  style: const TextStyle(color: AppTheme.white60),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     child: const Text(
                                       'Cancelar',
-                                      style: TextStyle(color: AppTheme.white60),
+                                      style: TextStyle(color: AppTheme.white),
                                     ),
                                   ),
                                   ElevatedButton(
@@ -5272,7 +5174,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         'Hora',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.white60,
+                                          color: AppTheme.white,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -5327,7 +5229,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                                         'Categoría',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.white60,
+                                          color: AppTheme.white,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -5409,7 +5311,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
             subtitle,
             style: const TextStyle(
               fontSize: 14,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -5520,9 +5422,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Nombre del evento',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -5536,9 +5438,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       value: selectedType,
                       decoration: InputDecoration(
                         labelText: 'Tipo de evento',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -5573,16 +5475,16 @@ class _PersonalSectionsState extends State<PersonalSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Hora',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: _carminePastel),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
+                              suffixIcon: const Icon(Icons.access_time, color: AppTheme.white),
                             ),
                             onTap: () async {
                               final time = await showTimePicker(
@@ -5619,9 +5521,9 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Ubicación (opcional)',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -5638,7 +5540,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(
@@ -5877,11 +5779,11 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       decoration: InputDecoration(
                         labelText: 'Título de la tarea',
                         labelStyle: const TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 16,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -5896,11 +5798,11 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       decoration: InputDecoration(
                         labelText: 'Sección',
                         labelStyle: const TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 16,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -5947,11 +5849,11 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       decoration: InputDecoration(
                         labelText: 'Prioridad',
                         labelStyle: const TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 16,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -6013,18 +5915,18 @@ class _PersonalSectionsState extends State<PersonalSections> {
                       decoration: InputDecoration(
                         labelText: 'Hora (opcional)',
                         labelStyle: const TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 16,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: _carminePastel),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        suffixIcon: const Icon(Icons.access_time, color: AppTheme.white60),
+                        suffixIcon: const Icon(Icons.access_time, color: AppTheme.white),
                       ),
                       onTap: () async {
                         final time = await showTimePicker(
@@ -6060,7 +5962,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(

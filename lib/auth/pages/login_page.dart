@@ -321,7 +321,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -350,7 +350,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -371,7 +371,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -412,12 +412,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         },
                         decoration: InputDecoration(
                           hintText: 'tu@email.com',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: Icon(
                             Icons.mail_outline,
                             color: _hasEmailText
                                 ? _carminePastel
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             size: 22,
                           ),
                           border: InputBorder.none,
@@ -452,7 +452,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -493,12 +493,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         },
                         decoration: InputDecoration(
                           hintText: 'Tu contraseña',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: Icon(
                             Icons.lock_outline,
                             color: _hasPasswordText
                                 ? _carminePastel
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             size: 22,
                           ),
                           suffixIcon: IconButton(
@@ -508,7 +508,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   : Icons.visibility_off_outlined,
                               color: _hasPasswordText
                                   ? _carminePastel
-                                  : AppTheme.white60,
+                                  : AppTheme.white,
                               size: 22,
                             ),
                             onPressed: () {
@@ -590,7 +590,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     border: Border.all(
                                       color: _rememberMe
                                           ? _carminePastel
-                                          : AppTheme.white60,
+                                          : AppTheme.white,
                                       width: 2,
                                     ),
                                     borderRadius: BorderRadius.circular(4),
@@ -613,7 +613,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           const Text(
                             'Recordarme',
                             style: TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 14,
                             ),
                           ),

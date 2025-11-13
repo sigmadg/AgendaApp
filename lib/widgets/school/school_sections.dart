@@ -56,6 +56,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
   // Estados para Horario Semanal
   int _selectedDayIndex = 0; // 0 = Lunes
   int _selectedHourIndex = 0; // 0 = 7:00 AM
+  
+  // Variables para modales de clases (días y horarios)
   final List<String> _weekDays = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
   final List<String> _timeSlots = [
     '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -72,6 +74,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
   bool _showAddClassOverviewModal = false;
   String _currentModalType = '';
   int? _editingMaterialIndex;
+  
+  // Estado para mostrar formulario de clase directamente en la página
+  bool _showClassForm = false;
+  ClassSchedule? _editingClass;
   
   // Controladores para formularios
   final TextEditingController _classSubjectController = TextEditingController();
@@ -435,7 +441,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -576,7 +582,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
             context,
             icon: Icons.settings_outlined,
             title: 'Configuración',
-            color: AppTheme.white60,
+            color: AppTheme.white,
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=settings');
@@ -669,7 +675,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? Colors.purple 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -680,7 +686,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? Colors.purple 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -702,6 +708,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
   }
 
   Widget _buildActiveSection() {
+    // Si se está mostrando el formulario de clase, mostrarlo directamente
+    if (_showClassForm) {
+      return _buildClassForm();
+    }
+    
     switch (_activeSection) {
       case 'timetable':
         return _buildTimetable();
@@ -721,6 +732,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
   }
 
   Widget _buildFloatingActionButton() {
+    // No mostrar botón flotante si se está mostrando el formulario de clase
+    if (_showClassForm) {
+      return const SizedBox.shrink();
+    }
+    
     if (_activeSection == 'timetable') {
       return FloatingActionButton.extended(
         onPressed: () {
@@ -731,37 +747,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
         backgroundColor: Colors.purple,
       );
     } else if (_activeSection == 'todo') {
-      // Solo mostrar el botón si hay tareas académicas
-      if (_academicTasks.isEmpty) {
-        return const SizedBox.shrink();
-      }
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              context.pro.primary,
-              context.pro.secondary,
-            ],
-          ),
-          borderRadius: AppRadius.circleAll,
-          boxShadow: AppShadows.elevated(context.pro.secondary),
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showAddTaskDialog(),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.add, color: AppTheme.white),
-          label: const Text(
-            'Nueva Tarea Académica',
-            style: TextStyle(
-              color: AppTheme.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          tooltip: 'Agregar tarea académica',
-        ),
+      return FloatingActionButton.extended(
+        onPressed: () => _showAddTaskDialog(),
+        icon: const Icon(Icons.add),
+        label: const Text('Nueva Tarea'),
+        backgroundColor: Colors.purple,
       );
     } else if (_activeSection == 'projects') {
       return FloatingActionButton.extended(
@@ -809,13 +799,17 @@ class _SchoolSectionsState extends State<SchoolSections> {
   }
 
   void _showAddClassDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _buildAddClassModal(),
-    ).then((_) {
-      setState(() {
-        _showAddClassModal = false;
-      });
+    setState(() {
+      _showClassForm = true;
+      _editingClass = null;
+      // Limpiar controladores
+      _classSubjectController.clear();
+      _classClassroomController.clear();
+      _classProfessorController.clear();
+      _classLinkController.clear();
+      _selectedClassTime = '7:00 AM';
+      _selectedClassDuration = '60';
+      _selectedClassDays = [];
     });
   }
 
@@ -887,10 +881,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
     _selectedClassDuration = classItem.duration.toString();
     _selectedClassDays = [classItem.day];
 
-    showDialog(
-      context: context,
-      builder: (context) => _buildEditClassModal(classItem),
-    );
+    setState(() {
+      _showClassForm = true;
+      _editingClass = classItem;
+    });
   }
 
   void _showDeleteClassDialog(ClassSchedule classItem) {
@@ -904,12 +898,12 @@ class _SchoolSectionsState extends State<SchoolSections> {
         ),
         content: Text(
           '¿Estás seguro de que deseas eliminar la clase "${classItem.subject}"?',
-          style: const TextStyle(color: AppTheme.white70),
+          style: const TextStyle(color: AppTheme.white),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white70)),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
           ),
           TextButton(
             onPressed: () async {
@@ -967,6 +961,636 @@ class _SchoolSectionsState extends State<SchoolSections> {
     );
   }
 
+  // ==================== FORMULARIO DE CLASE (SIN MODAL) ====================
+  Widget _buildClassForm() {
+    final isEditing = _editingClass != null;
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con botón de volver
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppTheme.white),
+                onPressed: () {
+                  setState(() {
+                    _showClassForm = false;
+                    _editingClass = null;
+                    // Limpiar controladores
+                    _classSubjectController.clear();
+                    _classClassroomController.clear();
+                    _classProfessorController.clear();
+                    _classLinkController.clear();
+                    _selectedClassTime = '7:00 AM';
+                    _selectedClassDuration = '60';
+                    _selectedClassDays = [];
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isEditing ? 'Editar Clase' : 'Agregar Nueva Clase',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Contenido del formulario (reutilizar el contenido del modal pero sin Dialog)
+          _buildClassFormContent(),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildClassFormContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Campo Materia
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurfaceVariant,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
+            ),
+          ),
+          child: TextField(
+            controller: _classSubjectController,
+            decoration: const InputDecoration(
+              labelText: 'Materia *',
+              labelStyle: TextStyle(color: AppTheme.white),
+              prefixIcon: Icon(
+                Icons.school,
+                color: Colors.purple,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+            ),
+            style: const TextStyle(color: AppTheme.white, fontSize: 16),
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Selector de días (múltiple)
+        const Row(
+          children: [
+            Icon(Icons.calendar_today, size: 18, color: Colors.purple),
+            SizedBox(width: 8),
+            Text(
+              'Días de la semana *',
+              style: TextStyle(
+                color: AppTheme.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurfaceVariant,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
+            ),
+          ),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _weekDays.map((day) {
+              final isSelected = _selectedClassDays.contains(day);
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedClassDays.remove(day);
+                    } else {
+                      _selectedClassDays.add(day);
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.purple : AppTheme.darkSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? Colors.purple : AppTheme.darkSurfaceVariant,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected)
+                        const Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: AppTheme.white,
+                        )
+                      else
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.white,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      Text(
+                        day,
+                        style: TextStyle(
+                          color: AppTheme.white,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Selector de hora
+        const Row(
+          children: [
+            Icon(Icons.access_time, size: 18, color: Colors.purple),
+            SizedBox(width: 8),
+            Text(
+              'Hora *',
+              style: TextStyle(
+                color: AppTheme.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 140,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurfaceVariant,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
+            ),
+          ),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 2.5,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: _timeSlots.length,
+            itemBuilder: (context, index) {
+              final time = _timeSlots[index];
+              final isSelected = _selectedClassTime == time;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedClassTime = time;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.purple : AppTheme.darkSurface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected ? Colors.purple : AppTheme.darkSurfaceVariant,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      time,
+                      style: TextStyle(
+                        color: AppTheme.white,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Campos opcionales
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurfaceVariant,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.darkSurfaceVariant,
+                    width: 1,
+                  ),
+                ),
+                child: TextField(
+                  controller: _classClassroomController,
+                  decoration: const InputDecoration(
+                    labelText: 'Aula',
+                    labelStyle: TextStyle(color: AppTheme.white),
+                    prefixIcon: Icon(
+                      Icons.location_on,
+                      color: Colors.purple,
+                      size: 20,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                  ),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurfaceVariant,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.darkSurfaceVariant,
+                    width: 1,
+                  ),
+                ),
+                child: TextField(
+                  controller: _classProfessorController,
+                  decoration: const InputDecoration(
+                    labelText: 'Profesor',
+                    labelStyle: TextStyle(color: AppTheme.white),
+                    prefixIcon: Icon(
+                      Icons.person,
+                      color: Colors.purple,
+                      size: 20,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                  ),
+                  style: const TextStyle(color: AppTheme.white, fontSize: 15),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        
+        // Campo de link
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurfaceVariant,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
+            ),
+          ),
+          child: TextField(
+            controller: _classLinkController,
+            decoration: const InputDecoration(
+              labelText: 'Link para unirse (Zoom, Meet, etc.)',
+              labelStyle: TextStyle(color: AppTheme.white),
+              hintText: 'https://meet.google.com/...',
+              hintStyle: TextStyle(color: AppTheme.white),
+              prefixIcon: Icon(
+                Icons.link,
+                color: Colors.purple,
+                size: 20,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+            ),
+            style: const TextStyle(color: AppTheme.white, fontSize: 15),
+            keyboardType: TextInputType.url,
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Selector de duración
+        const Row(
+          children: [
+            Icon(Icons.timer, size: 18, color: Colors.purple),
+            SizedBox(width: 8),
+            Text(
+              'Duración',
+              style: TextStyle(
+                color: AppTheme.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.darkSurfaceVariant,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.darkSurfaceVariant,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: ['30', '60', '90', '120'].map((duration) {
+              final isSelected = _selectedClassDuration == duration;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedClassDuration = duration;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.purple : AppTheme.darkSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? Colors.purple : AppTheme.darkSurfaceVariant,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$duration min',
+                          style: TextStyle(
+                            color: AppTheme.white,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 32),
+        
+        // Botones
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _showClassForm = false;
+                  _editingClass = null;
+                  _classSubjectController.clear();
+                  _classClassroomController.clear();
+                  _classProfessorController.clear();
+                  _classLinkController.clear();
+                  _selectedClassDays.clear();
+                  _selectedClassTime = '7:00 AM';
+                  _selectedClassDuration = '60';
+                });
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: () async {
+                await _saveClass();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_editingClass != null ? Icons.save : Icons.add, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    _editingClass != null ? 'Guardar Cambios' : 'Agregar Clase',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Future<void> _saveClass() async {
+    try {
+      // Validar campos obligatorios
+      if (_classSubjectController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Por favor completa todos los campos obligatorios'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_selectedClassDays.isEmpty || _selectedClassTime.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Por favor selecciona al menos un día y la hora'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_editingClass != null) {
+        // Editar clase existente
+        final updatedClass = ClassSchedule(
+          id: _editingClass!.id,
+          subject: _classSubjectController.text.trim(),
+          day: _selectedClassDays.first,
+          time: _selectedClassTime,
+          classroom: _classClassroomController.text.trim().isNotEmpty 
+              ? _classClassroomController.text.trim() 
+              : null,
+          professor: _classProfessorController.text.trim().isNotEmpty
+              ? _classProfessorController.text.trim()
+              : null,
+          duration: int.parse(_selectedClassDuration),
+          link: _classLinkController.text.trim().isNotEmpty
+              ? _classLinkController.text.trim()
+              : null,
+        );
+
+        final result = await _classScheduleService.updateClassSchedule(updatedClass);
+        
+        if (result['success'] == true) {
+          // Recargar clases
+          final loadedClasses = await _classScheduleService.getClassSchedules();
+          setState(() {
+            _classes = loadedClasses;
+            _showClassForm = false;
+            _editingClass = null;
+            _classSubjectController.clear();
+            _classClassroomController.clear();
+            _classProfessorController.clear();
+            _classLinkController.clear();
+            _selectedClassDays.clear();
+            _selectedClassTime = '7:00 AM';
+            _selectedClassDuration = '60';
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Clase actualizada exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al actualizar la clase: ${result['error'] ?? 'Error desconocido'}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        // Crear nuevas clases
+        final totalDays = _selectedClassDays.length;
+        int successCount = 0;
+        final List<ClassSchedule> newClasses = [];
+
+        for (int i = 0; i < _selectedClassDays.length; i++) {
+          try {
+            final day = _selectedClassDays[i];
+            final newClass = ClassSchedule(
+              id: '${DateTime.now().millisecondsSinceEpoch}_$i',
+              subject: _classSubjectController.text.trim(),
+              day: day,
+              time: _selectedClassTime,
+              classroom: _classClassroomController.text.trim().isNotEmpty 
+                  ? _classClassroomController.text.trim() 
+                  : null,
+              professor: _classProfessorController.text.trim().isNotEmpty
+                  ? _classProfessorController.text.trim()
+                  : null,
+              duration: int.parse(_selectedClassDuration),
+              link: _classLinkController.text.trim().isNotEmpty
+                  ? _classLinkController.text.trim()
+                  : null,
+            );
+
+            final result = await _classScheduleService.addClassSchedule(newClass);
+
+            if (result['success'] == true) {
+              successCount++;
+              newClasses.add(newClass);
+              
+              // Crear evento en personal automáticamente
+              try {
+                final event = _classToEvent(newClass);
+                await _eventService.addEvent(event);
+              } catch (e) {
+                print('Error al crear evento para clase: $e');
+              }
+            }
+          } catch (e) {
+            print('Error al agregar clase: $e');
+          }
+        }
+
+        // Recargar clases
+        if (successCount > 0) {
+          final loadedClasses = await _classScheduleService.getClassSchedules();
+          setState(() {
+            _classes = loadedClasses;
+            _showClassForm = false;
+            _editingClass = null;
+            _classSubjectController.clear();
+            _classClassroomController.clear();
+            _classProfessorController.clear();
+            _classLinkController.clear();
+            _selectedClassDays.clear();
+            _selectedClassTime = '7:00 AM';
+            _selectedClassDuration = '60';
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                successCount == 1
+                    ? 'Clase agregada exitosamente'
+                    : '$successCount clases agregadas exitosamente',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   // ==================== HORARIO SEMANAL ====================
   Widget _buildTimetable() {
     final currentDay = _weekDays[_selectedDayIndex];
@@ -995,27 +1619,16 @@ class _SchoolSectionsState extends State<SchoolSections> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header mejorado
+          // Header
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.purple.withOpacity(0.3),
-                  Colors.deepPurple.withOpacity(0.2),
-                  AppTheme.darkSurface,
-                ],
+              color: AppTheme.darkSurface,
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.4),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
             child: Column(
               children: [
@@ -1024,16 +1637,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.purple.withOpacity(0.4),
-                            Colors.deepPurple.withOpacity(0.3),
-                          ],
-                        ),
+                        color: AppTheme.darkSurfaceVariant,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.purple.withOpacity(0.5),
-                          width: 2,
+                          color: AppTheme.darkSurfaceVariant,
+                          width: 1,
                         ),
                       ),
                       child: const Icon(
@@ -1047,7 +1655,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Horario Semanal',
                             style: TextStyle(
                               fontSize: 24,
@@ -1059,9 +1667,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           const SizedBox(height: 4),
                           Text(
                             currentDate,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -1074,14 +1682,14 @@ class _SchoolSectionsState extends State<SchoolSections> {
           ),
           const SizedBox(height: 24),
           
-          // Selector de días mejorado
+          // Selector de días
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              color: AppTheme.darkSurfaceVariant,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.purple.withOpacity(0.2),
+                color: AppTheme.darkSurfaceVariant,
                 width: 1,
               ),
             ),
@@ -1103,21 +1711,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                       decoration: BoxDecoration(
-                        gradient: isSelected
-                            ? LinearGradient(
-                                colors: [
-                                  Colors.purple.withOpacity(0.4),
-                                  Colors.deepPurple.withOpacity(0.3),
-                                ],
-                              )
-                            : null,
-                        color: isToday && !isSelected
-                            ? Colors.purple.withOpacity(0.15)
-                            : null,
+                        color: isSelected ? Colors.purple : (isToday ? Colors.purple.withOpacity(0.15) : null),
                         borderRadius: BorderRadius.circular(12),
                         border: isSelected
                             ? Border.all(
-                                color: Colors.purple.withOpacity(0.6),
+                                color: Colors.purple,
                                 width: 2,
                               )
                             : isToday
@@ -1135,10 +1733,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               fontSize: 11,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                               color: isSelected
-                                  ? Colors.purple
+                                  ? AppTheme.white
                                   : isToday
-                                      ? Colors.purple.withOpacity(0.8)
-                                      : AppTheme.white70,
+                                      ? Colors.purple
+                                      : AppTheme.white,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -1147,7 +1745,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               margin: const EdgeInsets.only(top: 4),
                               width: 4,
                               height: 4,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: Colors.purple,
                                 shape: BoxShape.circle,
                               ),
@@ -1162,7 +1760,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
           ),
           const SizedBox(height: 24),
           
-          // Resumen del día mejorado
+          // Resumen del día
           Row(
             children: [
               Expanded(
@@ -1192,36 +1790,28 @@ class _SchoolSectionsState extends State<SchoolSections> {
           ),
           const SizedBox(height: 24),
           
-          // Horario mejorado
+          // Horario
           Container(
             decoration: BoxDecoration(
               color: AppTheme.darkSurface,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.purple.withOpacity(0.3),
-                width: 1.5,
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.2),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Column(
               children: [
-                // Header de la tabla mejorado
+                // Header de la tabla
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.purple,
-                        Colors.deepPurple,
-                      ],
+                    color: AppTheme.darkSurface,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: AppTheme.darkSurfaceVariant,
+                        width: 1,
+                      ),
                     ),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(24),
@@ -1233,7 +1823,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: AppTheme.darkSurfaceVariant,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -1259,8 +1849,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             const SizedBox(height: 2),
                             Text(
                               dayNames[currentDay]!,
-                              style: TextStyle(
-                                color: AppTheme.white.withOpacity(0.9),
+                              style: const TextStyle(
+                                color: AppTheme.white,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1271,7 +1861,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: AppTheme.darkSurfaceVariant,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -1286,7 +1876,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     ],
                   ),
                 ),
-                // Cuerpo del horario mejorado
+                // Cuerpo del horario
                 Container(
                   constraints: const BoxConstraints(maxHeight: 500),
                   child: ListView.builder(
@@ -1309,7 +1899,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Columna de tiempo mejorada
+                            // Columna de tiempo
                             Container(
                               width: 90,
                               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1323,11 +1913,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     decoration: BoxDecoration(
                                       color: hasClass
                                           ? Colors.purple.withOpacity(0.2)
-                                          : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                                          : AppTheme.darkSurfaceVariant,
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(
                                         color: hasClass
-                                            ? Colors.purple.withOpacity(0.4)
+                                            ? Colors.purple
                                             : AppTheme.darkSurfaceVariant,
                                         width: 1,
                                       ),
@@ -1341,7 +1931,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                             : FontWeight.w500,
                                         color: hasClass
                                             ? Colors.purple
-                                            : AppTheme.white70,
+                                            : AppTheme.white,
                                       ),
                                     ),
                                   ),
@@ -1376,24 +1966,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            classColor,
-            classColor.withOpacity(0.8),
-          ],
-        ),
+        color: classColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: classColor.withOpacity(0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: classColor,
           width: 1,
         ),
       ),
@@ -1405,12 +1981,8 @@ class _SchoolSectionsState extends State<SchoolSections> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: classColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
                 ),
                 child: const Icon(
                   Icons.school,
@@ -1432,208 +2004,101 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         letterSpacing: 0.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: Colors.greenAccent,
-                              shape: BoxShape.circle,
+                    if (isCurrentTime)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.circle, size: 6, color: Colors.orange),
+                            SizedBox(width: 6),
+                            Text(
+                              'En curso',
+                              style: TextStyle(
+                                color: AppTheme.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'En curso',
-                            style: TextStyle(
-                              color: AppTheme.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
+          if (classItem.classroom != null || classItem.professor != null) ...[
+            const SizedBox(height: 12),
+            Row(
               children: [
-                if (classItem.classroom != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.location_on,
-                            size: 16,
-                            color: AppTheme.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            classItem.classroom!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                if (classItem.classroom != null) ...[
+                  const Icon(Icons.location_on, size: 14, color: AppTheme.white),
+                  const SizedBox(width: 4),
+                  Text(
+                    classItem.classroom!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.white,
                     ),
                   ),
-                if (classItem.professor != null)
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          size: 16,
-                          color: AppTheme.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          classItem.professor!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  if (classItem.professor != null) const SizedBox(width: 12),
+                ],
+                if (classItem.professor != null) ...[
+                  const Icon(Icons.person, size: 14, color: AppTheme.white),
+                  const SizedBox(width: 4),
+                  Text(
+                    classItem.professor!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.white,
+                    ),
                   ),
+                ],
               ],
             ),
-          ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: IconButton(
+              if (classItem.link != null && classItem.link!.isNotEmpty)
+                Expanded(
+                  child: OutlinedButton.icon(
                     onPressed: () async {
-                      if (classItem.link != null && classItem.link!.isNotEmpty) {
-                        try {
-                          final uri = Uri.parse(classItem.link!);
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          } else {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('No se pudo abrir el link'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error al abrir el link: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
+                      try {
+                        final uri = Uri.parse(classItem.link!);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
                         }
-                      } else {
+                      } catch (e) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('No hay link disponible para esta clase'),
-                              backgroundColor: Colors.orange,
-                            ),
+                            SnackBar(content: Text('Error al abrir el link: $e')),
                           );
                         }
                       }
                     },
-                    icon: const Icon(Icons.videocam, size: 16, color: AppTheme.white),
-                    padding: const EdgeInsets.all(10),
-                    constraints: const BoxConstraints(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
+                    icon: const Icon(Icons.videocam, size: 16),
+                    label: const Text('Unirse'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.white,
+                      side: const BorderSide(color: AppTheme.white),
                     ),
                   ),
-                  child: IconButton(
-                    onPressed: () {
-                      _showEditClassModal(classItem);
-                    },
-                    icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
-                    padding: const EdgeInsets.all(10),
-                    constraints: const BoxConstraints(),
-                  ),
                 ),
-              ),
               const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Colors.red.withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    _showDeleteClassDialog(classItem);
-                  },
-                  icon: const Icon(Icons.delete, size: 18, color: Colors.redAccent),
-                  padding: const EdgeInsets.all(10),
-                  constraints: const BoxConstraints(),
+              OutlinedButton.icon(
+                onPressed: () => _showEditClassModal(classItem),
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('Editar'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.white,
+                  side: const BorderSide(color: AppTheme.white),
                 ),
               ),
             ],
@@ -1664,31 +2129,22 @@ class _SchoolSectionsState extends State<SchoolSections> {
       decoration: BoxDecoration(
         color: isCurrentTime 
             ? Colors.purple.withOpacity(0.15)
-            : AppTheme.darkSurfaceVariant.withOpacity(0.2),
+            : AppTheme.darkSurfaceVariant,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCurrentTime 
-              ? Colors.purple.withOpacity(0.4)
-              : AppTheme.darkSurfaceVariant.withOpacity(0.3),
+              ? Colors.purple
+              : AppTheme.darkSurfaceVariant,
           width: 1.5,
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isCurrentTime
-                  ? Colors.purple.withOpacity(0.2)
-                  : AppTheme.darkSurfaceVariant.withOpacity(0.3),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isCurrentTime ? Icons.access_time : Icons.event_available,
-              color: isCurrentTime ? Colors.purple : AppTheme.white60,
-              size: 20,
-            ),
+          Icon(
+            isCurrentTime ? Icons.access_time : Icons.event_available,
+            color: isCurrentTime ? Colors.purple : AppTheme.white,
+            size: 20,
           ),
           const SizedBox(width: 12),
           Text(
@@ -1696,8 +2152,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: isCurrentTime ? Colors.purple : AppTheme.white70,
-              letterSpacing: 0.3,
+              color: isCurrentTime ? Colors.purple : AppTheme.white,
             ),
           ),
         ],
@@ -1739,7 +2194,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                     title,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                 Text(
@@ -1832,7 +2287,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         'Gestiona tus tareas y proyectos académicos',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2247,7 +2702,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: task.completed ? AppTheme.white40 : AppTheme.white,
+                                color: task.completed ? AppTheme.white : AppTheme.white,
                                 decoration: task.completed ? TextDecoration.lineThrough : null,
                               ),
                             ),
@@ -2336,7 +2791,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       ),
                       // Botón de opciones (igual que trabajo)
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 20),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2353,14 +2808,14 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 ),
                                 content: Text(
                                   '¿Estás seguro de que quieres eliminar "${task.task}"?',
-                                  style: const TextStyle(color: AppTheme.white60),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     child: const Text(
                                       'Cancelar',
-                                      style: TextStyle(color: AppTheme.white60),
+                                      style: TextStyle(color: AppTheme.white),
                                     ),
                                   ),
                                   ElevatedButton(
@@ -2649,7 +3104,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               task.notes!,
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                                 height: 1.4,
                               ),
                             ),
@@ -2746,7 +3201,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
               title!,
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
         ],
@@ -2834,7 +3289,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         'Gestiona proyectos grupales y colaborativos',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2942,11 +3397,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
+                          const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                           const SizedBox(width: 4),
                           Text(
                             '${DateFormat('dd/MM').format(project.startDate)} - ${DateFormat('dd/MM/yyyy').format(project.endDate)}',
-                            style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                            style: const TextStyle(fontSize: 12, color: AppTheme.white),
                           ),
                         ],
                       ),
@@ -2986,7 +3441,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   project.objective,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
                 if (project.resources != null && project.resources!.isNotEmpty) ...[
@@ -3011,7 +3466,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             const SizedBox(height: 4),
                             Text(
                               project.resources!,
-                              style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                              style: const TextStyle(fontSize: 12, color: AppTheme.white),
                             ),
                           ],
                         ),
@@ -3041,7 +3496,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             const SizedBox(height: 4),
                             Text(
                               project.ideas!,
-                              style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                              style: const TextStyle(fontSize: 12, color: AppTheme.white),
                             ),
                           ],
                         ),
@@ -3110,7 +3565,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       Icon(
                                         step.completed ? Icons.check_circle : Icons.radio_button_unchecked,
                                         size: 20,
-                                        color: step.completed ? Colors.green : AppTheme.white60,
+                                        color: step.completed ? Colors.green : AppTheme.white,
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -3118,7 +3573,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                           step.text,
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: step.completed ? AppTheme.white40 : AppTheme.white,
+                                            color: step.completed ? AppTheme.white : AppTheme.white,
                                             decoration: step.completed ? TextDecoration.lineThrough : null,
                                           ),
                                         ),
@@ -3166,7 +3621,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       '$completedSteps/$totalSteps',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -3234,7 +3689,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         'Planifica y prepara tus exámenes',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3342,11 +3797,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
+                          const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                           const SizedBox(width: 4),
                           Text(
                             DateFormat('dd/MM/yyyy').format(exam.date),
-                            style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                            style: const TextStyle(fontSize: 12, color: AppTheme.white),
                           ),
                         ],
                       ),
@@ -3439,7 +3894,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       Icon(
                                         todo.completed ? Icons.check_circle : Icons.radio_button_unchecked,
                                         size: 20,
-                                        color: todo.completed ? Colors.green : AppTheme.white60,
+                                        color: todo.completed ? Colors.green : AppTheme.white,
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -3447,7 +3902,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                           todo.text,
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: todo.completed ? AppTheme.white40 : AppTheme.white,
+                                            color: todo.completed ? AppTheme.white : AppTheme.white,
                                             decoration: todo.completed ? TextDecoration.lineThrough : null,
                                           ),
                                         ),
@@ -3508,7 +3963,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         const SizedBox(height: 8),
                         Text(
                           exam.notes!,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                          style: const TextStyle(fontSize: 12, color: AppTheme.white),
                         ),
                       ],
                     ),
@@ -3530,7 +3985,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         '$completedTodos/$totalTodos',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -3599,7 +4054,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         'Organiza libros, recursos y materiales',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3818,7 +4273,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     : item['book'] ?? '',
                                 style: const TextStyle(
                                   fontSize: 12, 
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -3873,11 +4328,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.library_books, size: 14, color: AppTheme.white60),
+                                        const Icon(Icons.library_books, size: 14, color: AppTheme.white),
                                         const SizedBox(width: 4),
                                         Text(
                                           item['genre'],
-                                          style: const TextStyle(fontSize: 11, color: AppTheme.white70),
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.white),
                                         ),
                                       ],
                                     ),
@@ -3885,11 +4340,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.attach_money, size: 14, color: AppTheme.white60),
+                                        const Icon(Icons.attach_money, size: 14, color: AppTheme.white),
                                         const SizedBox(width: 4),
                                         Text(
                                           item['price'],
-                                          style: const TextStyle(fontSize: 11, color: AppTheme.white70),
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.white),
                                         ),
                                       ],
                                     ),
@@ -3897,11 +4352,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.description, size: 14, color: AppTheme.white60),
+                                        const Icon(Icons.description, size: 14, color: AppTheme.white),
                                         const SizedBox(width: 4),
                                         Text(
                                           'Pág. ${item['page']}',
-                                          style: const TextStyle(fontSize: 11, color: AppTheme.white70),
+                                          style: const TextStyle(fontSize: 11, color: AppTheme.white),
                                         ),
                                       ],
                                     ),
@@ -3920,7 +4375,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                   item['notes'],
                                   style: const TextStyle(
                                     fontSize: 11,
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -3935,7 +4390,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           if (onEdit != null)
                             IconButton(
                               onPressed: () => onEdit(index, item),
-                              icon: const Icon(Icons.edit, color: AppTheme.white60, size: 18),
+                              icon: const Icon(Icons.edit, color: AppTheme.white, size: 18),
                             ),
                           IconButton(
                             onPressed: () => onDelete(index),
@@ -4007,7 +4462,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         'Organiza y gestiona tus clases',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -4260,7 +4715,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             'Apuntes Digitales',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -4307,7 +4762,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           'Objetivo',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -4334,7 +4789,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           'Actual',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -4414,11 +4869,11 @@ class _SchoolSectionsState extends State<SchoolSections> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: AppTheme.white60),
+          Icon(icon, size: 14, color: AppTheme.white),
           const SizedBox(width: 8),
           Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppTheme.white70),
+            style: const TextStyle(fontSize: 13, color: AppTheme.white),
           ),
         ],
       ),
@@ -4501,7 +4956,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
               subtitle,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -4627,7 +5082,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           Text(
                             'Completa los datos de tu clase',
                             style: TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 13,
                             ),
                           ),
@@ -4659,7 +5114,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: _classSubjectController,
                           decoration: InputDecoration(
                             labelText: 'Materia *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(
                               Icons.school,
                               color: Colors.purple,
@@ -4769,7 +5224,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: AppTheme.white70,
+                                            color: AppTheme.white,
                                             width: 2,
                                           ),
                                         ),
@@ -4780,7 +5235,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       style: TextStyle(
                                         color: isSelected
                                             ? AppTheme.white
-                                            : AppTheme.white70,
+                                            : AppTheme.white,
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.w500,
@@ -4867,7 +5322,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     style: TextStyle(
                                       color: isSelected
                                           ? AppTheme.white
-                                          : AppTheme.white70,
+                                          : AppTheme.white,
                                       fontWeight: isSelected
                                           ? FontWeight.bold
                                           : FontWeight.w500,
@@ -4900,7 +5355,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 controller: _classClassroomController,
                                 decoration: const InputDecoration(
                                   labelText: 'Aula',
-                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  labelStyle: TextStyle(color: AppTheme.white),
                                   prefixIcon: Icon(
                                     Icons.location_on,
                                     color: Colors.purple,
@@ -4930,7 +5385,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 controller: _classProfessorController,
                                 decoration: const InputDecoration(
                                   labelText: 'Profesor',
-                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  labelStyle: TextStyle(color: AppTheme.white),
                                   prefixIcon: Icon(
                                     Icons.person,
                                     color: Colors.purple,
@@ -4963,9 +5418,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: _classLinkController,
                           decoration: const InputDecoration(
                             labelText: 'Link para unirse (Zoom, Meet, etc.)',
-                            labelStyle: TextStyle(color: AppTheme.white70),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             hintText: 'https://meet.google.com/...',
-                            hintStyle: TextStyle(color: AppTheme.white60),
+                            hintStyle: TextStyle(color: AppTheme.white),
                             prefixIcon: Icon(
                               Icons.link,
                               color: Colors.purple,
@@ -5047,7 +5502,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         style: TextStyle(
                                           color: isSelected
                                               ? AppTheme.white
-                                              : AppTheme.white70,
+                                              : AppTheme.white,
                                           fontWeight: isSelected
                                               ? FontWeight.bold
                                               : FontWeight.w500,
@@ -5095,7 +5550,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       child: const Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontSize: 15,
                         ),
                       ),
@@ -5395,7 +5850,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           Text(
                             'Modifica los datos de tu clase',
                             style: TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 13,
                             ),
                           ),
@@ -5427,7 +5882,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: _classSubjectController,
                           decoration: const InputDecoration(
                             labelText: 'Materia *',
-                            labelStyle: TextStyle(color: AppTheme.white70),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             prefixIcon: Icon(
                               Icons.school,
                               color: Colors.purple,
@@ -5476,7 +5931,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             },
                             selectedColor: Colors.purple,
                             labelStyle: TextStyle(
-                              color: isSelected ? AppTheme.white : AppTheme.white70,
+                              color: isSelected ? AppTheme.white : AppTheme.white,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                             backgroundColor: AppTheme.darkSurfaceVariant.withOpacity(0.3),
@@ -5556,7 +6011,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     style: TextStyle(
                                       color: isSelected
                                           ? AppTheme.white
-                                          : AppTheme.white70,
+                                          : AppTheme.white,
                                       fontWeight: isSelected
                                           ? FontWeight.bold
                                           : FontWeight.w500,
@@ -5588,7 +6043,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 controller: _classClassroomController,
                                 decoration: const InputDecoration(
                                   labelText: 'Aula',
-                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  labelStyle: TextStyle(color: AppTheme.white),
                                   prefixIcon: Icon(
                                     Icons.location_on,
                                     color: Colors.purple,
@@ -5618,7 +6073,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 controller: _classProfessorController,
                                 decoration: const InputDecoration(
                                   labelText: 'Profesor',
-                                  labelStyle: TextStyle(color: AppTheme.white70),
+                                  labelStyle: TextStyle(color: AppTheme.white),
                                   prefixIcon: Icon(
                                     Icons.person,
                                     color: Colors.purple,
@@ -5650,9 +6105,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: _classLinkController,
                           decoration: const InputDecoration(
                             labelText: 'Link para unirse (Zoom, Meet, etc.)',
-                            labelStyle: TextStyle(color: AppTheme.white70),
+                            labelStyle: TextStyle(color: AppTheme.white),
                             hintText: 'https://meet.google.com/...',
-                            hintStyle: TextStyle(color: AppTheme.white60),
+                            hintStyle: TextStyle(color: AppTheme.white),
                             prefixIcon: Icon(
                               Icons.link,
                               color: Colors.purple,
@@ -5732,7 +6187,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       style: TextStyle(
                                         color: isSelected
                                             ? AppTheme.white
-                                            : AppTheme.white70,
+                                            : AppTheme.white,
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.normal,
@@ -5766,7 +6221,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                               child: const Text(
                                 'Cancelar',
                                 style: TextStyle(
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                   fontSize: 15,
                                 ),
                               ),
@@ -6024,7 +6479,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Agregar Tarea Académica',
+                              'Agregar Tarea',
                               style: TextStyle(
                                 color: AppTheme.white,
                                 fontSize: 22,
@@ -6035,7 +6490,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             Text(
                               'Organiza tus tareas académicas',
                               style: TextStyle(
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                                 fontSize: 14,
                               ),
                             ),
@@ -6123,7 +6578,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Tarea *',
-                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     prefixIcon: const Icon(Icons.assignment, color: Colors.purple),
                     filled: true,
                     fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6147,7 +6602,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Materia',
-                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     prefixIcon: const Icon(Icons.school, color: Colors.purple),
                     filled: true,
                     fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6196,12 +6651,12 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Fecha de entrega *',
-                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     hintText: _selectedTaskDate != null 
                         ? DateFormat('dd/MM/yyyy').format(_selectedTaskDate!)
                         : 'Seleccionar fecha',
                     hintStyle: TextStyle(
-                      color: _selectedTaskDate != null ? AppTheme.white : AppTheme.white60,
+                      color: _selectedTaskDate != null ? AppTheme.white : AppTheme.white,
                     ),
                     prefixIcon: const Icon(Icons.calendar_today, color: Colors.blue),
                     filled: true,
@@ -6252,7 +6707,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   value: _selectedTaskPriority,
                   decoration: InputDecoration(
                     labelText: 'Prioridad',
-                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     prefixIcon: Icon(
                       _getPriorityIcon(_selectedTaskPriority),
                       color: _getPriorityColor(_selectedTaskPriority),
@@ -6364,10 +6819,10 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Tiempo estimado',
-                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     hintText: _selectedTaskTime ?? 'Seleccionar tiempo',
                     hintStyle: TextStyle(
-                      color: _selectedTaskTime != null ? AppTheme.white : AppTheme.white60,
+                      color: _selectedTaskTime != null ? AppTheme.white : AppTheme.white,
                     ),
                     prefixIcon: const Icon(Icons.access_time, color: Colors.orange),
                     filled: true,
@@ -6417,7 +6872,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: 'Notas adicionales',
-                    labelStyle: const TextStyle(color: AppTheme.white70),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     prefixIcon: const Icon(Icons.note_add, color: Colors.orange),
                     filled: true,
                     fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6456,7 +6911,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         onPressed: () => Navigator.of(dialogContext).pop(),
                         child: const Text(
                           'Cancelar',
-                          style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                          style: TextStyle(color: AppTheme.white, fontSize: 16),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -6628,7 +7083,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           Text(
                             'Crea un proyecto colaborativo',
                             style: TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 14,
                             ),
                           ),
@@ -6690,7 +7145,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _projectTitleController,
                         decoration: InputDecoration(
                           labelText: 'Título del Proyecto *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.title, color: Colors.purple),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6714,7 +7169,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _projectObjectiveController,
                         decoration: InputDecoration(
                           labelText: 'Objetivo *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.track_changes, color: Colors.purple),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6789,7 +7244,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     const Text(
                                       'Fecha de inicio *',
                                       style: TextStyle(
-                                        color: AppTheme.white70,
+                                        color: AppTheme.white,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -6801,7 +7256,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       style: TextStyle(
                                         color: _selectedProjectStartDate != null 
                                             ? AppTheme.white 
-                                            : AppTheme.white40,
+                                            : AppTheme.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -6845,7 +7300,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     const Text(
                                       'Fecha de finalización *',
                                       style: TextStyle(
-                                        color: AppTheme.white70,
+                                        color: AppTheme.white,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -6857,7 +7312,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       style: TextStyle(
                                         color: _selectedProjectEndDate != null 
                                             ? AppTheme.white 
-                                            : AppTheme.white40,
+                                            : AppTheme.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -6899,7 +7354,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _projectResourcesController,
                         decoration: InputDecoration(
                           labelText: 'Recursos',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.library_books, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6924,7 +7379,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _projectIdeasController,
                         decoration: InputDecoration(
                           labelText: 'Ideas',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.lightbulb, color: Colors.orange),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -6993,7 +7448,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _projectStepController,
                         decoration: InputDecoration(
                           hintText: 'Agregar paso de acción',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.add_task, color: Colors.orange),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7095,7 +7550,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       },
                       child: const Text(
                         'Cancelar',
-                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                        style: TextStyle(color: AppTheme.white, fontSize: 16),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -7252,7 +7707,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           Text(
                             'Planifica y prepara tu examen',
                             style: TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 14,
                             ),
                           ),
@@ -7311,7 +7766,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _examTopicController,
                         decoration: InputDecoration(
                           labelText: 'Tema del Examen *',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.topic, color: Colors.purple),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7385,7 +7840,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                     const Text(
                                       'Fecha del Examen *',
                                       style: TextStyle(
-                                        color: AppTheme.white70,
+                                        color: AppTheme.white,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -7397,7 +7852,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       style: TextStyle(
                                         color: _selectedExamDate != null 
                                             ? AppTheme.white 
-                                            : AppTheme.white40,
+                                            : AppTheme.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -7459,7 +7914,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _examTodoController,
                         decoration: InputDecoration(
                           hintText: 'Agregar tarea de preparación',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.add_task, color: Colors.green),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7557,7 +8012,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: _examNotesController,
                         decoration: InputDecoration(
                           labelText: 'Notas de Estudio',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.note_add, color: Colors.orange),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7607,7 +8062,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       },
                       child: const Text(
                         'Cancelar',
-                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                        style: TextStyle(color: AppTheme.white, fontSize: 16),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -7789,7 +8244,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         ? 'Guarda recursos en línea'
                                         : 'Agrega referencias bibliográficas'),
                             style: const TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 14,
                             ),
                           ),
@@ -7847,7 +8302,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: titleController,
                           decoration: InputDecoration(
                             labelText: 'Título del Libro *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.book, color: Colors.purple),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7871,7 +8326,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: authorController,
                           decoration: InputDecoration(
                             labelText: 'Autor',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.person, color: Colors.purple),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7895,7 +8350,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: titleController,
                           decoration: InputDecoration(
                             labelText: 'Sitio Web *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.language, color: Colors.green),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7919,7 +8374,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: authorController,
                           decoration: InputDecoration(
                             labelText: 'Usuario/Login',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.person, color: Colors.green),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7943,7 +8398,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: titleController,
                           decoration: InputDecoration(
                             labelText: 'Cita/Referencia *',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.format_quote, color: Colors.orange),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -7968,7 +8423,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           controller: authorController,
                           decoration: InputDecoration(
                             labelText: 'Libro/Autor',
-                            labelStyle: const TextStyle(color: AppTheme.white70),
+                            labelStyle: const TextStyle(color: AppTheme.white),
                             prefixIcon: const Icon(Icons.book, color: Colors.orange),
                             filled: true,
                             fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8029,7 +8484,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 child: Text(
                                   'No hay clases registradas. Ve a "Horario" para agregar clases.',
                                   style: TextStyle(
-                                    color: AppTheme.white70,
+                                    color: AppTheme.white,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -8059,7 +8514,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       return ListTile(
                                         leading: Icon(
                                           Icons.school,
-                                          color: isSelected ? Colors.blue : AppTheme.white70,
+                                          color: isSelected ? Colors.blue : AppTheme.white,
                                         ),
                                         title: Text(
                                           classItem.subject,
@@ -8070,7 +8525,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         ),
                                         subtitle: Text(
                                           '${classItem.day} - ${classItem.time}',
-                                          style: const TextStyle(color: AppTheme.white60),
+                                          style: const TextStyle(color: AppTheme.white),
                                         ),
                                         trailing: isSelected
                                             ? const Icon(Icons.check_circle, color: Colors.blue)
@@ -8122,7 +8577,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                       const Text(
                                         'Clase relacionada',
                                         style: TextStyle(
-                                          color: AppTheme.white70,
+                                          color: AppTheme.white,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -8134,7 +8589,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         style: TextStyle(
                                           color: selectedClassId != null 
                                               ? AppTheme.white 
-                                              : AppTheme.white40,
+                                              : AppTheme.white,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -8144,7 +8599,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                         Text(
                                           '${_classes.firstWhere((c) => c.id == selectedClassId).day} - ${_classes.firstWhere((c) => c.id == selectedClassId).time}',
                                           style: const TextStyle(
-                                            color: AppTheme.white60,
+                                            color: AppTheme.white,
                                             fontSize: 12,
                                           ),
                                         ),
@@ -8154,7 +8609,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                                 ),
                                 Icon(
                                   selectedClassId != null ? Icons.check_circle : Icons.arrow_forward_ios,
-                                  color: selectedClassId != null ? Colors.blue : AppTheme.white60,
+                                  color: selectedClassId != null ? Colors.blue : AppTheme.white,
                                   size: 20,
                                 ),
                               ],
@@ -8190,7 +8645,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                         controller: notesController,
                         decoration: InputDecoration(
                           labelText: 'Notas',
-                          labelStyle: const TextStyle(color: AppTheme.white70),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           prefixIcon: const Icon(Icons.note_add, color: Colors.orange),
                           filled: true,
                           fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8238,7 +8693,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       },
                       child: const Text(
                         'Cancelar',
-                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                        style: TextStyle(color: AppTheme.white, fontSize: 16),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -8428,7 +8883,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                           Text(
                             'Organiza toda la información de tu curso',
                             style: TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 14,
                             ),
                           ),
@@ -8501,7 +8956,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseNameController,
                 decoration: InputDecoration(
                   labelText: 'Nombre del Curso *',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.school, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8525,7 +8980,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseTimeController,
                 decoration: InputDecoration(
                   labelText: 'Horario',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.access_time, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8549,7 +9004,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseLocationController,
                 decoration: InputDecoration(
                   labelText: 'Ubicación',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.location_on, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8573,7 +9028,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseInstructorController,
                 decoration: InputDecoration(
                   labelText: 'Instructor',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.person, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8597,7 +9052,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseContactInfoController,
                 decoration: InputDecoration(
                   labelText: 'Información de Contacto',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.contact_mail, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8621,7 +9076,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseOfficeHoursController,
                 decoration: InputDecoration(
                   labelText: 'Horario de Atención',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.schedule, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8670,7 +9125,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseAccessAccountController,
                 decoration: InputDecoration(
                   labelText: 'Cuenta/Plataforma',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.account_circle, color: Colors.orange),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8694,7 +9149,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseAccessLoginController,
                 decoration: InputDecoration(
                   labelText: 'Usuario/Login',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.person_outline, color: Colors.orange),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8718,7 +9173,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseAccessPasswordController,
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.lock, color: Colors.orange),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8768,9 +9223,9 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseNotesUrlController,
                 decoration: InputDecoration(
                   labelText: 'URL de Apuntes Digitales',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   hintText: 'https://ejemplo.com/apuntes',
-                  hintStyle: const TextStyle(color: AppTheme.white40),
+                  hintStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.link, color: Colors.blue),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8840,7 +9295,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _importantDateController,
                 decoration: InputDecoration(
                   hintText: 'Descripción de la fecha importante',
-                  hintStyle: const TextStyle(color: AppTheme.white40),
+                  hintStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.event, color: Colors.green),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8963,7 +9418,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _gradingComponentNameController,
                 decoration: InputDecoration(
                   labelText: 'Nombre del componente',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.description, color: Colors.blue),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -8987,7 +9442,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _gradingComponentWeightController,
                 decoration: InputDecoration(
                   labelText: 'Peso (%)',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.percent, color: Colors.blue),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9039,7 +9494,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                             const SizedBox(height: 4),
                             Text(
                               'Peso: ${component['weight']}',
-                              style: const TextStyle(color: AppTheme.white60, fontSize: 12),
+                              style: const TextStyle(color: AppTheme.white, fontSize: 12),
                             ),
                           ],
                         ),
@@ -9086,7 +9541,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseTargetGradeController,
                 decoration: InputDecoration(
                   labelText: 'Calificación Objetivo',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.track_changes, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9111,7 +9566,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseActualGradeController,
                 decoration: InputDecoration(
                   labelText: 'Calificación Actual',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.check_circle, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9161,7 +9616,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                 controller: _courseNotesController,
                 decoration: InputDecoration(
                   labelText: 'Notas Adicionales',
-                  labelStyle: const TextStyle(color: AppTheme.white70),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   prefixIcon: const Icon(Icons.note_add, color: Colors.purple),
                   filled: true,
                   fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -9225,7 +9680,7 @@ class _SchoolSectionsState extends State<SchoolSections> {
                       },
                       child: const Text(
                         'Cancelar',
-                        style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                        style: TextStyle(color: AppTheme.white, fontSize: 16),
                       ),
                     ),
                     const SizedBox(width: 12),

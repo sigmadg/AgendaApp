@@ -158,7 +158,7 @@ class WorkSummaryCard extends StatelessWidget {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
           if (subtitle != null) ...[
@@ -234,7 +234,7 @@ class WorkEmptyState extends StatelessWidget {
               subtitle!,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),

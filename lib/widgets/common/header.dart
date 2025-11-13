@@ -87,7 +87,7 @@ class Header extends StatelessWidget {
                       _getCurrentGreeting(),
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -146,7 +146,7 @@ class Header extends StatelessWidget {
                           'Categoría activa',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -175,7 +175,7 @@ class Header extends StatelessWidget {
                           '¡Bienvenido a tu agenda!',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],

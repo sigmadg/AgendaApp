@@ -92,7 +92,7 @@ part of 'work_sections.dart';
                         'Vista general estratégica y análisis de productividad',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -148,7 +148,7 @@ part of 'work_sections.dart';
                               'Progreso General',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -157,7 +157,7 @@ part of 'work_sections.dart';
                               'Todas las metas',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white40,
+                                color: AppTheme.white,
                               ),
                             ),
                           ],
@@ -226,14 +226,14 @@ part of 'work_sections.dart';
                       '$completedGoals de $totalGoals metas completadas',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     Text(
                       '${totalProjects} proyecto${totalProjects == 1 ? '' : 's'}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -339,7 +339,7 @@ part of 'work_sections.dart';
                               'Eficiencia General',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -348,7 +348,7 @@ part of 'work_sections.dart';
                               'Tareas completadas',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white40,
+                                color: AppTheme.white,
                               ),
                             ),
                           ],
@@ -426,14 +426,14 @@ part of 'work_sections.dart';
                       '$completedDailyTasks de $totalTasks tareas completadas',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     Text(
                       '$totalMeetings sesiones',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -1250,7 +1250,7 @@ part of 'work_sections.dart';
                                 project.overview?.presumption ?? '',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -1273,7 +1273,7 @@ part of 'work_sections.dart';
                                 '', // Segundo text area vacío por ahora
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -1325,7 +1325,7 @@ part of 'work_sections.dart';
                                 project.overview?.jobDescription ?? '',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -1379,7 +1379,7 @@ part of 'work_sections.dart';
                                             '',
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: AppTheme.white40,
+                                              color: AppTheme.white,
                                             ),
                                           ),
                                         ),
@@ -1420,7 +1420,7 @@ part of 'work_sections.dart';
                                             output.text,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: output.completed ? AppTheme.white60 : AppTheme.white,
+                                              color: output.completed ? AppTheme.white : AppTheme.white,
                                               decoration: output.completed ? TextDecoration.lineThrough : null,
                                             ),
                                           ),
@@ -1475,7 +1475,7 @@ part of 'work_sections.dart';
                                           decoration: BoxDecoration(
                                             border: Border(
                                               bottom: BorderSide(
-                                                color: AppTheme.white40.withOpacity(0.3),
+                                                color: AppTheme.white.withOpacity(0.3),
                                                 width: 1,
                                               ),
                                             ),
@@ -1491,7 +1491,7 @@ part of 'work_sections.dart';
                                           decoration: BoxDecoration(
                                             border: Border(
                                               bottom: BorderSide(
-                                                color: AppTheme.white40.withOpacity(0.3),
+                                                color: AppTheme.white.withOpacity(0.3),
                                                 width: 1,
                                               ),
                                             ),
@@ -1544,7 +1544,7 @@ part of 'work_sections.dart';
                                 project.overview?.achievements ?? '',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -1571,7 +1571,7 @@ part of 'work_sections.dart';
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: AppTheme.white60,
+            color: AppTheme.white,
           ),
         ),
         if (subtitle != null) ...[
@@ -1580,7 +1580,7 @@ part of 'work_sections.dart';
             subtitle,
             style: TextStyle(
               fontSize: 10,
-              color: AppTheme.white40,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -1600,7 +1600,7 @@ part of 'work_sections.dart';
             value.isEmpty ? 'Sin definir' : value,
             style: TextStyle(
               fontSize: 14,
-              color: value.isEmpty ? AppTheme.white40 : AppTheme.white,
+              color: value.isEmpty ? AppTheme.white : AppTheme.white,
             ),
           ),
         ),
@@ -1641,7 +1641,7 @@ part of 'work_sections.dart';
             'Sin compañeros de equipo',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -1705,7 +1705,7 @@ part of 'work_sections.dart';
             'Sin logros definidos',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -1773,7 +1773,7 @@ part of 'work_sections.dart';
             'Sin trabajos definidos',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -1860,7 +1860,7 @@ part of 'work_sections.dart';
             'Sin financiamiento definido',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -1936,7 +1936,7 @@ part of 'work_sections.dart';
         style: TextStyle(
           fontSize: isHeader ? 11 : 10,
           fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-          color: isHeader ? AppTheme.white : AppTheme.white70,
+          color: isHeader ? AppTheme.white : AppTheme.white,
         ),
       ),
     );

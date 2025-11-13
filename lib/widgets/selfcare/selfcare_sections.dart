@@ -113,7 +113,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -338,7 +338,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? AppTheme.orangeAccent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -349,7 +349,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? AppTheme.orangeAccent 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.w400,
@@ -437,7 +437,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                     children: [
                       const Text('Lista de Cuidado Personal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.white)),
                       const SizedBox(height: 5),
-                      Text('Tu rutina diaria de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                      Text('Tu rutina diaria de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                     ],
                   ),
                 ),
@@ -445,7 +445,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('${dayStats['percentage']}%', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.white)),
-                    const Text('Completado', style: TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    const Text('Completado', style: TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ],
@@ -470,7 +470,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('${dayStats['completed']} de ${dayStats['total']} actividades completadas', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
+                Text('${dayStats['completed']} de ${dayStats['total']} actividades completadas', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
                 const SizedBox(height: 16),
                 Stack(
                   children: [
@@ -496,7 +496,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                 const SizedBox(height: 12),
                 Text(
                   _getMotivationalMessage(dayStats['percentage'] as int),
-                  style: const TextStyle(fontSize: 14, color: AppTheme.white70, fontStyle: FontStyle.italic),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.white, fontStyle: FontStyle.italic),
                 ),
               ],
             ),
@@ -593,7 +593,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
           const SizedBox(height: 8),
           Text('${stats['completed']}/${stats['total']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.white)),
           const SizedBox(height: 4),
-          Text(title, style: TextStyle(fontSize: 10, color: AppTheme.white60)),
+          Text(title, style: TextStyle(fontSize: 10, color: AppTheme.white)),
           const SizedBox(height: 8),
           Stack(
             children: [
@@ -651,7 +651,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.white)),
-                    Text('${stats['completed']} de ${stats['total']} completadas', style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    Text('${stats['completed']} de ${stats['total']} completadas', style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ),
@@ -670,7 +670,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text('No hay actividades en este período', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                child: Text('No hay actividades en este período', style: TextStyle(fontSize: 14, color: AppTheme.white)),
               ),
             )
           else
@@ -716,7 +716,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
               decoration: BoxDecoration(
                 color: isCompleted ? Colors.green : Colors.transparent,
                 border: Border.all(
-                  color: isCompleted ? Colors.green : AppTheme.white60,
+                  color: isCompleted ? Colors.green : AppTheme.white,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(6),
@@ -729,7 +729,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                 item['text'] ?? '',
                 style: TextStyle(
                   fontSize: 14,
-                  color: isCompleted ? AppTheme.white70 : AppTheme.white,
+                  color: isCompleted ? AppTheme.white : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                 ),
               ),
@@ -737,7 +737,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             const SizedBox(width: 12),
             Text(
               '${(index + 1).toString().padLeft(2, '0')}',
-              style: TextStyle(fontSize: 12, color: AppTheme.white40),
+              style: TextStyle(fontSize: 12, color: AppTheme.white),
             ),
           ],
         ),
@@ -792,7 +792,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                     children: [
                       const Text('Programador de Bienestar Personal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                       const SizedBox(height: 5),
-                      Text('Organiza tu rutina de bienestar diaria', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                      Text('Organiza tu rutina de bienestar diaria', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                     ],
                   ),
                 ),
@@ -824,7 +824,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('${overallStats['completed']} de ${overallStats['total']} actividades completadas', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
+                Text('${overallStats['completed']} de ${overallStats['total']} actividades completadas', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
                 const SizedBox(height: 16),
                 Stack(
                   children: [
@@ -842,7 +842,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(_getMotivationalMessage(overallStats['percentage'] as int), style: const TextStyle(fontSize: 14, color: AppTheme.white70, fontStyle: FontStyle.italic)),
+                Text(_getMotivationalMessage(overallStats['percentage'] as int), style: const TextStyle(fontSize: 14, color: AppTheme.white, fontStyle: FontStyle.italic)),
               ],
             ),
           ),
@@ -902,7 +902,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
           const SizedBox(height: 8),
           Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.white)),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 10, color: AppTheme.white60)),
+          Text(label, style: TextStyle(fontSize: 10, color: AppTheme.white)),
         ],
       ),
     );
@@ -929,7 +929,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(schedule.activity, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.white)),
-                    Text('${schedule.time} • ${schedule.frequency}', style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    Text('${schedule.time} • ${schedule.frequency}', style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ),
@@ -952,7 +952,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
           ),
           if (schedule.notes != null && schedule.notes!.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(schedule.notes!, style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
+            Text(schedule.notes!, style: const TextStyle(fontSize: 14, color: AppTheme.white)),
           ],
         ],
       ),
@@ -969,12 +969,12 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)),
-            child: const Icon(Icons.schedule, size: 64, color: AppTheme.white40),
+            child: const Icon(Icons.schedule, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           const Text('No hay rutinas programadas', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Crea tu primera rutina de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Crea tu primera rutina de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {},
@@ -1021,7 +1021,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                     children: [
                       const Text('Diario de Cuidado Personal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                       const SizedBox(height: 5),
-                      Text('Reflexiona sobre tu día y cuida tu bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                      Text('Reflexiona sobre tu día y cuida tu bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                     ],
                   ),
                 ),
@@ -1053,7 +1053,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('${journalStats['totalEntries']} entradas • ${journalStats['gratefulItems']} cosas por las que agradecer', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
+                Text('${journalStats['totalEntries']} entradas • ${journalStats['gratefulItems']} cosas por las que agradecer', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -1123,7 +1123,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
           const SizedBox(height: 8),
           Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.white)),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 10, color: AppTheme.white60)),
+          Text(label, style: TextStyle(fontSize: 10, color: AppTheme.white)),
         ],
       ),
     );
@@ -1139,7 +1139,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(entry.date.toString().split(' ')[0], style: const TextStyle(fontSize: 14, color: AppTheme.white60)),
+              Text(entry.date.toString().split(' ')[0], style: const TextStyle(fontSize: 14, color: AppTheme.white)),
               Row(
                 children: [
                   _buildMoodIndicator('Estado', entry.mood),
@@ -1151,7 +1151,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
           ),
           if (entry.notes != null) ...[
             const SizedBox(height: 12),
-            Text(entry.notes!, style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
+            Text(entry.notes!, style: const TextStyle(fontSize: 14, color: AppTheme.white)),
           ],
         ],
       ),
@@ -1168,12 +1168,12 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)),
-            child: const Icon(Icons.book, size: 64, color: AppTheme.white40),
+            child: const Icon(Icons.book, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           const Text('No hay entradas en el diario', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Comienza a escribir sobre tu día', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Comienza a escribir sobre tu día', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {},
@@ -1220,7 +1220,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                     children: [
                       const Text('Planificador de Autocuidado', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                       const SizedBox(height: 5),
-                      Text('Organiza tus actividades de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                      Text('Organiza tus actividades de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                     ],
                   ),
                 ),
@@ -1298,7 +1298,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(plan.date.toString().split(' ')[0], style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+          Text(plan.date.toString().split(' ')[0], style: const TextStyle(fontSize: 12, color: AppTheme.white)),
         ],
       ),
     );
@@ -1314,12 +1314,12 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)),
-            child: const Icon(Icons.calendar_view_week, size: 64, color: AppTheme.white40),
+            child: const Icon(Icons.calendar_view_week, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           const Text('No hay planes de autocuidado', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Crea tu primer plan de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Crea tu primer plan de bienestar', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {},
@@ -1366,7 +1366,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                     children: [
                       const Text('Seguimiento de Hábitos', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                       const SizedBox(height: 5),
-                      Text('Construye hábitos positivos día a día', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                      Text('Construye hábitos positivos día a día', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                     ],
                   ),
                 ),
@@ -1449,7 +1449,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             ],
           ),
           const SizedBox(height: 12),
-          Text('$completedCount de $totalCount días completados', style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+          Text('$completedCount de $totalCount días completados', style: const TextStyle(fontSize: 12, color: AppTheme.white)),
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: progress,
@@ -1473,12 +1473,12 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)),
-            child: const Icon(Icons.repeat, size: 64, color: AppTheme.white40),
+            child: const Icon(Icons.repeat, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           const Text('No hay hábitos registrados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Comienza a construir hábitos positivos', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Comienza a construir hábitos positivos', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {},
@@ -1523,7 +1523,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                     children: [
                       const Text('Seguimiento del Estado de Ánimo', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                       const SizedBox(height: 5),
-                      Text('Conecta con tus emociones diariamente', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                      Text('Conecta con tus emociones diariamente', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                     ],
                   ),
                 ),
@@ -1638,7 +1638,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
             child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24))),
           ),
           const SizedBox(height: 8),
-          Text(label, style: TextStyle(fontSize: 12, color: AppTheme.white60)),
+          Text(label, style: TextStyle(fontSize: 12, color: AppTheme.white)),
         ],
       ),
     );
@@ -1647,7 +1647,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
   Widget _buildWeeklyMoodItem(String day, String emoji, Color color) {
     return Column(
       children: [
-        Text(day, style: TextStyle(fontSize: 12, color: AppTheme.white60)),
+        Text(day, style: TextStyle(fontSize: 12, color: AppTheme.white)),
         const SizedBox(height: 8),
         Container(
           width: 40,
@@ -1664,13 +1664,13 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -1695,7 +1695,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
               decoration: BoxDecoration(
                 color: wellness.completed ? Colors.green : Colors.transparent,
                 border: Border.all(
-                  color: wellness.completed ? Colors.green : AppTheme.white60,
+                  color: wellness.completed ? Colors.green : AppTheme.white,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(6),
@@ -1720,7 +1720,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   const SizedBox(height: 4),
                   Text(
                     '${wellness.time} • ${wellness.frequency}',
-                    style: const TextStyle(fontSize: 12, color: AppTheme.white60),
+                    style: const TextStyle(fontSize: 12, color: AppTheme.white),
                   ),
                 ],
               ),
@@ -1750,7 +1750,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   entry.date.toString().split(' ')[0],
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
                 Row(
@@ -1768,7 +1768,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                 entry.notes!,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.white70,
+                  color: AppTheme.white,
                 ),
               ),
             ],
@@ -1783,7 +1783,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: AppTheme.white60),
+          style: const TextStyle(fontSize: 10, color: AppTheme.white),
         ),
         const SizedBox(height: 4),
         Row(
@@ -1842,7 +1842,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
                   plan.date.toString().split(' ')[0],
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1904,7 +1904,7 @@ class _SelfCareSectionsState extends State<SelfCareSections> {
               '$completedCount de $totalCount días completados',
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
             const SizedBox(height: 8),

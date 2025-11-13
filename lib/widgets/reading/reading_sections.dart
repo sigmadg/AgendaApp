@@ -155,7 +155,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -291,7 +291,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
               context.go('/selfcare');
             },
           ),
-          Divider(color: AppTheme.white60.withOpacity(0.3), height: 32),
+          Divider(color: AppTheme.white.withOpacity(0.3), height: 32),
           _buildDrawerItem(
             context,
             icon: Icons.logout,
@@ -326,7 +326,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
         ),
         child: Icon(
           icon,
-          color: isActive ? color : AppTheme.white60,
+          color: isActive ? color : AppTheme.white,
           size: 22,
         ),
       ),
@@ -378,7 +378,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? AppTheme.orangeAccent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -389,7 +389,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? AppTheme.orangeAccent 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -491,7 +491,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                           'Tu colección personal de libros y experiencias',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -541,7 +541,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.book,
                                 color: _contentType == 'book' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -550,7 +550,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'book' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'book' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -579,7 +579,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.headset,
                                 color: _contentType == 'audiobook' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -588,7 +588,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'audiobook' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'audiobook' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -771,7 +771,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                           'Seguimiento detallado de tus lecturas',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -808,7 +808,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.book,
                                 color: _contentType == 'book' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -817,7 +817,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'book' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'book' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -846,7 +846,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.headset,
                                 color: _contentType == 'audiobook' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -855,7 +855,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'audiobook' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'audiobook' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -888,7 +888,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                     '$booksThisMonth de $monthlyGoal ${_contentType == 'book' ? 'libros' : 'audiolibros'} este mes',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1062,7 +1062,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                           'Las palabras que inspiran tu vida',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -1110,7 +1110,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.book,
                                 color: _contentType == 'book' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -1119,7 +1119,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'book' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'book' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -1148,7 +1148,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.headset,
                                 color: _contentType == 'audiobook' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -1157,7 +1157,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'audiobook' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'audiobook' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -1190,7 +1190,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                     '$totalQuotes citas de $totalAuthors autores',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1299,7 +1299,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                           'Colecciones épicas de literatura',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -1347,7 +1347,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.book,
                                 color: _contentType == 'book' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -1356,7 +1356,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'book' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'book' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -1385,7 +1385,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.headset,
                                 color: _contentType == 'audiobook' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -1394,7 +1394,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'audiobook' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'audiobook' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -1427,7 +1427,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                     '$totalSeries sagas con $totalBooks ${_contentType == 'book' ? 'libros' : 'audiolibros'}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1536,7 +1536,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                           'Tu biblioteca personal organizada',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -1584,7 +1584,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.book,
                                 color: _contentType == 'book' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -1593,7 +1593,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'book' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'book' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -1622,7 +1622,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 Icons.headset,
                                 color: _contentType == 'audiobook' 
                                     ? AppTheme.white 
-                                    : AppTheme.white60,
+                                    : AppTheme.white,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -1631,7 +1631,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                 style: TextStyle(
                                   color: _contentType == 'audiobook' 
                                       ? AppTheme.white 
-                                      : AppTheme.white60,
+                                      : AppTheme.white,
                                   fontWeight: _contentType == 'audiobook' 
                                       ? FontWeight.bold 
                                       : FontWeight.normal,
@@ -1664,7 +1664,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                     '$totalBooks ${_contentType == 'book' ? 'libros' : 'audiolibros'} en tu colección',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1726,13 +1726,13 @@ class _ReadingSectionsState extends State<ReadingSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -1772,7 +1772,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         '${book.author} • ${book.pages} págs',
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1817,7 +1817,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   ),
                   child: Text(
                     book.genre,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                    style: const TextStyle(fontSize: 12, color: AppTheme.white),
                   ),
                 ),
               ],
@@ -1861,7 +1861,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
               '— ${quote.book}, ${quote.author}',
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
             const SizedBox(height: 8),
@@ -1873,7 +1873,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   quote.rating.toStringAsFixed(1),
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -1931,7 +1931,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
               '${series.books.length} libros • Calificación: ${series.overallRating.toStringAsFixed(1)}',
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
           ],
@@ -1982,7 +1982,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                     book.author,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -2076,7 +2076,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2171,7 +2171,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         book.author,
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -2195,7 +2195,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                                   book.genre,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: AppTheme.white70,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -2230,7 +2230,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 14, color: AppTheme.white60),
+                      const Icon(Icons.calendar_today, size: 14, color: AppTheme.white),
                       const SizedBox(width: 4),
                       Text(
                         book.startDate != null 
@@ -2238,7 +2238,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                             : 'No iniciado',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2247,7 +2247,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle, size: 14, color: AppTheme.white60),
+                      const Icon(Icons.check_circle, size: 14, color: AppTheme.white),
                       const SizedBox(width: 4),
                       Text(
                         book.finishDate != null 
@@ -2255,7 +2255,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                             : 'En progreso',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2272,7 +2272,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       Icon(
                         _contentType == 'book' ? Icons.description : Icons.access_time,
                         size: 14,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -2281,7 +2281,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                             : '8h 30m',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2296,7 +2296,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         book.rating > 0 ? '${book.rating.toStringAsFixed(1)}/5' : 'Sin calificar',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2315,7 +2315,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       '$progress% completado',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2358,7 +2358,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       book.review!,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2410,9 +2410,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Título',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2427,9 +2427,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Autor',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2444,9 +2444,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Género',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2462,9 +2462,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: _contentType == 'book' ? 'Páginas' : 'Duración (horas)',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2478,9 +2478,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   value: _selectedBookStatus,
                   decoration: InputDecoration(
                     labelText: 'Estado',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2506,9 +2506,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   value: _selectedBookRating,
                   decoration: InputDecoration(
                     labelText: 'Calificación',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2539,9 +2539,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: 'Notas',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2557,7 +2557,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddBookModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.white60),
+                          side: const BorderSide(color: AppTheme.white),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: const Text(
@@ -2663,7 +2663,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         quote.book,
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -2719,7 +2719,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   '${quote.rating}/5',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
                 const Spacer(),
@@ -2733,7 +2733,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                     quote.genre,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -2764,7 +2764,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       quote.notes!,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -2817,9 +2817,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: 'Cita',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2834,9 +2834,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Libro',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2851,9 +2851,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   style: const TextStyle(color: AppTheme.white),
                   decoration: InputDecoration(
                     labelText: 'Autor',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2867,9 +2867,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   value: _selectedQuoteCategory,
                   decoration: InputDecoration(
                     labelText: 'Categoría',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2899,9 +2899,9 @@ class _ReadingSectionsState extends State<ReadingSections> {
                   value: _selectedQuoteRating,
                   decoration: InputDecoration(
                     labelText: 'Calificación',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: AppTheme.white60),
+                      borderSide: BorderSide(color: AppTheme.white),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2932,7 +2932,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       child: OutlinedButton(
                         onPressed: () => setState(() => _showAddQuoteModal = false),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.white60),
+                          side: const BorderSide(color: AppTheme.white),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: const Text(
@@ -3041,7 +3041,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         series.genre,
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3070,13 +3070,13 @@ class _ReadingSectionsState extends State<ReadingSections> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.book, size: 14, color: AppTheme.white60),
+                      const Icon(Icons.book, size: 14, color: AppTheme.white),
                       const SizedBox(width: 4),
                       Text(
                         'Libros: $booksRead/${series.books.length}',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3093,7 +3093,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                             : 'Sin calificar',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3112,7 +3112,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       '$progress% completado',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -3155,7 +3155,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       series.notes!,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -3189,7 +3189,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -3206,7 +3206,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       '${book.pages} páginas',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -3281,7 +3281,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         book.author,
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -3295,7 +3295,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                           book.genre,
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.white70,
+                            color: AppTheme.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -3329,7 +3329,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       Icon(
                         _contentType == 'book' ? Icons.description : Icons.access_time,
                         size: 14,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -3338,7 +3338,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                             : '8h 30m',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3353,7 +3353,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                         book.rating > 0 ? '${book.rating.toStringAsFixed(1)}/5' : 'Sin calificar',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3385,7 +3385,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       book.review!,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -3457,7 +3457,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                 if (_books.isEmpty)
                   const Text(
                     'No hay libros disponibles',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   )
                 else
                   ..._books.map((book) {
@@ -3466,11 +3466,11 @@ class _ReadingSectionsState extends State<ReadingSections> {
                       title: Text(book.title, style: const TextStyle(color: AppTheme.white)),
                       subtitle: Text(
                         '${book.author} • ${book.genre}',
-                        style: const TextStyle(color: AppTheme.white60),
+                        style: const TextStyle(color: AppTheme.white),
                       ),
                       trailing: isInShelf
                           ? const Icon(Icons.check, color: Colors.green)
-                          : const Icon(Icons.add, color: AppTheme.white60),
+                          : const Icon(Icons.add, color: AppTheme.white),
                       onTap: () {
                         if (!isInShelf) {
                           setState(() {
@@ -3485,7 +3485,7 @@ class _ReadingSectionsState extends State<ReadingSections> {
                 OutlinedButton(
                   onPressed: () => setState(() => _showAddBookshelfModal = false),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.white60),
+                    side: const BorderSide(color: AppTheme.white),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(

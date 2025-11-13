@@ -210,7 +210,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -434,7 +434,7 @@ class _TravelSectionsState extends State<TravelSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? Colors.cyan 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -445,7 +445,7 @@ class _TravelSectionsState extends State<TravelSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? Colors.cyan 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.w400,
@@ -538,7 +538,7 @@ class _TravelSectionsState extends State<TravelSections> {
                             'Organiza tus viajes de manera inteligente',
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -648,7 +648,7 @@ class _TravelSectionsState extends State<TravelSections> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -687,14 +687,14 @@ class _TravelSectionsState extends State<TravelSections> {
                       plan.date,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                     Text(
                       plan.duration,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -732,7 +732,7 @@ class _TravelSectionsState extends State<TravelSections> {
             '${plan.progress}% completado',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
           const SizedBox(height: 20),
@@ -787,7 +787,7 @@ class _TravelSectionsState extends State<TravelSections> {
                                 reminder,
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -875,7 +875,7 @@ class _TravelSectionsState extends State<TravelSections> {
                       '${(category['items'] as List).length} artículos',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ),
@@ -893,7 +893,7 @@ class _TravelSectionsState extends State<TravelSections> {
                             item,
                             style: const TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                         ),
@@ -907,7 +907,7 @@ class _TravelSectionsState extends State<TravelSections> {
                     '+${(category['items'] as List<String>).length - 3} más...',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.white60,
+                      color: AppTheme.white,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -960,7 +960,7 @@ class _TravelSectionsState extends State<TravelSections> {
               color: AppTheme.darkSurfaceVariant,
               borderRadius: BorderRadius.circular(60),
             ),
-            child: const Icon(Icons.flight, size: 64, color: AppTheme.white40),
+            child: const Icon(Icons.flight, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -977,7 +977,7 @@ class _TravelSectionsState extends State<TravelSections> {
             'Crea tu primer plan de viaje y comienza a organizar tu aventura',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1039,7 +1039,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 decoration: InputDecoration(
                   labelText: 'Fecha',
                   hintText: 'DD/MM/YYYY',
-                  labelStyle: const TextStyle(color: AppTheme.white60),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant),
@@ -1061,7 +1061,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 decoration: InputDecoration(
                   labelText: 'Destino',
                   hintText: 'Ciudad, País',
-                  labelStyle: const TextStyle(color: AppTheme.white60),
+                  labelStyle: const TextStyle(color: AppTheme.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant),
@@ -1083,7 +1083,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 children: [
                   TextButton(
                     onPressed: () => setState(() => _showAddTravelModal = false),
-                    child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60)),
+                    child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
@@ -1186,7 +1186,7 @@ class _TravelSectionsState extends State<TravelSections> {
                           const SizedBox(height: 5),
                           Text(
                             'Organiza tus tours y actividades diarias',
-                            style: TextStyle(fontSize: 14, color: AppTheme.white60),
+                            style: TextStyle(fontSize: 14, color: AppTheme.white),
                           ),
                         ],
                       ),
@@ -1260,8 +1260,8 @@ class _TravelSectionsState extends State<TravelSections> {
                   children: [
                     Text(tour.destination, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                     const SizedBox(height: 4),
-                    Text('${tour.date} - ${tour.day}', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
-                    Text(tour.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    Text('${tour.date} - ${tour.day}', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
+                    Text(tour.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ),
@@ -1333,7 +1333,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...tour.sites.map((site) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.check_circle_outline, size: 14, color: Colors.green), const SizedBox(width: 8), Expanded(child: Text(site, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.check_circle_outline, size: 14, color: Colors.green), const SizedBox(width: 8), Expanded(child: Text(site, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -1358,7 +1358,7 @@ class _TravelSectionsState extends State<TravelSections> {
                           const SizedBox(width: 8),
                           const Text('Desayuno:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.white)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(tour.breakfast, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                          Expanded(child: Text(tour.breakfast, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                         ],
                       ),
                     ),
@@ -1371,7 +1371,7 @@ class _TravelSectionsState extends State<TravelSections> {
                           const SizedBox(width: 8),
                           const Text('Almuerzo:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.white)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(tour.lunch, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                          Expanded(child: Text(tour.lunch, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                         ],
                       ),
                     ),
@@ -1384,7 +1384,7 @@ class _TravelSectionsState extends State<TravelSections> {
                           const SizedBox(width: 8),
                           const Text('Cena:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.white)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(tour.dinner, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                          Expanded(child: Text(tour.dinner, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                         ],
                       ),
                     ),
@@ -1397,7 +1397,7 @@ class _TravelSectionsState extends State<TravelSections> {
                           const SizedBox(width: 8),
                           const Text('Otro:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.white)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(tour.other, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                          Expanded(child: Text(tour.other, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                         ],
                       ),
                     ),
@@ -1415,7 +1415,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 children: [
                   Row(children: [const Icon(Icons.note, size: 16, color: Colors.orange), const SizedBox(width: 8), const Text('Notas Importantes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange))]),
                   const SizedBox(height: 8),
-                  Text(tour.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white70)),
+                  Text(tour.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white)),
                 ],
               ),
             ),
@@ -1470,12 +1470,12 @@ class _TravelSectionsState extends State<TravelSections> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)),
-            child: const Icon(Icons.map, size: 64, color: AppTheme.white40),
+            child: const Icon(Icons.map, size: 64, color: AppTheme.white),
           ),
           const SizedBox(height: 24),
           const Text('No hay tours planificados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Crea tu primer tour y comienza a explorar nuevos lugares', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Crea tu primer tour y comienza a explorar nuevos lugares', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () => setState(() {
@@ -1528,7 +1528,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => setState(() => _showAddTourModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60))),
+                    TextButton(onPressed: () => setState(() => _showAddTourModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white))),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () {
@@ -1581,7 +1581,7 @@ class _TravelSectionsState extends State<TravelSections> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: const TextStyle(color: AppTheme.white60),
+        labelStyle: const TextStyle(color: AppTheme.white),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.green)),
@@ -1629,7 +1629,7 @@ class _TravelSectionsState extends State<TravelSections> {
                         children: [
                           const Text('Programador de Viajes', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.white)),
                           const SizedBox(height: 5),
-                          Text('Planifica tus viajes de larga duración', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                          Text('Planifica tus viajes de larga duración', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                         ],
                       ),
                     ),
@@ -1693,8 +1693,8 @@ class _TravelSectionsState extends State<TravelSections> {
                   children: [
                     Text(journey.destination, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                     const SizedBox(height: 4),
-                    Text(journey.travelDates, style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
-                    Text(journey.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    Text(journey.travelDates, style: const TextStyle(fontSize: 14, color: AppTheme.white)),
+                    Text(journey.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ),
@@ -1714,7 +1714,7 @@ class _TravelSectionsState extends State<TravelSections> {
             borderRadius: BorderRadius.circular(4),
           ),
           const SizedBox(height: 8),
-          Text('${journey.progress}% completado', style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+          Text('${journey.progress}% completado', style: const TextStyle(fontSize: 12, color: AppTheme.white)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -1744,7 +1744,7 @@ class _TravelSectionsState extends State<TravelSections> {
                         child: Row(children: [
                           Container(width: 24, height: 24, decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.check_circle, size: 14, color: AppTheme.white)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(activity, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                          Expanded(child: Text(activity, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                         ]),
                       )),
                 ],
@@ -1763,7 +1763,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...journey.highlights.map((highlight) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.location_on, size: 14, color: Colors.orange), const SizedBox(width: 8), Expanded(child: Text(highlight, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.location_on, size: 14, color: Colors.orange), const SizedBox(width: 8), Expanded(child: Text(highlight, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -1795,7 +1795,7 @@ class _TravelSectionsState extends State<TravelSections> {
                                 children: [
                                   Text(day.city, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.white)),
                                   const SizedBox(height: 2),
-                                  Text(day.activity, style: const TextStyle(fontSize: 13, color: AppTheme.white70)),
+                                  Text(day.activity, style: const TextStyle(fontSize: 13, color: AppTheme.white)),
                                 ],
                               ),
                             ),
@@ -1805,7 +1805,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   if (journey.itinerary.length > 5)
                     Padding(
                       padding: const EdgeInsets.only(left: 62),
-                      child: Text('+${journey.itinerary.length - 5} días más...', style: const TextStyle(fontSize: 12, color: AppTheme.white60, fontStyle: FontStyle.italic)),
+                      child: Text('+${journey.itinerary.length - 5} días más...', style: const TextStyle(fontSize: 12, color: AppTheme.white, fontStyle: FontStyle.italic)),
                     ),
                 ],
               ),
@@ -1821,7 +1821,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 children: [
                   Row(children: [const Icon(Icons.note, size: 16, color: Colors.orange), const SizedBox(width: 8), const Text('Notas Importantes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange))]),
                   const SizedBox(height: 8),
-                  Text(journey.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white70)),
+                  Text(journey.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white)),
                 ],
               ),
             ),
@@ -1847,7 +1847,7 @@ class _TravelSectionsState extends State<TravelSections> {
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.white)),
           const SizedBox(width: 4),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.white))),
         ],
@@ -1861,11 +1861,11 @@ class _TravelSectionsState extends State<TravelSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(width: 120, height: 120, decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)), child: const Icon(Icons.calendar_today, size: 64, color: AppTheme.white40)),
+          Container(width: 120, height: 120, decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)), child: const Icon(Icons.calendar_today, size: 64, color: AppTheme.white)),
           const SizedBox(height: 24),
           const Text('No hay viajes programados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Programa tu primer viaje de larga duración y comienza tu aventura', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Programa tu primer viaje de larga duración y comienza tu aventura', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () => setState(() {
@@ -1919,7 +1919,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => setState(() => _showAddJourneyModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60))),
+                    TextButton(onPressed: () => setState(() => _showAddJourneyModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white))),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () {
@@ -2003,7 +2003,7 @@ class _TravelSectionsState extends State<TravelSections> {
                         children: [
                           const Text('Planificador de Vacaciones', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.white)),
                           const SizedBox(height: 5),
-                          Text('Organiza tus vacaciones perfectas', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                          Text('Organiza tus vacaciones perfectas', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                         ],
                       ),
                     ),
@@ -2076,8 +2076,8 @@ class _TravelSectionsState extends State<TravelSections> {
                   children: [
                     Text(vacation.destination, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white)),
                     const SizedBox(height: 4),
-                    Text('${vacation.startDate} - ${vacation.endDate}', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
-                    Text(vacation.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    Text('${vacation.startDate} - ${vacation.endDate}', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
+                    Text(vacation.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ),
@@ -2121,7 +2121,7 @@ class _TravelSectionsState extends State<TravelSections> {
                       Expanded(
                         child: Text(
                           '${vacation.weather.temperature} - ${vacation.weather.condition}',
-                          style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                          style: const TextStyle(fontSize: 14, color: AppTheme.white),
                         ),
                       ),
                     ],
@@ -2149,7 +2149,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...vacation.activities.map((activity) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.check_circle_outline, size: 14, color: Colors.green), const SizedBox(width: 8), Expanded(child: Text(activity, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.check_circle_outline, size: 14, color: Colors.green), const SizedBox(width: 8), Expanded(child: Text(activity, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2167,7 +2167,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...vacation.highlights.map((highlight) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.location_on, size: 14, color: Colors.orange), const SizedBox(width: 8), Expanded(child: Text(highlight, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.location_on, size: 14, color: Colors.orange), const SizedBox(width: 8), Expanded(child: Text(highlight, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2185,7 +2185,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...vacation.packingList.map((item) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.check_box_outline_blank, size: 14, color: Colors.brown), const SizedBox(width: 8), Expanded(child: Text(item, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.check_box_outline_blank, size: 14, color: Colors.brown), const SizedBox(width: 8), Expanded(child: Text(item, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2211,7 +2211,7 @@ class _TravelSectionsState extends State<TravelSections> {
                               child: Text('Día ${day.day}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(child: Text(day.activity, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                            Expanded(child: Text(day.activity, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                           ],
                         ),
                       )),
@@ -2229,7 +2229,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 children: [
                   Row(children: [const Icon(Icons.note, size: 16, color: Colors.orange), const SizedBox(width: 8), const Text('Notas Importantes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange))]),
                   const SizedBox(height: 8),
-                  Text(vacation.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white70)),
+                  Text(vacation.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white)),
                 ],
               ),
             ),
@@ -2288,11 +2288,11 @@ class _TravelSectionsState extends State<TravelSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(width: 120, height: 120, decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)), child: const Icon(Icons.beach_access, size: 64, color: AppTheme.white40)),
+          Container(width: 120, height: 120, decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)), child: const Icon(Icons.beach_access, size: 64, color: AppTheme.white)),
           const SizedBox(height: 24),
           const Text('No hay vacaciones planificadas', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Planifica tu próxima vacación y comienza a soñar', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Planifica tu próxima vacación y comienza a soñar', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () => setState(() {
@@ -2356,7 +2356,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   value: _selectedVacationType,
                   decoration: InputDecoration(
                     labelText: 'Tipo de Vacación',
-                    labelStyle: const TextStyle(color: AppTheme.white60),
+                    labelStyle: const TextStyle(color: AppTheme.white),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant)),
                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.orange)),
@@ -2374,7 +2374,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => setState(() => _showAddVacationModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60))),
+                    TextButton(onPressed: () => setState(() => _showAddVacationModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white))),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () {
@@ -2474,7 +2474,7 @@ class _TravelSectionsState extends State<TravelSections> {
                         children: [
                           const Text('Organizador de Viajes', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.white)),
                           const SizedBox(height: 5),
-                          Text('Planifica y organiza tus viajes perfectos', style: TextStyle(fontSize: 14, color: AppTheme.white60)),
+                          Text('Planifica y organiza tus viajes perfectos', style: TextStyle(fontSize: 14, color: AppTheme.white)),
                         ],
                       ),
                     ),
@@ -2549,8 +2549,8 @@ class _TravelSectionsState extends State<TravelSections> {
                     const SizedBox(height: 4),
                     Text(trip.destination, style: const TextStyle(fontSize: 16, color: Colors.green, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text('${trip.startDate} - ${trip.endDate}', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
-                    Text(trip.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                    Text('${trip.startDate} - ${trip.endDate}', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
+                    Text(trip.duration, style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                   ],
                 ),
               ),
@@ -2580,7 +2580,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   children: [
                     const Icon(Icons.people, size: 16, color: Colors.orange),
                     const SizedBox(width: 4),
-                    Text('${trip.travelers} viajero${trip.travelers > 1 ? 's' : ''}', style: const TextStyle(fontSize: 14, color: AppTheme.white70)),
+                    Text('${trip.travelers} viajero${trip.travelers > 1 ? 's' : ''}', style: const TextStyle(fontSize: 14, color: AppTheme.white)),
                   ],
                 ),
               ],
@@ -2603,7 +2603,7 @@ class _TravelSectionsState extends State<TravelSections> {
                     children: [
                       Icon(_getTransportationIcon(trip.transportation), size: 16, color: _getTransportationColor(trip.transportation)),
                       const SizedBox(width: 6),
-                      Text('Transporte:', style: const TextStyle(fontSize: 12, color: AppTheme.white60)),
+                      Text('Transporte:', style: const TextStyle(fontSize: 12, color: AppTheme.white)),
                       const SizedBox(width: 4),
                       Expanded(child: Text(trip.transportation, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.white))),
                     ],
@@ -2624,7 +2624,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...trip.activities.map((activity) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.check_circle_outline, size: 14, color: Colors.green), const SizedBox(width: 8), Expanded(child: Text(activity, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.check_circle_outline, size: 14, color: Colors.green), const SizedBox(width: 8), Expanded(child: Text(activity, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2642,7 +2642,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...trip.documents.map((document) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.description, size: 14, color: Colors.blue), const SizedBox(width: 8), Expanded(child: Text(document, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.description, size: 14, color: Colors.blue), const SizedBox(width: 8), Expanded(child: Text(document, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2660,7 +2660,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...trip.packingList.map((item) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.check_box_outline_blank, size: 14, color: Colors.brown), const SizedBox(width: 8), Expanded(child: Text(item, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.check_box_outline_blank, size: 14, color: Colors.brown), const SizedBox(width: 8), Expanded(child: Text(item, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2678,7 +2678,7 @@ class _TravelSectionsState extends State<TravelSections> {
                   const SizedBox(height: 12),
                   ...trip.emergencyContacts.map((contact) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(children: [const Icon(Icons.call_outlined, size: 14, color: Colors.red), const SizedBox(width: 8), Expanded(child: Text(contact, style: const TextStyle(fontSize: 14, color: AppTheme.white70)))]),
+                        child: Row(children: [const Icon(Icons.call_outlined, size: 14, color: Colors.red), const SizedBox(width: 8), Expanded(child: Text(contact, style: const TextStyle(fontSize: 14, color: AppTheme.white)))]),
                       )),
                 ],
               ),
@@ -2706,12 +2706,12 @@ class _TravelSectionsState extends State<TravelSections> {
                                 children: [
                                   Text('Día ${day.day}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
                                   const SizedBox(height: 2),
-                                  Text(day.city, style: const TextStyle(fontSize: 10, color: AppTheme.white60)),
+                                  Text(day.city, style: const TextStyle(fontSize: 10, color: AppTheme.white)),
                                 ],
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(child: Text(day.activity, style: const TextStyle(fontSize: 14, color: AppTheme.white70))),
+                            Expanded(child: Text(day.activity, style: const TextStyle(fontSize: 14, color: AppTheme.white))),
                           ],
                         ),
                       )),
@@ -2729,7 +2729,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 children: [
                   Row(children: [const Icon(Icons.note, size: 16, color: Colors.orange), const SizedBox(width: 8), const Text('Notas Importantes', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange))]),
                   const SizedBox(height: 8),
-                  Text(trip.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white70)),
+                  Text(trip.notes, style: const TextStyle(fontSize: 13, color: AppTheme.white)),
                 ],
               ),
             ),
@@ -2784,11 +2784,11 @@ class _TravelSectionsState extends State<TravelSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(width: 120, height: 120, decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)), child: const Icon(Icons.luggage, size: 64, color: AppTheme.white40)),
+          Container(width: 120, height: 120, decoration: BoxDecoration(color: AppTheme.darkSurfaceVariant, borderRadius: BorderRadius.circular(60)), child: const Icon(Icons.luggage, size: 64, color: AppTheme.white)),
           const SizedBox(height: 24),
           const Text('No hay viajes organizados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text('Organiza tu próximo viaje y comienza a explorar', style: TextStyle(fontSize: 14, color: AppTheme.white60), textAlign: TextAlign.center),
+          Text('Organiza tu próximo viaje y comienza a explorar', style: TextStyle(fontSize: 14, color: AppTheme.white), textAlign: TextAlign.center),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () => setState(() {
@@ -2861,7 +2861,7 @@ class _TravelSectionsState extends State<TravelSections> {
                         decoration: InputDecoration(
                           labelText: 'Viajeros',
                           hintText: '1',
-                          labelStyle: const TextStyle(color: AppTheme.white60),
+                          labelStyle: const TextStyle(color: AppTheme.white),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant)),
                           enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.darkSurfaceVariant)),
                           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.green)),
@@ -2879,7 +2879,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => setState(() => _showAddTripModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white60))),
+                    TextButton(onPressed: () => setState(() => _showAddTripModal = false), child: const Text('Cancelar', style: TextStyle(color: AppTheme.white))),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () {
@@ -2944,13 +2944,13 @@ class _TravelSectionsState extends State<TravelSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -3005,7 +3005,7 @@ class _TravelSectionsState extends State<TravelSections> {
               '${plan.date} • ${plan.duration}',
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
             const SizedBox(height: 12),
@@ -3021,7 +3021,7 @@ class _TravelSectionsState extends State<TravelSections> {
               '${plan.progress}% completado',
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
           ],
@@ -3077,7 +3077,7 @@ class _TravelSectionsState extends State<TravelSections> {
               '${tour.date} • ${tour.day} • ${tour.duration}',
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
             if (tour.sites.isNotEmpty) ...[
@@ -3086,7 +3086,7 @@ class _TravelSectionsState extends State<TravelSections> {
                 '${tour.sites.length} sitios a explorar',
                 style: const TextStyle(
                   fontSize: 12,
-                  color: AppTheme.white60,
+                  color: AppTheme.white,
                 ),
               ),
             ],
@@ -3143,19 +3143,19 @@ class _TravelSectionsState extends State<TravelSections> {
               '${journey.travelDates} • ${journey.duration}',
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white70,
+                color: AppTheme.white,
               ),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.attach_money, size: 16, color: AppTheme.white60),
+                const Icon(Icons.attach_money, size: 16, color: AppTheme.white),
                 const SizedBox(width: 4),
                 Text(
                   journey.budget,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -3173,7 +3173,7 @@ class _TravelSectionsState extends State<TravelSections> {
               '${journey.progress}% completado',
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
           ],

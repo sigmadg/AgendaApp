@@ -183,7 +183,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -397,7 +397,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? AppTheme.orangeAccent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -408,7 +408,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             fontSize: 10,
                             color: isActive 
                                 ? AppTheme.orangeAccent 
-                                : AppTheme.white60,
+                                : AppTheme.white,
                             fontWeight: isActive 
                                 ? FontWeight.w600 
                                 : FontWeight.normal,
@@ -572,7 +572,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             fontWeight: FontWeight.bold,
                           ),
                           hintText: '0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -675,7 +675,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               label,
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -727,7 +727,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.more_vert, size: 18, color: AppTheme.white60),
+                  icon: const Icon(Icons.more_vert, size: 18, color: AppTheme.white),
                   onPressed: () {},
                 ),
               ],
@@ -741,7 +741,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Presupuesto',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -787,7 +787,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Gastado',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -833,7 +833,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Restante',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -896,7 +896,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             const SizedBox(height: 8),
             const Text(
               '0% utilizado',
-              style: TextStyle(fontSize: 12, color: AppTheme.white60),
+              style: TextStyle(fontSize: 12, color: AppTheme.white),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1423,7 +1423,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         'Organiza tus compras por categorías',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1499,13 +1499,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: [
-                          const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white40),
+                          const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white),
                           const SizedBox(height: 8),
                           const Text(
                             'No hay artículos en esta categoría',
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white60,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -1554,7 +1554,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                   border: Border.all(
                                     color: isPurchased
                                         ? Colors.green
-                                        : AppTheme.white60,
+                                        : AppTheme.white,
                                     width: 2,
                                   ),
                                 ),
@@ -1578,7 +1578,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: isPurchased
-                                          ? AppTheme.white60
+                                          ? AppTheme.white
                                           : AppTheme.white,
                                       decoration: isPurchased
                                           ? TextDecoration.lineThrough
@@ -1591,8 +1591,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: isPurchased
-                                          ? AppTheme.white40
-                                          : AppTheme.white60,
+                                          ? AppTheme.white
+                                          : AppTheme.white,
                                       decoration: isPurchased
                                           ? TextDecoration.lineThrough
                                           : null,
@@ -1673,13 +1673,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -1732,7 +1732,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         expense.category.isEmpty ? 'Sin categoría' : expense.category,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1765,14 +1765,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Fecha',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: expense.date,
                         decoration: InputDecoration(
                           hintText: 'DD/MM/YYYY',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1808,14 +1808,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Método',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: expense.paymentMethod,
                         decoration: InputDecoration(
                           hintText: 'Efectivo/Tarjeta',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1855,14 +1855,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Descripción',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: expense.description,
                         decoration: InputDecoration(
                           hintText: 'Descripción del gasto',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1898,14 +1898,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Categoría',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: expense.category,
                         decoration: InputDecoration(
                           hintText: 'Categoría',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1945,7 +1945,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Monto',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -1955,7 +1955,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -1993,8 +1993,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white60),
-                  label: const Text('Editar', style: TextStyle(color: AppTheme.white60)),
+                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
+                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -2063,7 +2063,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         card.bank.isEmpty ? 'Banco' : card.bank,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2096,14 +2096,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Nombre de Tarjeta',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: card.name,
                         decoration: InputDecoration(
                           hintText: 'Nombre de la tarjeta',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2140,14 +2140,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Banco',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: card.bank,
                         decoration: InputDecoration(
                           hintText: 'Banco',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2189,7 +2189,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Límite de Crédito',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -2199,7 +2199,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2236,7 +2236,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Saldo Actual',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -2246,7 +2246,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2287,14 +2287,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Fecha de Vencimiento',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: card.dueDate,
                         decoration: InputDecoration(
                           hintText: 'DD/MM/YYYY',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2331,7 +2331,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Pago Mínimo',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -2341,7 +2341,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2380,7 +2380,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 const Text(
                   'Crédito Utilizado',
-                  style: TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 Text(
                   '${creditUsed.toStringAsFixed(0)}%',
@@ -2417,8 +2417,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white60),
-                  label: const Text('Editar', style: TextStyle(color: AppTheme.white60)),
+                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
+                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -2489,7 +2489,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         bill.category.isEmpty ? 'Sin categoría' : bill.category,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2539,7 +2539,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Monto',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -2549,7 +2549,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2585,14 +2585,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Fecha de Vencimiento',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: bill.dueDate,
                         decoration: InputDecoration(
                           hintText: 'DD/MM/YYYY',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2632,14 +2632,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Nombre de Factura',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: bill.name,
                         decoration: InputDecoration(
                           hintText: 'Nombre de la factura',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2675,14 +2675,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Categoría',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: bill.category,
                         decoration: InputDecoration(
                           hintText: 'Categoría',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2720,7 +2720,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 const Text(
                   'Estado de Pago',
-                  style: TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 Container(
                   width: 20,
@@ -2762,8 +2762,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white60),
-                  label: const Text('Editar', style: TextStyle(color: AppTheme.white60)),
+                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
+                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -2840,7 +2840,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         investment.type.isEmpty ? 'Sin tipo' : investment.type,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -2873,7 +2873,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Monto Inicial',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -2883,7 +2883,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2920,7 +2920,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Valor Actual',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -2930,7 +2930,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -2971,14 +2971,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Nombre',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: investment.name,
                         decoration: InputDecoration(
                           hintText: 'Nombre de la inversión',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3015,14 +3015,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Tipo',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: investment.type,
                         decoration: InputDecoration(
                           hintText: 'Stock, Bond, etc.',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3063,7 +3063,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Ganancia/Pérdida',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -3073,7 +3073,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3110,14 +3110,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Fecha',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: investment.date,
                         decoration: InputDecoration(
                           hintText: 'DD/MM/YYYY',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3156,7 +3156,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 const Text(
                   'Rendimiento',
-                  style: TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 Text(
                   '${profitPercentage >= 0 ? '+' : ''}${profitPercentage.toStringAsFixed(2)}%',
@@ -3193,8 +3193,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white60),
-                  label: const Text('Editar', style: TextStyle(color: AppTheme.white60)),
+                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
+                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -3269,7 +3269,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         'Meta: \$${goal.targetAmount} • Fecha: ${goal.deadline}',
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3302,7 +3302,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Monto Objetivo',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -3312,7 +3312,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3351,7 +3351,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Monto Actual',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -3361,7 +3361,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           prefixText: '\$ ',
                           prefixStyle: const TextStyle(color: AppTheme.white),
                           hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3404,14 +3404,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Nombre del Objetivo',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: goal.name,
                         decoration: InputDecoration(
                           hintText: 'Nombre del objetivo',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3447,14 +3447,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     children: [
                       const Text(
                         'Fecha Límite',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white60),
+                        style: TextStyle(fontSize: 12, color: AppTheme.white),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
                         initialValue: goal.deadline,
                         decoration: InputDecoration(
                           hintText: 'DD/MM/YYYY',
-                          hintStyle: const TextStyle(color: AppTheme.white40),
+                          hintStyle: const TextStyle(color: AppTheme.white),
                           filled: true,
                           fillColor: AppTheme.darkSurfaceVariant,
                           border: OutlineInputBorder(
@@ -3492,7 +3492,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 const Text(
                   'Progreso',
-                  style: TextStyle(fontSize: 14, color: AppTheme.white70),
+                  style: TextStyle(fontSize: 14, color: AppTheme.white),
                 ),
                 Text(
                   '${progress.toStringAsFixed(0)}%',
@@ -3528,7 +3528,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 Text(
                   '\$${goal.currentAmount} de \$${goal.targetAmount}',
-                  style: const TextStyle(fontSize: 12, color: AppTheme.white70),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.white),
                 ),
                 Text(
                   'Restante: \$${(target - current).toStringAsFixed(2)}',
@@ -3543,8 +3543,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
               children: [
                 TextButton.icon(
                   onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white60),
-                  label: const Text('Editar', style: TextStyle(color: AppTheme.white60)),
+                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
+                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
@@ -3617,7 +3617,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           '${items.length} artículos',
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                       ],
@@ -3649,13 +3649,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 child: Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white40),
+                      const Icon(Icons.shopping_basket_outlined, size: 32, color: AppTheme.white),
                       const SizedBox(height: 8),
                       Text(
                         'No hay artículos en esta categoría',
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -3723,7 +3723,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             border: Border.all(
                               color: isPurchased
                                   ? Colors.green
-                                  : AppTheme.white60,
+                                  : AppTheme.white,
                               width: 2,
                             ),
                           ),
@@ -3747,7 +3747,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: isPurchased
-                                    ? AppTheme.white60
+                                    ? AppTheme.white
                                     : AppTheme.white,
                                 decoration: isPurchased
                                     ? TextDecoration.lineThrough
@@ -3760,8 +3760,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isPurchased
-                                    ? AppTheme.white40
-                                    : AppTheme.white60,
+                                    ? AppTheme.white
+                                    : AppTheme.white,
                                 decoration: isPurchased
                                     ? TextDecoration.lineThrough
                                     : null,
@@ -3859,7 +3859,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       controller: _itemNameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre del artículo *',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         prefixIcon: const Icon(Icons.shopping_bag, color: Colors.green),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -3887,7 +3887,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             controller: _itemQuantityController,
                             decoration: InputDecoration(
                               labelText: 'Cantidad',
-                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: const Icon(Icons.numbers, color: Colors.green),
                               filled: true,
                               fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -3915,7 +3915,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                             controller: _itemUnitController,
                             decoration: InputDecoration(
                               labelText: 'Unidad',
-                              labelStyle: const TextStyle(color: AppTheme.white70),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               prefixIcon: const Icon(Icons.straighten, color: Colors.green),
                               filled: true,
                               fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -3947,7 +3947,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           },
                           child: const Text(
                             'Cancelar',
-                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                            style: TextStyle(color: AppTheme.white, fontSize: 16),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -4092,7 +4092,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       controller: _newCategoryNameController,
                       decoration: InputDecoration(
                         labelText: 'Nombre de la categoría *',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         prefixIcon: const Icon(Icons.label, color: Colors.green),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -4116,9 +4116,9 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       controller: _newCategoryIconController,
                       decoration: InputDecoration(
                         labelText: 'Icono (emoji) *',
-                        labelStyle: const TextStyle(color: AppTheme.white70),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         hintText: '🍎',
-                        hintStyle: const TextStyle(color: AppTheme.white40, fontSize: 24),
+                        hintStyle: const TextStyle(color: AppTheme.white, fontSize: 24),
                         prefixIcon: const Icon(Icons.emoji_emotions, color: Colors.green),
                         filled: true,
                         fillColor: AppTheme.darkBackground.withOpacity(0.5),
@@ -4148,7 +4148,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                           },
                           child: const Text(
                             'Cancelar',
-                            style: TextStyle(color: AppTheme.white60, fontSize: 16),
+                            style: TextStyle(color: AppTheme.white, fontSize: 16),
                           ),
                         ),
                         const SizedBox(width: 12),

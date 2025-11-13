@@ -435,5 +435,84 @@ class HealthService {
       return {'success': false, 'error': e.toString()};
     }
   }
+
+  /// Guardar objetivo deportivo
+  Future<Map<String, dynamic>> saveSportsGoal(Map<String, dynamic> goalData) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return {'success': false, 'error': 'Usuario no autenticado'};
+      }
+
+      final data = {
+        'user_id': userId,
+        'id': goalData['id'],
+        'sport': goalData['sport'],
+        'objective': goalData['objective'],
+        'target_date': goalData['targetDate']?.toIso8601String(),
+        'current_progress': goalData['currentProgress'],
+        'notes': goalData['notes'],
+      };
+
+      await _supabase.from('sports_goals').upsert(data);
+
+      return {'success': true};
+    } catch (e) {
+      print('HealthService: Error guardando objetivo deportivo: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// Obtener todos los objetivos deportivos del usuario
+  Future<List<Map<String, dynamic>>> getSportsGoals() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return [];
+      }
+
+      final response = await _supabase
+          .from('sports_goals')
+          .select()
+          .eq('user_id', userId)
+          .order('target_date', ascending: true);
+
+      // Convertir los datos de la base de datos al formato esperado
+      return response.map<Map<String, dynamic>>((row) {
+        return {
+          'id': row['id'],
+          'sport': row['sport'],
+          'objective': row['objective'],
+          'targetDate': row['target_date'],
+          'currentProgress': row['current_progress'] ?? 'Sin progreso',
+          'notes': row['notes'],
+        };
+      }).toList();
+    } catch (e) {
+      print('HealthService: Error obteniendo objetivos deportivos: $e');
+      return [];
+    }
+  }
+
+  /// Eliminar objetivo deportivo
+  Future<Map<String, dynamic>> deleteSportsGoal(String goalId) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        return {'success': false, 'error': 'Usuario no autenticado'};
+      }
+
+      await _supabase
+          .from('sports_goals')
+          .delete()
+          .eq('id', goalId)
+          .eq('user_id', userId);
+
+      return {'success': true};
+    } catch (e) {
+      print('HealthService: Error eliminando objetivo deportivo: $e');
+      return {'success': false, 'error': e.toString()};
+    }
+  }
 }
 

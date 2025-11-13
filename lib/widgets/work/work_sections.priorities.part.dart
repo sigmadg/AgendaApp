@@ -54,7 +54,7 @@ part of 'work_sections.dart';
                       'Gestiona tus prioridades, áreas de enfoque y objetivos',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -129,7 +129,7 @@ part of 'work_sections.dart';
             Icon(
               icon,
               size: 20,
-              color: isActive ? AppTheme.white : AppTheme.white60,
+              color: isActive ? AppTheme.white : AppTheme.white,
             ),
             const SizedBox(height: 4),
             Text(
@@ -137,7 +137,7 @@ part of 'work_sections.dart';
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? AppTheme.white : AppTheme.white60,
+                color: isActive ? AppTheme.white : AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -199,7 +199,7 @@ part of 'work_sections.dart';
                     decoration: InputDecoration(
                       hintText: 'Escribe una nueva prioridad...',
                       hintStyle: TextStyle(
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontSize: 15,
                       ),
                       filled: true,
@@ -323,7 +323,7 @@ part of 'work_sections.dart';
                     decoration: InputDecoration(
                       hintText: 'Escribe un nuevo enfoque...',
                       hintStyle: TextStyle(
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontSize: 15,
                       ),
                       filled: true,
@@ -492,7 +492,7 @@ part of 'work_sections.dart';
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo objetivo...',
                         hintStyle: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 15,
                         ),
                         filled: true,
@@ -628,7 +628,7 @@ part of 'work_sections.dart';
                         'Define tus áreas de enfoque y concentración',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -655,7 +655,7 @@ part of 'work_sections.dart';
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo enfoque...',
-                        hintStyle: const TextStyle(color: AppTheme.white60),
+                        hintStyle: const TextStyle(color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkSurfaceVariant,
                         border: OutlineInputBorder(
@@ -797,7 +797,7 @@ part of 'work_sections.dart';
                         'Define y gestiona tus objetivos de trabajo',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -875,7 +875,7 @@ part of 'work_sections.dart';
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo objetivo...',
                         hintStyle: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 15,
                         ),
                         filled: true,
@@ -1026,7 +1026,7 @@ part of 'work_sections.dart';
               subtitle,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1222,7 +1222,7 @@ part of 'work_sections.dart';
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: task.completed
-                                    ? AppTheme.white40
+                                    ? AppTheme.white
                                     : isOverdue
                                         ? Colors.red.shade300
                                         : AppTheme.white,
@@ -1305,7 +1305,7 @@ part of 'work_sections.dart';
                                 Icon(
                                   isToday ? Icons.today : Icons.calendar_today,
                                   size: 14,
-                                  color: isToday ? context.pro.accent : AppTheme.white70,
+                                  color: isToday ? context.pro.accent : AppTheme.white,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -1315,7 +1315,7 @@ part of 'work_sections.dart';
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: isToday ? context.pro.accent : AppTheme.white70,
+                                    color: isToday ? context.pro.accent : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -1402,7 +1402,7 @@ part of 'work_sections.dart';
                       size: 20,
                       color: task.notes != null && task.notes!.isNotEmpty
                           ? context.pro.accent
-                          : AppTheme.white60,
+                          : AppTheme.white,
                     ),
                     onPressed: () {
                       // Obsoleto - _editingTask = task;
@@ -1453,14 +1453,14 @@ part of 'work_sections.dart';
                           ),
                           content: const Text(
                             '¿Estás seguro de eliminar esta tarea? Esta acción no se puede deshacer.',
-                            style: TextStyle(color: AppTheme.white70),
+                            style: TextStyle(color: AppTheme.white),
                           ),
                           actions: [
                             OutlinedButton(
                               onPressed: () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.white60,
-                                side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+                                foregroundColor: AppTheme.white,
+                                side: BorderSide(color: AppTheme.white.withOpacity(0.3)),
                               ),
                               child: const Text('Cancelar'),
                             ),
@@ -1519,7 +1519,7 @@ part of 'work_sections.dart';
                         task.notes!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           height: 1.4,
                         ),
                       ),
@@ -1883,7 +1883,7 @@ part of 'work_sections.dart';
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: task.completed ? AppTheme.white40 : AppTheme.white,
+                                color: task.completed ? AppTheme.white : AppTheme.white,
                                 decoration: task.completed ? TextDecoration.lineThrough : null,
                               ),
                             ),
@@ -1932,7 +1932,7 @@ part of 'work_sections.dart';
                       ),
                       // Botón de opciones (igual que Personal)
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 20),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1949,14 +1949,14 @@ part of 'work_sections.dart';
                                 ),
                                 content: Text(
                                   '¿Estás seguro de que quieres eliminar "${task.task}"?',
-                                  style: const TextStyle(color: AppTheme.white60),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     child: const Text(
                                       'Cancelar',
-                                      style: TextStyle(color: AppTheme.white60),
+                                      style: TextStyle(color: AppTheme.white),
                                     ),
                                   ),
                                   ElevatedButton(
@@ -2337,7 +2337,7 @@ part of 'work_sections.dart';
                                 project.aim,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                   height: 1.4,
                                 ),
                                 maxLines: 2,
@@ -2349,7 +2349,7 @@ part of 'work_sections.dart';
                       ),
                       // Botón de opciones
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 22),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 22),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2390,14 +2390,14 @@ part of 'work_sections.dart';
                                 ),
                                 content: Text(
                                   '¿Estás seguro de eliminar "${project.title}"? Esta acción no se puede deshacer.',
-                                  style: const TextStyle(color: AppTheme.white70),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   OutlinedButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppTheme.white60,
-                                      side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+                                      foregroundColor: AppTheme.white,
+                                      side: BorderSide(color: AppTheme.white.withOpacity(0.3)),
                                     ),
                                     child: const Text('Cancelar'),
                                   ),
@@ -2433,9 +2433,9 @@ part of 'work_sections.dart';
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 18, color: AppTheme.white70),
+                                Icon(Icons.edit, size: 18, color: AppTheme.white),
                                 SizedBox(width: 8),
-                                Text('Editar', style: TextStyle(color: AppTheme.white70)),
+                                Text('Editar', style: TextStyle(color: AppTheme.white)),
                               ],
                             ),
                           ),
@@ -2500,7 +2500,7 @@ part of 'work_sections.dart';
                                       'Fecha límite',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: AppTheme.white60,
+                                        color: AppTheme.white,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -2550,7 +2550,7 @@ part of 'work_sections.dart';
                                     'Metas',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.white60,
+                                      color: AppTheme.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -2584,7 +2584,7 @@ part of 'work_sections.dart';
                                           'Progreso',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: AppTheme.white60,
+                                            color: AppTheme.white,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -2761,7 +2761,7 @@ part of 'work_sections.dart';
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: goal.completed
-                                                      ? AppTheme.white60
+                                                      ? AppTheme.white
                                                       : AppTheme.white,
                                                   decoration: goal.completed
                                                       ? TextDecoration.lineThrough
@@ -2779,14 +2779,14 @@ part of 'work_sections.dart';
                                                       Icon(
                                                         Icons.person_rounded,
                                                         size: 12,
-                                                        color: AppTheme.white60,
+                                                        color: AppTheme.white,
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
                                                         goal.person!,
                                                         style: TextStyle(
                                                           fontSize: 11,
-                                                          color: AppTheme.white60,
+                                                          color: AppTheme.white,
                                                         ),
                                                       ),
                                                     ],
@@ -2796,14 +2796,14 @@ part of 'work_sections.dart';
                                                       Icon(
                                                         Icons.calendar_today_rounded,
                                                         size: 12,
-                                                        color: AppTheme.white60,
+                                                        color: AppTheme.white,
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
                                                         DateFormat('dd MMM yyyy', 'es').format(goal.date!),
                                                         style: TextStyle(
                                                           fontSize: 11,
-                                                          color: AppTheme.white60,
+                                                          color: AppTheme.white,
                                                         ),
                                                       ),
                                                     ],
@@ -2917,7 +2917,7 @@ part of 'work_sections.dart';
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isCompleted ? AppTheme.white60 : AppTheme.white,
+                  color: isCompleted ? AppTheme.white : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                   letterSpacing: 0.2,
                 ),
@@ -3076,7 +3076,7 @@ part of 'work_sections.dart';
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isCompleted ? AppTheme.white60 : AppTheme.white,
+                  color: isCompleted ? AppTheme.white : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                   letterSpacing: 0.2,
                 ),
@@ -3254,7 +3254,7 @@ part of 'work_sections.dart';
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isCompleted ? AppTheme.white60 : AppTheme.white,
+                      color: isCompleted ? AppTheme.white : AppTheme.white,
                       decoration: isCompleted ? TextDecoration.lineThrough : null,
                       letterSpacing: 0.3,
                     ),
@@ -3444,14 +3444,14 @@ part of 'work_sections.dart';
                       Icon(
                         Icons.checklist_rounded,
                         size: 14,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '$completedMilestones/$totalMilestones metas completadas',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -3579,7 +3579,7 @@ part of 'work_sections.dart';
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: milestoneCompleted 
-                                ? AppTheme.white60 
+                                ? AppTheme.white 
                                 : AppTheme.white,
                             decoration: milestoneCompleted 
                                 ? TextDecoration.lineThrough 
@@ -3661,7 +3661,7 @@ part of 'work_sections.dart';
                       decoration: InputDecoration(
                         hintText: 'Agregar meta...',
                         hintStyle: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 14,
                         ),
                         border: InputBorder.none,
@@ -3807,7 +3807,7 @@ part of 'work_sections.dart';
                         'Define y gestiona tus prioridades clave',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -3834,7 +3834,7 @@ part of 'work_sections.dart';
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         hintText: 'Escribe una nueva prioridad...',
-                        hintStyle: const TextStyle(color: AppTheme.white60),
+                        hintStyle: const TextStyle(color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkSurfaceVariant,
                         border: OutlineInputBorder(

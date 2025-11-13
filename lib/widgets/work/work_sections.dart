@@ -207,7 +207,7 @@ class _WorkSectionsState extends State<WorkSections> {
           children: [
             const Text(
               'Ya existe un evento a la misma hora y fecha:',
-              style: TextStyle(color: AppTheme.white70),
+              style: TextStyle(color: AppTheme.white),
             ),
             const SizedBox(height: 12),
             ...overlappingEvents.map((event) => Container(
@@ -237,7 +237,7 @@ class _WorkSectionsState extends State<WorkSections> {
             const SizedBox(height: 12),
             const Text(
               '¿Deseas crear el evento de todas formas?',
-              style: TextStyle(color: AppTheme.white70, fontWeight: FontWeight.w500),
+              style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -245,8 +245,8 @@ class _WorkSectionsState extends State<WorkSections> {
           OutlinedButton(
             onPressed: () => Navigator.pop(context, false),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.white60,
-              side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+              foregroundColor: AppTheme.white,
+              side: BorderSide(color: AppTheme.white.withOpacity(0.3)),
             ),
             child: const Text('Cancelar'),
           ),
@@ -495,7 +495,7 @@ class _WorkSectionsState extends State<WorkSections> {
                   user?.email ?? 'usuario@ejemplo.com',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white60,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -727,7 +727,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         section['icon'] as IconData,
                         color: isActive 
                             ? context.pro.accent 
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(height: 2),
@@ -740,7 +740,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               fontSize: 9,
                               color: isActive 
                                   ? context.pro.accent 
-                                  : AppTheme.white60,
+                                  : AppTheme.white,
                               fontWeight: isActive 
                                   ? FontWeight.w600 
                                   : FontWeight.normal,
@@ -845,7 +845,7 @@ class _WorkSectionsState extends State<WorkSections> {
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
           if (subtitle != null) ...[
@@ -907,7 +907,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 maxLines: 6,
                 decoration: InputDecoration(
                   hintText: 'Escribe notas adicionales...',
-                  hintStyle: const TextStyle(color: AppTheme.white60),
+                  hintStyle: const TextStyle(color: AppTheme.white),
                   filled: true,
                   fillColor: AppTheme.darkSurfaceVariant,
                   border: OutlineInputBorder(
@@ -1019,7 +1019,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       'Organiza tus reuniones y citas profesionales.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -1086,7 +1086,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               '${todayMeetings.length} evento${todayMeetings.length == 1 ? '' : 's'}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                               ),
                             ),
                           ),
@@ -1180,7 +1180,7 @@ class _WorkSectionsState extends State<WorkSections> {
               style: TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? context.pro.accent : AppTheme.white60,
+                color: isSelected ? context.pro.accent : AppTheme.white,
                 height: 1.0,
               ),
             ),
@@ -1399,7 +1399,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             meeting.time!,
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                           if (meeting.location != null) const SizedBox(width: 16),
@@ -1412,7 +1412,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               meeting.location!,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1498,9 +1498,9 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Nombre',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -1514,9 +1514,9 @@ class _WorkSectionsState extends State<WorkSections> {
                       value: selectedType,
                       decoration: InputDecoration(
                         labelText: 'Tipo',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -1547,9 +1547,9 @@ class _WorkSectionsState extends State<WorkSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Hora',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -1593,9 +1593,9 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Ubicación (opcional)',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -1612,7 +1612,7 @@ class _WorkSectionsState extends State<WorkSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(
@@ -1789,7 +1789,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         'Organiza tu trabajo día a día',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -1950,9 +1950,9 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         labelText: 'Tarea',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -1971,16 +1971,16 @@ class _WorkSectionsState extends State<WorkSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Fecha',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: context.pro.accent),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white60),
+                              suffixIcon: const Icon(Icons.calendar_today, color: AppTheme.white),
                             ),
                             onTap: () async {
                               final date = await showDatePicker(
@@ -2019,9 +2019,9 @@ class _WorkSectionsState extends State<WorkSections> {
                             style: const TextStyle(color: AppTheme.white),
                             decoration: InputDecoration(
                               labelText: 'Hora',
-                              labelStyle: const TextStyle(color: AppTheme.white60),
+                              labelStyle: const TextStyle(color: AppTheme.white),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: AppTheme.white60),
+                                borderSide: BorderSide(color: AppTheme.white),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -2064,9 +2064,9 @@ class _WorkSectionsState extends State<WorkSections> {
                       value: selectedPriority,
                       decoration: InputDecoration(
                         labelText: 'Prioridad',
-                        labelStyle: const TextStyle(color: AppTheme.white60),
+                        labelStyle: const TextStyle(color: AppTheme.white),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.white60),
+                          borderSide: BorderSide(color: AppTheme.white),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -2143,7 +2143,7 @@ class _WorkSectionsState extends State<WorkSections> {
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: AppTheme.white60),
+                    style: TextStyle(color: AppTheme.white),
                   ),
                 ),
                 ElevatedButton(
@@ -2288,7 +2288,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             'Gestiona y organiza tus proyectos',
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -2663,12 +2663,12 @@ class _WorkSectionsState extends State<WorkSections> {
                                 decoration: InputDecoration(
                                   labelText: 'Nombre del Proyecto',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Ej: Desarrollo Web App',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.title,
@@ -2716,12 +2716,12 @@ class _WorkSectionsState extends State<WorkSections> {
                                 decoration: InputDecoration(
                                   labelText: 'Descripción del Proyecto',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Describe brevemente el objetivo del proyecto...',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Padding(
                                     padding: const EdgeInsets.only(bottom: 60),
@@ -2825,7 +2825,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                               'Fecha Límite',
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: AppTheme.white60,
+                                                color: AppTheme.white,
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
@@ -2838,7 +2838,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                                 fontSize: 14,
                                                 color: _selectedProjectDeadline != null
                                                     ? AppTheme.white
-                                                    : AppTheme.white60,
+                                                    : AppTheme.white,
                                                 fontWeight: _selectedProjectDeadline != null
                                                     ? FontWeight.w600
                                                     : FontWeight.normal,
@@ -2942,12 +2942,12 @@ class _WorkSectionsState extends State<WorkSections> {
                                 decoration: InputDecoration(
                                   labelText: 'Descripción de la Meta',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Ej: Completar diseño de interfaz',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.flag,
@@ -2994,12 +2994,12 @@ class _WorkSectionsState extends State<WorkSections> {
                                 decoration: InputDecoration(
                                   labelText: 'Responsable',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Nombre',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.person,
@@ -3080,7 +3080,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                         Icons.calendar_today,
                                         color: _tempGoalDate != null
                                             ? context.pro.teal
-                                            : AppTheme.white60,
+                                            : AppTheme.white,
                                         size: 18,
                                       ),
                                       const SizedBox(width: 8),
@@ -3093,7 +3093,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                             fontSize: 14,
                                             color: _tempGoalDate != null
                                                 ? AppTheme.white
-                                                : AppTheme.white60,
+                                                : AppTheme.white,
                                             fontWeight: _tempGoalDate != null
                                                 ? FontWeight.w600
                                                 : FontWeight.normal,
@@ -3198,12 +3198,12 @@ class _WorkSectionsState extends State<WorkSections> {
                                                         children: [
                                                           Row(
                                                             children: [
-                                                              const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                                                              const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                                                               const SizedBox(width: 8),
                                                               const Text(
                                                                 'Fecha de la meta:',
                                                                 style: TextStyle(
-                                                                  color: AppTheme.white60,
+                                                                  color: AppTheme.white,
                                                                   fontSize: 12,
                                                                 ),
                                                               ),
@@ -3221,12 +3221,12 @@ class _WorkSectionsState extends State<WorkSections> {
                                                           const SizedBox(height: 12),
                                                           Row(
                                                             children: [
-                                                              const Icon(Icons.event_busy, size: 16, color: AppTheme.white60),
+                                                              const Icon(Icons.event_busy, size: 16, color: AppTheme.white),
                                                               const SizedBox(width: 8),
                                                               const Text(
                                                                 'Fecha límite del proyecto:',
                                                                 style: TextStyle(
-                                                                  color: AppTheme.white60,
+                                                                  color: AppTheme.white,
                                                                   fontSize: 12,
                                                                 ),
                                                               ),
@@ -3787,9 +3787,9 @@ class _WorkSectionsState extends State<WorkSections> {
                               });
                             },
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.white60,
+                              foregroundColor: AppTheme.white,
                               side: BorderSide(
-                                color: AppTheme.white60.withOpacity(0.3),
+                                color: AppTheme.white.withOpacity(0.3),
                                 width: 1.5,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -4066,7 +4066,7 @@ class _WorkSectionsState extends State<WorkSections> {
               child: Icon(
                 icon,
                 size: 14,
-                color: isActive ? AppTheme.white : AppTheme.white60,
+                color: isActive ? AppTheme.white : AppTheme.white,
               ),
             ),
             const SizedBox(width: 4),
@@ -4076,7 +4076,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                  color: isActive ? AppTheme.white : AppTheme.white60,
+                  color: isActive ? AppTheme.white : AppTheme.white,
                   letterSpacing: 0.2,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -4176,7 +4176,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Nombre',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -4209,7 +4209,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Rol/Puesto',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -4360,7 +4360,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 Text(
                   teammate.role,
                   style: TextStyle(
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                     fontSize: 13,
                   ),
                 ),
@@ -4424,7 +4424,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Nombre del logro',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -4494,7 +4494,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: TextStyle(
                         color: _tempAchievementDueDate != null
                             ? AppTheme.white
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontSize: 13,
                         fontWeight: _tempAchievementDueDate != null
                             ? FontWeight.w600
@@ -4630,12 +4630,12 @@ class _WorkSectionsState extends State<WorkSections> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.white60),
+                      Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.white),
                       const SizedBox(width: 6),
                       Text(
                         DateFormat('dd MMM yyyy', 'es').format(achievement.date!),
                         style: TextStyle(
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontSize: 13,
                         ),
                       ),
@@ -4702,7 +4702,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Posición',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -4735,7 +4735,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Asignación',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -4768,7 +4768,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Estado',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -4835,7 +4835,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: TextStyle(
                         color: _tempWorkStartDate != null
                             ? AppTheme.white
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontSize: 13,
                         fontWeight: _tempWorkStartDate != null
                             ? FontWeight.w600
@@ -4887,7 +4887,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: TextStyle(
                         color: _tempWorkDeadline != null
                             ? AppTheme.white
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontSize: 13,
                         fontWeight: _tempWorkDeadline != null
                             ? FontWeight.w600
@@ -4906,7 +4906,7 @@ class _WorkSectionsState extends State<WorkSections> {
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Notas (opcional)',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -5071,7 +5071,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     Text(
                       work.appoint,
                       style: TextStyle(
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontSize: 13,
                       ),
                     ),
@@ -5219,13 +5219,13 @@ class _WorkSectionsState extends State<WorkSections> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.note_rounded, size: 14, color: AppTheme.white60),
+                  Icon(Icons.note_rounded, size: 14, color: AppTheme.white),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       work.notes!,
                       style: const TextStyle(
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -5291,7 +5291,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 ),
               ),
               hintText: 'Elemento',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -5324,7 +5324,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Fondo a financiar',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -5357,7 +5357,7 @@ class _WorkSectionsState extends State<WorkSections> {
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Por quién',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -5391,7 +5391,7 @@ class _WorkSectionsState extends State<WorkSections> {
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Notas (opcional)',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -5555,12 +5555,12 @@ class _WorkSectionsState extends State<WorkSections> {
                       if (funding.fondo != null) ...[
                         Row(
                           children: [
-                            Icon(Icons.account_balance_wallet_rounded, size: 14, color: AppTheme.white60),
+                            Icon(Icons.account_balance_wallet_rounded, size: 14, color: AppTheme.white),
                             const SizedBox(width: 6),
                             Text(
                               'Fondo: ${funding.fondo}',
                               style: TextStyle(
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                                 fontSize: 13,
                               ),
                             ),
@@ -5572,12 +5572,12 @@ class _WorkSectionsState extends State<WorkSections> {
                       if (funding.financiadoPor != null) ...[
                         Row(
                           children: [
-                            Icon(Icons.person_rounded, size: 14, color: AppTheme.white60),
+                            Icon(Icons.person_rounded, size: 14, color: AppTheme.white),
                             const SizedBox(width: 6),
                             Text(
                               'Por: ${funding.financiadoPor}',
                               style: TextStyle(
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                                 fontSize: 13,
                               ),
                             ),
@@ -5668,13 +5668,13 @@ class _WorkSectionsState extends State<WorkSections> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.note_rounded, size: 14, color: AppTheme.white60),
+                        Icon(Icons.note_rounded, size: 14, color: AppTheme.white),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             funding.notes!,
                             style: const TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
                             ),
@@ -5805,7 +5805,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         'Vista general estratégica y análisis de productividad',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -5861,7 +5861,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               'Progreso General',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -5870,7 +5870,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               'Todas las metas',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white40,
+                                color: AppTheme.white,
                               ),
                             ),
                           ],
@@ -5939,14 +5939,14 @@ class _WorkSectionsState extends State<WorkSections> {
                       '$completedGoals de $totalGoals metas completadas',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     Text(
                       '${totalProjects} proyecto${totalProjects == 1 ? '' : 's'}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -6052,7 +6052,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               'Eficiencia General',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppTheme.white60,
+                                color: AppTheme.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -6061,7 +6061,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               'Tareas completadas',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.white40,
+                                color: AppTheme.white,
                               ),
                             ),
                           ],
@@ -6139,14 +6139,14 @@ class _WorkSectionsState extends State<WorkSections> {
                       '$completedDailyTasks de $totalTasks tareas completadas',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                     Text(
                       '$totalMeetings sesiones',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -6962,7 +6962,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 project.overview?.presumption ?? '',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -6985,7 +6985,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 '', // Segundo text area vacío por ahora
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -7037,7 +7037,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 project.overview?.jobDescription ?? '',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -7091,7 +7091,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                             '',
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: AppTheme.white40,
+                                              color: AppTheme.white,
                                             ),
                                           ),
                                         ),
@@ -7132,7 +7132,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                             output.text,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: output.completed ? AppTheme.white60 : AppTheme.white,
+                                              color: output.completed ? AppTheme.white : AppTheme.white,
                                               decoration: output.completed ? TextDecoration.lineThrough : null,
                                             ),
                                           ),
@@ -7187,7 +7187,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                           decoration: BoxDecoration(
                                             border: Border(
                                               bottom: BorderSide(
-                                                color: AppTheme.white40.withOpacity(0.3),
+                                                color: AppTheme.white.withOpacity(0.3),
                                                 width: 1,
                                               ),
                                             ),
@@ -7203,7 +7203,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                           decoration: BoxDecoration(
                                             border: Border(
                                               bottom: BorderSide(
-                                                color: AppTheme.white40.withOpacity(0.3),
+                                                color: AppTheme.white.withOpacity(0.3),
                                                 width: 1,
                                               ),
                                             ),
@@ -7256,7 +7256,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 project.overview?.achievements ?? '',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                 ),
                               ),
                             ),
@@ -7283,7 +7283,7 @@ class _WorkSectionsState extends State<WorkSections> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: AppTheme.white60,
+            color: AppTheme.white,
           ),
         ),
         if (subtitle != null) ...[
@@ -7292,7 +7292,7 @@ class _WorkSectionsState extends State<WorkSections> {
             subtitle,
             style: TextStyle(
               fontSize: 10,
-              color: AppTheme.white40,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -7312,7 +7312,7 @@ class _WorkSectionsState extends State<WorkSections> {
             value.isEmpty ? 'Sin definir' : value,
             style: TextStyle(
               fontSize: 14,
-              color: value.isEmpty ? AppTheme.white40 : AppTheme.white,
+              color: value.isEmpty ? AppTheme.white : AppTheme.white,
             ),
           ),
         ),
@@ -7353,7 +7353,7 @@ class _WorkSectionsState extends State<WorkSections> {
             'Sin compañeros de equipo',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -7417,7 +7417,7 @@ class _WorkSectionsState extends State<WorkSections> {
             'Sin logros definidos',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -7485,7 +7485,7 @@ class _WorkSectionsState extends State<WorkSections> {
             'Sin trabajos definidos',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -7572,7 +7572,7 @@ class _WorkSectionsState extends State<WorkSections> {
             'Sin financiamiento definido',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.white70,
+              color: AppTheme.white,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -7648,7 +7648,7 @@ class _WorkSectionsState extends State<WorkSections> {
         style: TextStyle(
           fontSize: isHeader ? 11 : 10,
           fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-          color: isHeader ? AppTheme.white : AppTheme.white70,
+          color: isHeader ? AppTheme.white : AppTheme.white,
         ),
       ),
     );
@@ -7708,7 +7708,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       'Gestiona tus prioridades, áreas de enfoque y objetivos',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ],
@@ -7783,7 +7783,7 @@ class _WorkSectionsState extends State<WorkSections> {
             Icon(
               icon,
               size: 20,
-              color: isActive ? AppTheme.white : AppTheme.white60,
+              color: isActive ? AppTheme.white : AppTheme.white,
             ),
             const SizedBox(height: 4),
             Text(
@@ -7791,7 +7791,7 @@ class _WorkSectionsState extends State<WorkSections> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? AppTheme.white : AppTheme.white60,
+                color: isActive ? AppTheme.white : AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -7853,7 +7853,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     decoration: InputDecoration(
                       hintText: 'Escribe una nueva prioridad...',
                       hintStyle: TextStyle(
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontSize: 15,
                       ),
                       filled: true,
@@ -7977,7 +7977,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     decoration: InputDecoration(
                       hintText: 'Escribe un nuevo enfoque...',
                       hintStyle: TextStyle(
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                         fontSize: 15,
                       ),
                       filled: true,
@@ -8146,7 +8146,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo objetivo...',
                         hintStyle: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 15,
                         ),
                         filled: true,
@@ -8282,7 +8282,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         'Define tus áreas de enfoque y concentración',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -8309,7 +8309,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo enfoque...',
-                        hintStyle: const TextStyle(color: AppTheme.white60),
+                        hintStyle: const TextStyle(color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkSurfaceVariant,
                         border: OutlineInputBorder(
@@ -8451,7 +8451,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         'Define y gestiona tus objetivos de trabajo',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -8529,7 +8529,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       decoration: InputDecoration(
                         hintText: 'Escribe un nuevo objetivo...',
                         hintStyle: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 15,
                         ),
                         filled: true,
@@ -8680,7 +8680,7 @@ class _WorkSectionsState extends State<WorkSections> {
               subtitle,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -8876,7 +8876,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: task.completed
-                                    ? AppTheme.white40
+                                    ? AppTheme.white
                                     : isOverdue
                                         ? Colors.red.shade300
                                         : AppTheme.white,
@@ -8959,7 +8959,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 Icon(
                                   isToday ? Icons.today : Icons.calendar_today,
                                   size: 14,
-                                  color: isToday ? context.pro.accent : AppTheme.white70,
+                                  color: isToday ? context.pro.accent : AppTheme.white,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -8969,7 +8969,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: isToday ? context.pro.accent : AppTheme.white70,
+                                    color: isToday ? context.pro.accent : AppTheme.white,
                                   ),
                                 ),
                               ],
@@ -9056,7 +9056,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       size: 20,
                       color: task.notes != null && task.notes!.isNotEmpty
                           ? context.pro.accent
-                          : AppTheme.white60,
+                          : AppTheme.white,
                     ),
                     onPressed: () {
                       // Obsoleto - _editingTask = task;
@@ -9107,14 +9107,14 @@ class _WorkSectionsState extends State<WorkSections> {
                           ),
                           content: const Text(
                             '¿Estás seguro de eliminar esta tarea? Esta acción no se puede deshacer.',
-                            style: TextStyle(color: AppTheme.white70),
+                            style: TextStyle(color: AppTheme.white),
                           ),
                           actions: [
                             OutlinedButton(
                               onPressed: () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.white60,
-                                side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+                                foregroundColor: AppTheme.white,
+                                side: BorderSide(color: AppTheme.white.withOpacity(0.3)),
                               ),
                               child: const Text('Cancelar'),
                             ),
@@ -9173,7 +9173,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         task.notes!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           height: 1.4,
                         ),
                       ),
@@ -9537,7 +9537,7 @@ class _WorkSectionsState extends State<WorkSections> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: task.completed ? AppTheme.white40 : AppTheme.white,
+                                color: task.completed ? AppTheme.white : AppTheme.white,
                                 decoration: task.completed ? TextDecoration.lineThrough : null,
                               ),
                             ),
@@ -9586,7 +9586,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       ),
                       // Botón de opciones (igual que Personal)
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 20),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 20),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -9603,14 +9603,14 @@ class _WorkSectionsState extends State<WorkSections> {
                                 ),
                                 content: Text(
                                   '¿Estás seguro de que quieres eliminar "${task.task}"?',
-                                  style: const TextStyle(color: AppTheme.white60),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     child: const Text(
                                       'Cancelar',
-                                      style: TextStyle(color: AppTheme.white60),
+                                      style: TextStyle(color: AppTheme.white),
                                     ),
                                   ),
                                   ElevatedButton(
@@ -9991,7 +9991,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                 project.aim,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: AppTheme.white70,
+                                  color: AppTheme.white,
                                   height: 1.4,
                                 ),
                                 maxLines: 2,
@@ -10003,7 +10003,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       ),
                       // Botón de opciones
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: AppTheme.white60, size: 22),
+                        icon: const Icon(Icons.more_vert, color: AppTheme.white, size: 22),
                         color: AppTheme.darkSurface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -10044,14 +10044,14 @@ class _WorkSectionsState extends State<WorkSections> {
                                 ),
                                 content: Text(
                                   '¿Estás seguro de eliminar "${project.title}"? Esta acción no se puede deshacer.',
-                                  style: const TextStyle(color: AppTheme.white70),
+                                  style: const TextStyle(color: AppTheme.white),
                                 ),
                                 actions: [
                                   OutlinedButton(
                                     onPressed: () => Navigator.pop(context, false),
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppTheme.white60,
-                                      side: BorderSide(color: AppTheme.white60.withOpacity(0.3)),
+                                      foregroundColor: AppTheme.white,
+                                      side: BorderSide(color: AppTheme.white.withOpacity(0.3)),
                                     ),
                                     child: const Text('Cancelar'),
                                   ),
@@ -10087,9 +10087,9 @@ class _WorkSectionsState extends State<WorkSections> {
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 18, color: AppTheme.white70),
+                                Icon(Icons.edit, size: 18, color: AppTheme.white),
                                 SizedBox(width: 8),
-                                Text('Editar', style: TextStyle(color: AppTheme.white70)),
+                                Text('Editar', style: TextStyle(color: AppTheme.white)),
                               ],
                             ),
                           ),
@@ -10154,7 +10154,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                       'Fecha límite',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: AppTheme.white60,
+                                        color: AppTheme.white,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -10204,7 +10204,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                     'Metas',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.white60,
+                                      color: AppTheme.white,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -10238,7 +10238,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                           'Progreso',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: AppTheme.white60,
+                                            color: AppTheme.white,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -10415,7 +10415,7 @@ class _WorkSectionsState extends State<WorkSections> {
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   color: goal.completed
-                                                      ? AppTheme.white60
+                                                      ? AppTheme.white
                                                       : AppTheme.white,
                                                   decoration: goal.completed
                                                       ? TextDecoration.lineThrough
@@ -10433,14 +10433,14 @@ class _WorkSectionsState extends State<WorkSections> {
                                                       Icon(
                                                         Icons.person_rounded,
                                                         size: 12,
-                                                        color: AppTheme.white60,
+                                                        color: AppTheme.white,
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
                                                         goal.person!,
                                                         style: TextStyle(
                                                           fontSize: 11,
-                                                          color: AppTheme.white60,
+                                                          color: AppTheme.white,
                                                         ),
                                                       ),
                                                     ],
@@ -10450,14 +10450,14 @@ class _WorkSectionsState extends State<WorkSections> {
                                                       Icon(
                                                         Icons.calendar_today_rounded,
                                                         size: 12,
-                                                        color: AppTheme.white60,
+                                                        color: AppTheme.white,
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
                                                         DateFormat('dd MMM yyyy', 'es').format(goal.date!),
                                                         style: TextStyle(
                                                           fontSize: 11,
-                                                          color: AppTheme.white60,
+                                                          color: AppTheme.white,
                                                         ),
                                                       ),
                                                     ],
@@ -10571,7 +10571,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isCompleted ? AppTheme.white60 : AppTheme.white,
+                  color: isCompleted ? AppTheme.white : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                   letterSpacing: 0.2,
                 ),
@@ -10730,7 +10730,7 @@ class _WorkSectionsState extends State<WorkSections> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isCompleted ? AppTheme.white60 : AppTheme.white,
+                  color: isCompleted ? AppTheme.white : AppTheme.white,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                   letterSpacing: 0.2,
                 ),
@@ -10908,7 +10908,7 @@ class _WorkSectionsState extends State<WorkSections> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isCompleted ? AppTheme.white60 : AppTheme.white,
+                      color: isCompleted ? AppTheme.white : AppTheme.white,
                       decoration: isCompleted ? TextDecoration.lineThrough : null,
                       letterSpacing: 0.3,
                     ),
@@ -11098,14 +11098,14 @@ class _WorkSectionsState extends State<WorkSections> {
                       Icon(
                         Icons.checklist_rounded,
                         size: 14,
-                        color: AppTheme.white60,
+                        color: AppTheme.white,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '$completedMilestones/$totalMilestones metas completadas',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -11233,7 +11233,7 @@ class _WorkSectionsState extends State<WorkSections> {
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: milestoneCompleted 
-                                ? AppTheme.white60 
+                                ? AppTheme.white 
                                 : AppTheme.white,
                             decoration: milestoneCompleted 
                                 ? TextDecoration.lineThrough 
@@ -11315,7 +11315,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       decoration: InputDecoration(
                         hintText: 'Agregar meta...',
                         hintStyle: TextStyle(
-                          color: AppTheme.white60,
+                          color: AppTheme.white,
                           fontSize: 14,
                         ),
                         border: InputBorder.none,
@@ -11461,7 +11461,7 @@ class _WorkSectionsState extends State<WorkSections> {
                         'Define y gestiona tus prioridades clave',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -11488,7 +11488,7 @@ class _WorkSectionsState extends State<WorkSections> {
                       style: const TextStyle(color: AppTheme.white),
                       decoration: InputDecoration(
                         hintText: 'Escribe una nueva prioridad...',
-                        hintStyle: const TextStyle(color: AppTheme.white60),
+                        hintStyle: const TextStyle(color: AppTheme.white),
                         filled: true,
                         fillColor: AppTheme.darkSurfaceVariant,
                         border: OutlineInputBorder(

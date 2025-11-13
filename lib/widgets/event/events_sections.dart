@@ -63,14 +63,14 @@ class _EventsSectionsState extends State<EventsSections> {
                     children: [
                       Icon(
                         section['icon'] as IconData,
-                        color: isActive ? AppTheme.white : AppTheme.white60,
+                        color: isActive ? AppTheme.white : AppTheme.white,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         section['name'] as String,
                         style: TextStyle(
-                          color: isActive ? AppTheme.white : AppTheme.white60,
+                          color: isActive ? AppTheme.white : AppTheme.white,
                           fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                         ),
                       ),
@@ -257,13 +257,13 @@ class _EventsSectionsState extends State<EventsSections> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.white40),
+          Icon(icon, size: 64, color: AppTheme.white),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
               fontSize: 16,
-              color: AppTheme.white60,
+              color: AppTheme.white,
             ),
           ),
         ],
@@ -303,7 +303,7 @@ class _EventsSectionsState extends State<EventsSections> {
                           'Cumple ${birthday.age} años',
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                     ],
@@ -328,19 +328,19 @@ class _EventsSectionsState extends State<EventsSections> {
               birthday.relationship,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppTheme.white60,
+                color: AppTheme.white,
               ),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                 const SizedBox(width: 8),
                 Text(
                   birthday.date,
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -353,7 +353,7 @@ class _EventsSectionsState extends State<EventsSections> {
                   leading: const Icon(Icons.phone, size: 16, color: Colors.green),
                   title: Text(
                     birthday.phone!,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.white),
                   ),
                 ),
               if (birthday.email != null)
@@ -362,7 +362,7 @@ class _EventsSectionsState extends State<EventsSections> {
                   leading: const Icon(Icons.email, size: 16, color: Colors.blue),
                   title: Text(
                     birthday.email!,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.white70),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.white),
                   ),
                 ),
               if (birthday.notes != null)
@@ -370,7 +370,7 @@ class _EventsSectionsState extends State<EventsSections> {
                   'Notas: ${birthday.notes}',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppTheme.white40,
+                    color: AppTheme.white,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -413,7 +413,7 @@ class _EventsSectionsState extends State<EventsSections> {
                           event.type!,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                     ],
@@ -436,13 +436,13 @@ class _EventsSectionsState extends State<EventsSections> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                 const SizedBox(width: 8),
                 Text(
                   '${event.date} ${event.time != null ? "• ${event.time}" : ""}',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -458,7 +458,7 @@ class _EventsSectionsState extends State<EventsSections> {
                       event.location!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ),
@@ -475,7 +475,7 @@ class _EventsSectionsState extends State<EventsSections> {
                     '${event.guests} invitados',
                     style: const TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -491,7 +491,7 @@ class _EventsSectionsState extends State<EventsSections> {
                     event.budget!,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -503,7 +503,7 @@ class _EventsSectionsState extends State<EventsSections> {
                 'Notas: ${event.notes}',
                 style: const TextStyle(
                   fontSize: 12,
-                  color: AppTheme.white40,
+                  color: AppTheme.white,
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -546,7 +546,7 @@ class _EventsSectionsState extends State<EventsSections> {
                           reminder.type!,
                           style: const TextStyle(
                             fontSize: 14,
-                            color: AppTheme.white60,
+                            color: AppTheme.white,
                           ),
                         ),
                     ],
@@ -569,13 +569,13 @@ class _EventsSectionsState extends State<EventsSections> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                 const SizedBox(width: 8),
                 Text(
                   '${reminder.date} ${reminder.time != null ? "• ${reminder.time}" : ""}',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -591,14 +591,14 @@ class _EventsSectionsState extends State<EventsSections> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.description, size: 16, color: AppTheme.white60),
+                    const Icon(Icons.description, size: 16, color: AppTheme.white),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         reminder.description!,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ),
@@ -643,7 +643,7 @@ class _EventsSectionsState extends State<EventsSections> {
                         invitation.guestName,
                         style: const TextStyle(
                           fontSize: 16,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                         ),
                       ),
                     ],
@@ -669,7 +669,7 @@ class _EventsSectionsState extends State<EventsSections> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                 const SizedBox(width: 8),
                 Text(
                   invitation.invitationDate != null
@@ -677,7 +677,7 @@ class _EventsSectionsState extends State<EventsSections> {
                       : 'Fecha no disponible',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                   ),
                 ),
               ],
@@ -693,7 +693,7 @@ class _EventsSectionsState extends State<EventsSections> {
                       invitation.email!,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                       ),
                     ),
                   ),
@@ -710,7 +710,7 @@ class _EventsSectionsState extends State<EventsSections> {
                     invitation.phone!,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: AppTheme.white70,
+                      color: AppTheme.white,
                     ),
                   ),
                 ],
@@ -733,14 +733,14 @@ class _EventsSectionsState extends State<EventsSections> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.message, size: 16, color: AppTheme.white60),
+                    const Icon(Icons.message, size: 16, color: AppTheme.white),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         invitation.message!,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontStyle: FontStyle.italic,
                         ),
                       ),

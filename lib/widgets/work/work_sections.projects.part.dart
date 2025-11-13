@@ -65,7 +65,7 @@ part of 'work_sections.dart';
                             'Gestiona y organiza tus proyectos',
                             style: TextStyle(
                               fontSize: 14,
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                             ),
                           ),
                         ],
@@ -440,12 +440,12 @@ part of 'work_sections.dart';
                                 decoration: InputDecoration(
                                   labelText: 'Nombre del Proyecto',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Ej: Desarrollo Web App',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.title,
@@ -493,12 +493,12 @@ part of 'work_sections.dart';
                                 decoration: InputDecoration(
                                   labelText: 'Descripción del Proyecto',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Describe brevemente el objetivo del proyecto...',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Padding(
                                     padding: const EdgeInsets.only(bottom: 60),
@@ -602,7 +602,7 @@ part of 'work_sections.dart';
                                               'Fecha Límite',
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: AppTheme.white60,
+                                                color: AppTheme.white,
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
@@ -615,7 +615,7 @@ part of 'work_sections.dart';
                                                 fontSize: 14,
                                                 color: _selectedProjectDeadline != null
                                                     ? AppTheme.white
-                                                    : AppTheme.white60,
+                                                    : AppTheme.white,
                                                 fontWeight: _selectedProjectDeadline != null
                                                     ? FontWeight.w600
                                                     : FontWeight.normal,
@@ -719,12 +719,12 @@ part of 'work_sections.dart';
                                 decoration: InputDecoration(
                                   labelText: 'Descripción de la Meta',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Ej: Completar diseño de interfaz',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.flag,
@@ -771,12 +771,12 @@ part of 'work_sections.dart';
                                 decoration: InputDecoration(
                                   labelText: 'Responsable',
                                   labelStyle: TextStyle(
-                                    color: AppTheme.white60,
+                                    color: AppTheme.white,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   hintText: 'Nombre',
                                   hintStyle: TextStyle(
-                                    color: AppTheme.white40,
+                                    color: AppTheme.white,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.person,
@@ -857,7 +857,7 @@ part of 'work_sections.dart';
                                         Icons.calendar_today,
                                         color: _tempGoalDate != null
                                             ? context.pro.teal
-                                            : AppTheme.white60,
+                                            : AppTheme.white,
                                         size: 18,
                                       ),
                                       const SizedBox(width: 8),
@@ -870,7 +870,7 @@ part of 'work_sections.dart';
                                             fontSize: 14,
                                             color: _tempGoalDate != null
                                                 ? AppTheme.white
-                                                : AppTheme.white60,
+                                                : AppTheme.white,
                                             fontWeight: _tempGoalDate != null
                                                 ? FontWeight.w600
                                                 : FontWeight.normal,
@@ -975,12 +975,12 @@ part of 'work_sections.dart';
                                                         children: [
                                                           Row(
                                                             children: [
-                                                              const Icon(Icons.calendar_today, size: 16, color: AppTheme.white60),
+                                                              const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
                                                               const SizedBox(width: 8),
                                                               const Text(
                                                                 'Fecha de la meta:',
                                                                 style: TextStyle(
-                                                                  color: AppTheme.white60,
+                                                                  color: AppTheme.white,
                                                                   fontSize: 12,
                                                                 ),
                                                               ),
@@ -998,12 +998,12 @@ part of 'work_sections.dart';
                                                           const SizedBox(height: 12),
                                                           Row(
                                                             children: [
-                                                              const Icon(Icons.event_busy, size: 16, color: AppTheme.white60),
+                                                              const Icon(Icons.event_busy, size: 16, color: AppTheme.white),
                                                               const SizedBox(width: 8),
                                                               const Text(
                                                                 'Fecha límite del proyecto:',
                                                                 style: TextStyle(
-                                                                  color: AppTheme.white60,
+                                                                  color: AppTheme.white,
                                                                   fontSize: 12,
                                                                 ),
                                                               ),
@@ -1564,9 +1564,9 @@ part of 'work_sections.dart';
                               });
                             },
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.white60,
+                              foregroundColor: AppTheme.white,
                               side: BorderSide(
-                                color: AppTheme.white60.withOpacity(0.3),
+                                color: AppTheme.white.withOpacity(0.3),
                                 width: 1.5,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1843,7 +1843,7 @@ part of 'work_sections.dart';
               child: Icon(
                 icon,
                 size: 14,
-                color: isActive ? AppTheme.white : AppTheme.white60,
+                color: isActive ? AppTheme.white : AppTheme.white,
               ),
             ),
             const SizedBox(width: 4),
@@ -1853,7 +1853,7 @@ part of 'work_sections.dart';
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                  color: isActive ? AppTheme.white : AppTheme.white60,
+                  color: isActive ? AppTheme.white : AppTheme.white,
                   letterSpacing: 0.2,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -1953,7 +1953,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Nombre',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -1986,7 +1986,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Rol/Puesto',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -2137,7 +2137,7 @@ part of 'work_sections.dart';
                 Text(
                   teammate.role,
                   style: TextStyle(
-                    color: AppTheme.white70,
+                    color: AppTheme.white,
                     fontSize: 13,
                   ),
                 ),
@@ -2201,7 +2201,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Nombre del logro',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -2271,7 +2271,7 @@ part of 'work_sections.dart';
                       style: TextStyle(
                         color: _tempAchievementDueDate != null
                             ? AppTheme.white
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontSize: 13,
                         fontWeight: _tempAchievementDueDate != null
                             ? FontWeight.w600
@@ -2407,12 +2407,12 @@ part of 'work_sections.dart';
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.white60),
+                      Icon(Icons.calendar_today_rounded, size: 14, color: AppTheme.white),
                       const SizedBox(width: 6),
                       Text(
                         DateFormat('dd MMM yyyy', 'es').format(achievement.date!),
                         style: TextStyle(
-                          color: AppTheme.white70,
+                          color: AppTheme.white,
                           fontSize: 13,
                         ),
                       ),
@@ -2479,7 +2479,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Posición',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -2512,7 +2512,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Asignación',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -2545,7 +2545,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Estado',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -2612,7 +2612,7 @@ part of 'work_sections.dart';
                       style: TextStyle(
                         color: _tempWorkStartDate != null
                             ? AppTheme.white
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontSize: 13,
                         fontWeight: _tempWorkStartDate != null
                             ? FontWeight.w600
@@ -2664,7 +2664,7 @@ part of 'work_sections.dart';
                       style: TextStyle(
                         color: _tempWorkDeadline != null
                             ? AppTheme.white
-                            : AppTheme.white60,
+                            : AppTheme.white,
                         fontSize: 13,
                         fontWeight: _tempWorkDeadline != null
                             ? FontWeight.w600
@@ -2683,7 +2683,7 @@ part of 'work_sections.dart';
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Notas (opcional)',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -2848,7 +2848,7 @@ part of 'work_sections.dart';
                     Text(
                       work.appoint,
                       style: TextStyle(
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontSize: 13,
                       ),
                     ),
@@ -2996,13 +2996,13 @@ part of 'work_sections.dart';
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.note_rounded, size: 14, color: AppTheme.white60),
+                  Icon(Icons.note_rounded, size: 14, color: AppTheme.white),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       work.notes!,
                       style: const TextStyle(
-                        color: AppTheme.white70,
+                        color: AppTheme.white,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -3068,7 +3068,7 @@ part of 'work_sections.dart';
                 ),
               ),
               hintText: 'Elemento',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -3101,7 +3101,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Fondo a financiar',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -3134,7 +3134,7 @@ part of 'work_sections.dart';
             style: const TextStyle(color: AppTheme.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Por quién',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -3168,7 +3168,7 @@ part of 'work_sections.dart';
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Notas (opcional)',
-              hintStyle: const TextStyle(color: AppTheme.white60, fontSize: 13),
+              hintStyle: const TextStyle(color: AppTheme.white, fontSize: 13),
               filled: true,
               fillColor: AppTheme.darkBackground.withOpacity(0.5),
               border: OutlineInputBorder(
@@ -3332,12 +3332,12 @@ part of 'work_sections.dart';
                       if (funding.fondo != null) ...[
                         Row(
                           children: [
-                            Icon(Icons.account_balance_wallet_rounded, size: 14, color: AppTheme.white60),
+                            Icon(Icons.account_balance_wallet_rounded, size: 14, color: AppTheme.white),
                             const SizedBox(width: 6),
                             Text(
                               'Fondo: ${funding.fondo}',
                               style: TextStyle(
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                                 fontSize: 13,
                               ),
                             ),
@@ -3349,12 +3349,12 @@ part of 'work_sections.dart';
                       if (funding.financiadoPor != null) ...[
                         Row(
                           children: [
-                            Icon(Icons.person_rounded, size: 14, color: AppTheme.white60),
+                            Icon(Icons.person_rounded, size: 14, color: AppTheme.white),
                             const SizedBox(width: 6),
                             Text(
                               'Por: ${funding.financiadoPor}',
                               style: TextStyle(
-                                color: AppTheme.white70,
+                                color: AppTheme.white,
                                 fontSize: 13,
                               ),
                             ),
@@ -3445,13 +3445,13 @@ part of 'work_sections.dart';
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.note_rounded, size: 14, color: AppTheme.white60),
+                        Icon(Icons.note_rounded, size: 14, color: AppTheme.white),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             funding.notes!,
                             style: const TextStyle(
-                              color: AppTheme.white70,
+                              color: AppTheme.white,
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
                             ),
