@@ -5,6 +5,7 @@ class Expense {
   final String category;
   final String amount;
   final String paymentMethod;
+  final bool isPinned;
 
   Expense({
     required this.id,
@@ -13,6 +14,7 @@ class Expense {
     required this.category,
     required this.amount,
     required this.paymentMethod,
+    this.isPinned = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -23,6 +25,7 @@ class Expense {
       'category': category,
       'amount': amount,
       'paymentMethod': paymentMethod,
+      'isPinned': isPinned,
     };
   }
 
@@ -34,6 +37,7 @@ class Expense {
       category: json['category'] ?? '',
       amount: json['amount'] ?? '',
       paymentMethod: json['paymentMethod'] ?? '',
+      isPinned: json['isPinned'] ?? false,
     );
   }
 }

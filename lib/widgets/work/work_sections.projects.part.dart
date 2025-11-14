@@ -23,30 +23,26 @@ part of 'work_sections.dart';
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      context.pro.primary,
-                      context.pro.secondary,
-                      context.pro.accent,
+                      Colors.blue.withOpacity(0.2),
+                      AppTheme.darkSurface,
+                      AppTheme.darkSurfaceVariant,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.pro.secondary.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(24),
+                        color: Colors.blue.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.folder_special, color: AppTheme.white, size: 24),
+                      child: const Icon(
+                        Icons.folder_special,
+                        size: 32,
+                        color: AppTheme.white,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -56,11 +52,12 @@ part of 'work_sections.dart';
                           const Text(
                             'Proyectos',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.white,
                             ),
                           ),
+                          const SizedBox(height: 4),
                           const Text(
                             'Gestiona y organiza tus proyectos',
                             style: TextStyle(

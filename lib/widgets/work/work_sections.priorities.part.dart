@@ -12,30 +12,26 @@ part of 'work_sections.dart';
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                context.pro.primary,
-                context.pro.secondary,
-                context.pro.accent,
+                Colors.blue.withOpacity(0.2),
+                AppTheme.darkSurface,
+                AppTheme.darkSurfaceVariant,
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: context.pro.secondary.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(24),
+                  color: Colors.blue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.dashboard, color: AppTheme.white, size: 24),
+                child: const Icon(
+                  Icons.dashboard,
+                  size: 32,
+                  color: AppTheme.white,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -45,11 +41,12 @@ part of 'work_sections.dart';
                     const Text(
                       'Gestión de prioridades',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.white,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     const Text(
                       'Gestiona tus prioridades, áreas de enfoque y objetivos',
                       style: TextStyle(
@@ -586,30 +583,26 @@ part of 'work_sections.dart';
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  context.pro.primary,
-                  context.pro.secondary,
-                  context.pro.accent,
+                  Colors.blue.withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: context.pro.secondary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
+                    color: Colors.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.center_focus_strong, color: AppTheme.white, size: 24),
+                  child: const Icon(
+                    Icons.center_focus_strong,
+                    size: 32,
+                    color: AppTheme.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -619,11 +612,12 @@ part of 'work_sections.dart';
                       const Text(
                         'Enfoque',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.white,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       const Text(
                         'Define tus áreas de enfoque y concentración',
                         style: TextStyle(
@@ -755,30 +749,26 @@ part of 'work_sections.dart';
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  context.pro.primary,
-                  context.pro.secondary,
-                  context.pro.accent,
+                  Colors.blue.withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: context.pro.secondary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
+                    color: Colors.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.flag, color: AppTheme.white, size: 24),
+                  child: const Icon(
+                    Icons.flag,
+                    size: 32,
+                    color: AppTheme.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -788,11 +778,12 @@ part of 'work_sections.dart';
                       const Text(
                         'Objetivos',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.white,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       const Text(
                         'Define y gestiona tus objetivos de trabajo',
                         style: TextStyle(
@@ -3765,30 +3756,26 @@ part of 'work_sections.dart';
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  context.pro.primary,
-                  context.pro.secondary,
-                  context.pro.accent,
+                  Colors.blue.withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: context.pro.secondary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
+                    color: Colors.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.priority_high, color: AppTheme.white, size: 24),
+                  child: const Icon(
+                    Icons.priority_high,
+                    size: 32,
+                    color: AppTheme.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -3798,11 +3785,12 @@ part of 'work_sections.dart';
                       const Text(
                         'Prioridades',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.white,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       const Text(
                         'Define y gestiona tus prioridades clave',
                         style: TextStyle(

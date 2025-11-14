@@ -11,9 +11,11 @@ import '../../services/task_service.dart';
 import '../../services/settings_service.dart';
 import '../../services/class_schedule_service.dart';
 import '../../services/health_service.dart';
+import '../../services/document_service.dart';
 import '../../models/exercise/gym_routine.dart';
 import '../../models/school/class_schedule.dart';
 import '../../models/school/academic_task.dart';
+import '../../models/personal/document_card.dart';
 import '../calendar/calendar_view.dart';
 import '../event/events_sections.dart';
 import '../common/navigation_header.dart';
@@ -41,12 +43,17 @@ class _PersonalSectionsState extends State<PersonalSections> {
   final SettingsService _settingsService = SettingsService();
   final ClassScheduleService _classScheduleService = ClassScheduleService();
   final HealthService _healthService = HealthService();
+  final DocumentService _documentService = DocumentService();
   bool _isLoadingEvents = false;
   bool _isLoadingTasks = false;
   
   // Datos de rutinas y entrenamientos para el calendario
   List<GymRoutine> _gymRoutines = [];
   List<Map<String, dynamic>> _workouts = [];
+  
+  // Datos de documentos y tarjetas
+  List<DocumentCard> _documents = [];
+  bool _isLoadingDocuments = false;
   
   // Configuraciones de usuario
   Map<String, dynamic>? _userSettings;
@@ -80,6 +87,7 @@ class _PersonalSectionsState extends State<PersonalSections> {
     _loadSettings();
     _syncClassesToEvents(); // Sincronizar clases existentes como eventos
     _loadGymRoutinesAndWorkouts(); // Cargar rutinas y entrenamientos para el calendario
+    _loadDocuments(); // Cargar documentos y tarjetas
   }
 
   @override
@@ -299,6 +307,25 @@ class _PersonalSectionsState extends State<PersonalSections> {
       });
     } catch (e) {
       print('Error cargando rutinas y entrenamientos: $e');
+    }
+  }
+
+  // Cargar documentos y tarjetas
+  Future<void> _loadDocuments() async {
+    setState(() {
+      _isLoadingDocuments = true;
+    });
+    try {
+      final documents = await _documentService.getDocuments();
+      setState(() {
+        _documents = documents;
+        _isLoadingDocuments = false;
+      });
+    } catch (e) {
+      print('Error cargando documentos: $e');
+      setState(() {
+        _isLoadingDocuments = false;
+      });
     }
   }
 
@@ -2740,6 +2767,17 @@ class _PersonalSectionsState extends State<PersonalSections> {
           ),
           const SizedBox(height: 12),
           _buildProfileOption(
+            icon: Icons.credit_card,
+            title: 'Tarjetas y Documentos',
+            subtitle: 'Gestiona tus documentos de identidad',
+            color: Colors.orange,
+            gradientColors: [Colors.orange, Colors.deepOrange],
+            onTap: () {
+              _showDocumentsDialog(context);
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildProfileOption(
             icon: Icons.info_outline,
             title: 'Información de la App',
             subtitle: 'Versión y detalles de la aplicación',
@@ -3248,6 +3286,609 @@ class _PersonalSectionsState extends State<PersonalSections> {
         );
       },
     );
+  }
+
+  void _showDocumentsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: AppTheme.darkSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                constraints: const BoxConstraints(maxHeight: 600),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Tarjetas y Documentos',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppTheme.white),
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Botón para agregar nuevo documento
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddDocumentDialog(context, setDialogState),
+                      icon: const Icon(Icons.add, color: AppTheme.white),
+                      label: const Text(
+                        'Agregar Documento',
+                        style: TextStyle(color: AppTheme.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Lista de documentos
+                    Expanded(
+                      child: _isLoadingDocuments
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                              ),
+                            )
+                          : _documents.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.credit_card_outlined,
+                                        size: 64,
+                                        color: AppTheme.white.withOpacity(0.5),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No hay documentos guardados',
+                                        style: TextStyle(
+                                          color: AppTheme.white.withOpacity(0.7),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _documents.length,
+                                  itemBuilder: (context, index) {
+                                    final doc = _documents[index];
+                                    return _buildDocumentCard(doc, setDialogState);
+                                  },
+                                ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDocumentCard(DocumentCard doc, StateSetter setDialogState) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orange.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(doc.typeIcon, color: Colors.orange, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doc.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      doc.typeLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.white.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.orange, size: 20),
+                onPressed: () => _showAddDocumentDialog(context, setDialogState, doc: doc),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                onPressed: () => _deleteDocument(doc.id, setDialogState),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Número:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.white.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      doc.number,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (doc.issuer != null)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Emisor:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.white.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        doc.issuer!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          if (doc.expiryDate != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Vence: ${DateFormat('dd/MM/yyyy').format(doc.expiryDate!)}',
+              style: TextStyle(
+                fontSize: 12,
+                color: doc.expiryDate!.isBefore(DateTime.now().add(const Duration(days: 30)))
+                    ? Colors.red
+                    : Colors.orange,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showAddDocumentDialog(BuildContext context, StateSetter setDialogState, {DocumentCard? doc}) {
+    final nameController = TextEditingController(text: doc?.name ?? '');
+    final numberController = TextEditingController(text: doc?.number ?? '');
+    final issuerController = TextEditingController(text: doc?.issuer ?? '');
+    final notesController = TextEditingController(text: doc?.notes ?? '');
+    String selectedType = doc?.type ?? 'id';
+    DateTime? issueDate = doc?.issueDate;
+    DateTime? expiryDate = doc?.expiryDate;
+    bool isSaving = false;
+    String? errorMessage;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext addDialogContext) {
+        return StatefulBuilder(
+          builder: (context, setAddDialogState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.darkSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Text(
+                doc == null ? 'Agregar Documento' : 'Editar Documento',
+                style: const TextStyle(color: AppTheme.white),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (errorMessage != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                    const Text(
+                      'Tipo de Documento',
+                      style: TextStyle(color: AppTheme.white, fontSize: 14),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: AppTheme.darkSurfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      dropdownColor: AppTheme.darkSurfaceVariant,
+                      style: const TextStyle(color: AppTheme.white),
+                      items: [
+                        DropdownMenuItem(value: 'id', child: const Text('Identificación', style: TextStyle(color: AppTheme.white))),
+                        DropdownMenuItem(value: 'passport', child: const Text('Pasaporte', style: TextStyle(color: AppTheme.white))),
+                        DropdownMenuItem(value: 'license', child: const Text('Licencia de Conducir', style: TextStyle(color: AppTheme.white))),
+                        DropdownMenuItem(value: 'insurance', child: const Text('Seguro', style: TextStyle(color: AppTheme.white))),
+                        DropdownMenuItem(value: 'other', child: const Text('Otro', style: TextStyle(color: AppTheme.white))),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setAddDialogState(() {
+                            selectedType = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre del Documento',
+                        labelStyle: const TextStyle(color: AppTheme.white),
+                        filled: true,
+                        fillColor: AppTheme.darkSurfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: numberController,
+                      decoration: InputDecoration(
+                        labelText: 'Número',
+                        labelStyle: const TextStyle(color: AppTheme.white),
+                        filled: true,
+                        fillColor: AppTheme.darkSurfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: issuerController,
+                      decoration: InputDecoration(
+                        labelText: 'Emisor (opcional)',
+                        labelStyle: const TextStyle(color: AppTheme.white),
+                        filled: true,
+                        fillColor: AppTheme.darkSurfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: issueDate ?? DateTime.now(),
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark(),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (date != null) {
+                                setAddDialogState(() {
+                                  issueDate = date;
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkSurfaceVariant,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Fecha de Emisión',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.white.withOpacity(0.7),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    issueDate != null
+                                        ? DateFormat('dd/MM/yyyy').format(issueDate!)
+                                        : 'Seleccionar',
+                                    style: const TextStyle(color: AppTheme.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: expiryDate ?? DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: ThemeData.dark(),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (date != null) {
+                                setAddDialogState(() {
+                                  expiryDate = date;
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.darkSurfaceVariant,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Fecha de Vencimiento',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.white.withOpacity(0.7),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    expiryDate != null
+                                        ? DateFormat('dd/MM/yyyy').format(expiryDate!)
+                                        : 'Seleccionar',
+                                    style: const TextStyle(color: AppTheme.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: notesController,
+                      decoration: InputDecoration(
+                        labelText: 'Notas (opcional)',
+                        labelStyle: const TextStyle(color: AppTheme.white),
+                        filled: true,
+                        fillColor: AppTheme.darkSurfaceVariant,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: const TextStyle(color: AppTheme.white),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.of(addDialogContext).pop(),
+                  child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          if (nameController.text.isEmpty || numberController.text.isEmpty) {
+                            setAddDialogState(() {
+                              errorMessage = 'Por favor completa todos los campos requeridos';
+                            });
+                            return;
+                          }
+
+                          setAddDialogState(() {
+                            isSaving = true;
+                            errorMessage = null;
+                          });
+
+                          final document = DocumentCard(
+                            id: doc?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                            type: selectedType,
+                            name: nameController.text,
+                            number: numberController.text,
+                            issuer: issuerController.text.isEmpty ? null : issuerController.text,
+                            issueDate: issueDate,
+                            expiryDate: expiryDate,
+                            notes: notesController.text.isEmpty ? null : notesController.text,
+                          );
+
+                          final result = await _documentService.saveDocument(document);
+
+                          if (!addDialogContext.mounted) return;
+
+                          if (result['success'] == true) {
+                            Navigator.of(addDialogContext).pop();
+                            await _loadDocuments();
+                            setDialogState(() {});
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(doc == null
+                                      ? 'Documento agregado exitosamente'
+                                      : 'Documento actualizado exitosamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } else {
+                            setAddDialogState(() {
+                              errorMessage = result['error'] ?? 'Error al guardar el documento';
+                              isSaving = false;
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: AppTheme.white,
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                          ),
+                        )
+                      : Text(doc == null ? 'Guardar' : 'Actualizar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteDocument(String documentId, StateSetter setDialogState) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface,
+        title: const Text('Eliminar Documento', style: TextStyle(color: AppTheme.white)),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar este documento?',
+          style: TextStyle(color: AppTheme.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final result = await _documentService.deleteDocument(documentId);
+      if (result['success'] == true) {
+        await _loadDocuments();
+        setDialogState(() {});
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Documento eliminado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['error'] ?? 'Error al eliminar el documento'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   void _showAppInfoDialog(BuildContext context) {

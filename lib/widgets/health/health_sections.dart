@@ -690,25 +690,28 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.restaurant,
-                    size: 24,
+                    size: 32,
                     color: AppTheme.white,
                   ),
                 ),
@@ -735,15 +738,6 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.calendar_today, size: 16, color: Colors.green),
                 ),
               ],
             ),
@@ -1526,25 +1520,28 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.shopping_cart,
-                    size: 24,
+                    size: 32,
                     color: AppTheme.white,
                   ),
                 ),
@@ -2854,25 +2851,28 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.menu_book,
-                    size: 24,
+                    size: 32,
                     color: AppTheme.white,
                   ),
                 ),
@@ -2899,15 +2899,6 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.local_fire_department, size: 16, color: Colors.green),
                 ),
               ],
             ),
@@ -4889,25 +4880,28 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.fitness_center,
-                    size: 24,
+                    size: 32,
                     color: AppTheme.white,
                   ),
                 ),
@@ -4934,15 +4928,6 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.fitness_center, size: 16, color: Colors.green),
                 ),
               ],
             ),
@@ -5597,23 +5582,30 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.track_changes, size: 24, color: Colors.green),
+                  child: const Icon(
+                    Icons.track_changes,
+                    size: 32,
+                    color: AppTheme.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -5638,15 +5630,6 @@ class _HealthSectionsState extends State<HealthSections> {
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.fitness_center, size: 16, color: Colors.green),
                 ),
               ],
             ),
@@ -6597,23 +6580,30 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.health_and_safety, size: 24, color: Colors.green),
+                  child: const Icon(
+                    Icons.health_and_safety,
+                    size: 32,
+                    color: AppTheme.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -7587,23 +7577,30 @@ class _HealthSectionsState extends State<HealthSections> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface,
-              border: Border.all(
-                color: AppTheme.darkSurfaceVariant,
-                width: 1,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2E7D32).withOpacity(0.2),
+                  AppTheme.darkSurface,
+                  AppTheme.darkSurfaceVariant,
+                ],
               ),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFF2E7D32).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.local_dining, size: 24, color: Colors.green),
+                  child: const Icon(
+                    Icons.local_dining,
+                    size: 32,
+                    color: AppTheme.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

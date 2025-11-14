@@ -38,6 +38,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
   late AnimationController _formAnimationController;
   late AnimationController _buttonAnimationController;
   late AnimationController _checkboxAnimationController;
+  late AnimationController _holographicController;
 
   // Animations
   late Animation<double> _logoScaleAnimation;
@@ -123,6 +124,12 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
       curve: Curves.elasticOut,
     ));
 
+    // Holographic Animation
+    _holographicController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+
     // Start animations
     _logoAnimationController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -142,6 +149,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
     _formAnimationController.dispose();
     _buttonAnimationController.dispose();
     _checkboxAnimationController.dispose();
+    _holographicController.dispose();
     super.dispose();
   }
 
@@ -283,13 +291,10 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                         },
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Cortex',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
+                      _HolographicText(
+                        text: 'Cortex',
+                        fontSize: 32,
+                        animation: _holographicController,
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -977,6 +982,118 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
           ),
         ),
       ),
+    );
+  }
+}
+
+// Widget con efecto holográfico para el texto
+class _HolographicText extends StatelessWidget {
+  final String text;
+  final double fontSize;
+  final Animation<double> animation;
+
+  const _HolographicText({
+    required this.text,
+    required this.fontSize,
+    required this.animation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return ShaderMask(
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.lerp(
+                  const Color(0xFF00E5FF),
+                  const Color(0xFF7B1FA2),
+                  animation.value,
+                )!,
+                Color.lerp(
+                  const Color(0xFF7B1FA2),
+                  const Color(0xFFFF00E5),
+                  animation.value,
+                )!,
+                Color.lerp(
+                  const Color(0xFFFF00E5),
+                  const Color(0xFF00E5FF),
+                  animation.value,
+                )!,
+              ],
+              stops: [
+                0.0,
+                0.5 + (animation.value * 0.3),
+                1.0,
+              ],
+            ).createShader(bounds);
+          },
+          child: Stack(
+            children: [
+              // Texto principal con sombra
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      color: Color.lerp(
+                        const Color(0xFF00E5FF).withOpacity(0.8),
+                        const Color(0xFFFF00E5).withOpacity(0.8),
+                        animation.value,
+                      )!,
+                      blurRadius: 20,
+                      offset: const Offset(0, 0),
+                    ),
+                    Shadow(
+                      color: Color.lerp(
+                        const Color(0xFF7B1FA2).withOpacity(0.6),
+                        const Color(0xFF00E5FF).withOpacity(0.6),
+                        animation.value,
+                      )!,
+                      blurRadius: 30,
+                      offset: const Offset(0, 0),
+                    ),
+                  ],
+                ),
+              ),
+              // Efecto de brillo animado
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment(
+                        -1.0 + (animation.value * 2.0),
+                        -0.5,
+                      ),
+                      end: Alignment(
+                        1.0 - (animation.value * 2.0),
+                        1.5,
+                      ),
+                      colors: [
+                        Colors.transparent,
+                        Colors.white.withOpacity(0.3 * (0.5 + (animation.value * 0.5))),
+                        Colors.transparent,
+                      ],
+                      stops: [
+                        0.0,
+                        0.5,
+                        1.0,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

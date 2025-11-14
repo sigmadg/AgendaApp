@@ -69,6 +69,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
   final TextEditingController _expensePaymentMethodController = TextEditingController();
   DateTime? _expenseDate;
   Expense? _editingExpense;
+  bool _expenseIsPinned = false;
+  String? _selectedExpenseCategory;
 
   final sections = [
     {'id': 'budget-tracker', 'name': 'Presupuesto', 'icon': Icons.account_balance_wallet},
@@ -153,7 +155,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               onPressed: () {
                 _showAddExpenseDialog();
               },
-              backgroundColor: const Color(0xFF4A7C59),
+              backgroundColor: const Color(0xFFF57F17),
               icon: const Icon(Icons.add, color: AppTheme.white),
               label: const Text(
                 'Agregar Gasto',
@@ -183,7 +185,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.orangeAccent.withOpacity(0.3),
+                  const Color(0xFFF57F17).withOpacity(0.3),
                   AppTheme.darkBackground,
                 ],
               ),
@@ -196,7 +198,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: AppTheme.orangeAccent,
+                    color: const Color(0xFFF57F17),
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: const Icon(
@@ -229,7 +231,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             context,
             icon: Icons.person_outline,
             title: 'Personal',
-            color: AppTheme.orangeAccent,
+                            color: const Color(0xFFF57F17),
             onTap: () {
               Navigator.pop(context);
               context.go('/main?section=profile');
@@ -269,7 +271,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             context,
             icon: Icons.account_balance_wallet_outlined,
             title: 'Finanzas',
-            color: Colors.amber,
+            color: const Color(0xFFF57F17),
             isActive: true,
             onTap: () {
               Navigator.pop(context);
@@ -415,12 +417,12 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   height: 42,
                   decoration: BoxDecoration(
                     color: isActive 
-                        ? AppTheme.orangeAccent.withOpacity(0.2)
+                        ? const Color(0xFFF57F17).withOpacity(0.2)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isActive 
-                          ? AppTheme.orangeAccent 
+                          ? const Color(0xFFF57F17) 
                           : AppTheme.darkSurfaceVariant,
                       width: isActive ? 2 : 1,
                     ),
@@ -486,35 +488,32 @@ class _FinanceSectionsState extends State<FinanceSections> {
   Widget _buildImprovedHeader(String title, String subtitle, IconData icon, Color color) {
     return Container(
       margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color,
-            color.withOpacity(0.7),
+            const Color(0xFFF57F17).withOpacity(0.2),
+            AppTheme.darkSurface,
+            AppTheme.darkSurfaceVariant,
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(24),
       ),
-      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(24),
+              color: const Color(0xFFF57F17).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(
+              icon,
+              size: 32,
+              color: AppTheme.white,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -524,37 +523,108 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppTheme.white,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: AppTheme.white,
                   ),
                 ),
               ],
             ),
-          ),
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.trending_up, color: Colors.white, size: 16),
           ),
         ],
       ),
     );
   }
 
+  // Función para actualizar el gasto de cada categoría basándose en los gastos registrados
+  void _updateCategorySpent() {
+    // Calcular gastos por categoría
+    final expensesByCategory = <String, double>{};
+    for (var expense in _expenses) {
+      final categoryName = expense.category.trim();
+      if (categoryName.isNotEmpty) {
+        final amount = double.tryParse(expense.amount) ?? 0.0;
+        expensesByCategory[categoryName] = (expensesByCategory[categoryName] ?? 0.0) + amount;
+      }
+    }
+    
+    // Actualizar el campo "spent" de cada categoría
+    setState(() {
+      _categories = _categories.map((category) {
+        // Buscar coincidencias exactas o parciales
+        double totalSpent = 0.0;
+        final categoryNameLower = category.name.toLowerCase().trim();
+        
+        // Primero buscar coincidencia exacta
+        if (expensesByCategory.containsKey(category.name)) {
+          totalSpent = expensesByCategory[category.name]!;
+        } else {
+          // Buscar coincidencias parciales (case-insensitive)
+          for (var entry in expensesByCategory.entries) {
+            final expenseCategoryLower = entry.key.toLowerCase().trim();
+            
+            // Coincidencias comunes
+            bool matches = false;
+            
+            // Alimentación/Comida
+            if ((categoryNameLower == 'alimentación' || categoryNameLower == 'comida') &&
+                (expenseCategoryLower == 'comida' || expenseCategoryLower == 'alimentación' || 
+                 expenseCategoryLower.contains('alimento') || expenseCategoryLower.contains('comida'))) {
+              matches = true;
+            }
+            // Transporte
+            else if (categoryNameLower.contains('transporte') && expenseCategoryLower.contains('transporte')) {
+              matches = true;
+            }
+            // Entretenimiento
+            else if (categoryNameLower.contains('entretenimiento') && expenseCategoryLower.contains('entretenimiento')) {
+              matches = true;
+            }
+            // Servicios
+            else if (categoryNameLower.contains('servicio') && expenseCategoryLower.contains('servicio')) {
+              matches = true;
+            }
+            // Salud
+            else if (categoryNameLower.contains('salud') && expenseCategoryLower.contains('salud')) {
+              matches = true;
+            }
+            // Coincidencia exacta (case-insensitive)
+            else if (categoryNameLower == expenseCategoryLower) {
+              matches = true;
+            }
+            
+            if (matches) {
+              totalSpent += entry.value;
+            }
+          }
+        }
+        
+        final budget = double.tryParse(category.budget) ?? 0.0;
+        final remaining = budget - totalSpent;
+        
+        return BudgetCategory(
+          id: category.id,
+          name: category.name,
+          budget: category.budget,
+          spent: totalSpent.toStringAsFixed(2),
+          remaining: remaining.toStringAsFixed(2),
+        );
+      }).toList();
+    });
+  }
+
   Widget _buildBudgetTracker() {
+    // Actualizar gastos de categorías antes de mostrar
+    _updateCategorySpent();
+    
     // Calcular totales
     final totalBudget = _categories.fold<double>(
       0.0,
@@ -574,7 +644,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             'Presupuesto',
             'Controla tus gastos mensuales',
             Icons.account_balance_wallet,
-            const Color(0xFF4A7C59),
+            const Color(0xFFF57F17),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -599,12 +669,12 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.orangeAccent.withOpacity(0.2),
+                            color: const Color(0xFFF57F17).withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
                             Icons.calendar_today,
-                            color: AppTheme.orangeAccent,
+                            color: const Color(0xFFF57F17),
                             size: 24,
                           ),
                         ),
@@ -641,7 +711,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       decoration: InputDecoration(
                         prefixText: '\$ ',
                         prefixStyle: const TextStyle(
-                          color: AppTheme.orangeAccent,
+                          color: const Color(0xFFF57F17),
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
@@ -666,7 +736,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(
-                            color: AppTheme.orangeAccent,
+                            color: const Color(0xFFF57F17),
                             width: 2,
                           ),
                         ),
@@ -883,7 +953,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Agregar'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C59),
+                      backgroundColor: const Color(0xFFF57F17),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -1030,13 +1100,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: AppTheme.orangeAccent.withOpacity(0.2),
+                        color: const Color(0xFFF57F17).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         Icons.folder,
                         size: 18,
-                        color: AppTheme.orangeAccent,
+                        color: const Color(0xFFF57F17),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1331,7 +1401,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFF4A7C59),
+                color: Color(0xFFF57F17),
                 width: 2,
               ),
             ),
@@ -1366,7 +1436,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4A7C59),
+              backgroundColor: const Color(0xFFF57F17),
             ),
             child: const Text('Agregar'),
           ),
@@ -1414,7 +1484,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFF4A7C59),
+                color: Color(0xFFF57F17),
                 width: 2,
               ),
             ),
@@ -1451,7 +1521,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4A7C59),
+              backgroundColor: const Color(0xFFF57F17),
             ),
             child: const Text('Guardar'),
           ),
@@ -1526,7 +1596,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             'Seguimiento de Gastos',
             'Registra y analiza tus gastos',
             Icons.receipt,
-            const Color(0xFF4A7C59),
+            const Color(0xFFF57F17),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1693,7 +1763,19 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     child: _buildEmptyState('No hay gastos registrados', Icons.receipt),
                   )
                 else
-                  ..._expenses.map((expense) => _buildImprovedExpenseCard(expense)),
+                  ...(_expenses..sort((a, b) {
+                    // Ordenar: primero los anclados, luego por fecha
+                    if (a.isPinned && !b.isPinned) return -1;
+                    if (!a.isPinned && b.isPinned) return 1;
+                    // Si ambos tienen la misma prioridad, ordenar por fecha (más recientes primero)
+                    try {
+                      final dateA = DateFormat('dd/MM/yyyy').parse(a.date);
+                      final dateB = DateFormat('dd/MM/yyyy').parse(b.date);
+                      return dateB.compareTo(dateA);
+                    } catch (e) {
+                      return 0;
+                    }
+                  })).map((expense) => _buildImprovedExpenseCard(expense)),
               ],
             ),
           ),
@@ -1711,6 +1793,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
       0.0,
       (sum, card) => sum + (double.tryParse(card.balance) ?? 0.0),
     );
+    final totalAvailable = totalLimit - totalBalance;
+    final totalUsedPercentage = totalLimit > 0 ? (totalBalance / totalLimit * 100).clamp(0.0, 100.0) : 0.0;
 
     return SingleChildScrollView(
       child: Column(
@@ -1719,47 +1803,167 @@ class _FinanceSectionsState extends State<FinanceSections> {
             'Gestor de Tarjetas',
             'Administra tus tarjetas de crédito',
             Icons.credit_card,
-            const Color(0xFF4A7C59),
+            const Color(0xFFF57F17),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                // Summary Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSummaryCard(
-                        '${_creditCards.length}',
-                        'Tarjetas',
-                        Icons.credit_card,
-                        Colors.blue,
-                      ),
+                // Resumen general mejorado
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFFF57F17).withOpacity(0.2),
+                        AppTheme.darkSurface,
+                        AppTheme.darkSurfaceVariant,
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildSummaryCard(
-                        '\$${totalLimit.toStringAsFixed(2)}',
-                        'Límite Total',
-                        Icons.account_balance_wallet,
-                        Colors.green,
-                      ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppTheme.darkSurfaceVariant,
+                      width: 1,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildSummaryCard(
-                        '\$${totalBalance.toStringAsFixed(2)}',
-                        'Saldo Total',
-                        Icons.trending_up,
-                        Colors.orange,
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Resumen General',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_creditCards.length} ${_creditCards.length == 1 ? 'tarjeta' : 'tarjetas'}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF57F17).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.credit_card,
+                              color: Color(0xFFF57F17),
+                              size: 28,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      // Barra de progreso del crédito total
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Crédito Utilizado',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                          Text(
+                            '${totalUsedPercentage.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: totalUsedPercentage > 80 
+                                  ? Colors.red 
+                                  : totalUsedPercentage > 50 
+                                      ? Colors.orange 
+                                      : const Color(0xFFF57F17),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: (totalUsedPercentage / 100).clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: totalUsedPercentage > 80 
+                                    ? [Colors.red, Colors.red.shade700]
+                                    : totalUsedPercentage > 50 
+                                        ? [Colors.orange, Colors.orange.shade700]
+                                        : [const Color(0xFFF57F17), const Color(0xFFF57F17).withOpacity(0.8)],
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Tarjetas de resumen mejoradas
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildCreditCardSummaryCard(
+                              'Límite Total',
+                              '\$${totalLimit.toStringAsFixed(2)}',
+                              Icons.account_balance_wallet,
+                              Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildCreditCardSummaryCard(
+                              'Saldo Total',
+                              '\$${totalBalance.toStringAsFixed(2)}',
+                              Icons.trending_up,
+                              Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildCreditCardSummaryCard(
+                              'Disponible',
+                              '\$${totalAvailable.toStringAsFixed(2)}',
+                              Icons.account_balance,
+                              Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                // Botón para agregar tarjeta
-                SizedBox(
+                const SizedBox(height: 20),
+                // Botón para agregar tarjeta mejorado
+                Container(
                   width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFF57F17),
+                      width: 2,
+                    ),
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: () {
                       setState(() {
@@ -1774,23 +1978,85 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         ));
                       });
                     },
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Agregar Tarjeta'),
+                    icon: const Icon(Icons.add_circle, size: 24),
+                    label: const Text(
+                      'Agregar Nueva Tarjeta',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C59),
+                      backgroundColor: const Color(0xFFF57F17),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 // Lista de tarjetas
                 if (_creditCards.isEmpty)
-                  _buildEmptyState('No hay tarjetas registradas', Icons.credit_card)
+                  Container(
+                    padding: const EdgeInsets.all(40),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.darkSurfaceVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: _buildEmptyState('No hay tarjetas registradas', Icons.credit_card),
+                  )
                 else
-                  ..._creditCards.map((card) => _buildCreditCardCard(card)),
+                  ..._creditCards.map((card) => _buildImprovedCreditCardCard(card)),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCreditCardSummaryCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.darkSurfaceVariant,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.white,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -1808,7 +2074,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             'Seguimiento de Facturas',
             'Gestiona tus facturas y pagos',
             Icons.description,
-            const Color(0xFF4A7C59),
+            const Color(0xFFF57F17),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1865,7 +2131,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('Agregar Factura'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C59),
+                      backgroundColor: const Color(0xFFF57F17),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -1902,7 +2168,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             'Seguimiento de Inversiones',
             'Monitorea tu portafolio de inversiones',
             Icons.trending_up,
-            const Color(0xFF4A7C59),
+            const Color(0xFFF57F17),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1960,7 +2226,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('Agregar Inversión'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C59),
+                      backgroundColor: const Color(0xFFF57F17),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -1998,7 +2264,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
             'Objetivos de Ahorro',
             'Establece y alcanza tus metas financieras',
             Icons.savings,
-            const Color(0xFF4A7C59),
+            const Color(0xFFF57F17),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -2055,7 +2321,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     icon: const Icon(Icons.add_circle_outline),
                     label: const Text('Agregar Objetivo'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A7C59),
+                      backgroundColor: const Color(0xFFF57F17),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -2089,7 +2355,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.green.withOpacity(0.2),
+                  const Color(0xFFF57F17).withOpacity(0.2),
                   AppTheme.darkSurface,
                   AppTheme.darkSurfaceVariant,
                 ],
@@ -2099,15 +2365,14 @@ class _FinanceSectionsState extends State<FinanceSections> {
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFFF57F17).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.shopping_cart,
-                    size: 24,
+                    size: 32,
                     color: AppTheme.white,
                   ),
                 ),
@@ -2412,13 +2677,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59).withOpacity(0.2),
+                    color: const Color(0xFFF57F17).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.credit_card,
                     size: 18,
-                    color: Color(0xFF4A7C59),
+                    color: Color(0xFFF57F17),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -2499,6 +2764,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 category: expense.category,
                                 amount: expense.amount,
                                 paymentMethod: expense.paymentMethod,
+                                isPinned: expense.isPinned,
                               );
                             }
                           });
@@ -2542,6 +2808,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 category: expense.category,
                                 amount: expense.amount,
                                 paymentMethod: value,
+                                isPinned: expense.isPinned,
                               );
                             }
                           });
@@ -2589,6 +2856,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 category: expense.category,
                                 amount: expense.amount,
                                 paymentMethod: expense.paymentMethod,
+                                isPinned: expense.isPinned,
                               );
                             }
                           });
@@ -2632,9 +2900,12 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 category: value,
                                 amount: expense.amount,
                                 paymentMethod: expense.paymentMethod,
+                                isPinned: expense.isPinned,
                               );
                             }
                           });
+                          // Actualizar gastos de categorías cuando cambia la categoría
+                          _updateCategorySpent();
                         },
                       ),
                     ],
@@ -2682,9 +2953,12 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 category: expense.category,
                                 amount: value,
                                 paymentMethod: expense.paymentMethod,
+                                isPinned: expense.isPinned,
                               );
                             }
                           });
+                          // Actualizar gastos de categorías cuando cambia el monto
+                          _updateCategorySpent();
                         },
                       ),
                     ],
@@ -2708,6 +2982,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                     setState(() {
                       _expenses.removeWhere((e) => e.id == expense.id);
                     });
+                    // Actualizar gastos de categorías
+                    _updateCategorySpent();
                   },
                   icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
                   label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
@@ -2726,7 +3002,9 @@ class _FinanceSectionsState extends State<FinanceSections> {
       _expenseDescriptionController.text = expense.description;
       _expenseAmountController.text = expense.amount;
       _expenseCategoryController.text = expense.category;
+      _selectedExpenseCategory = expense.category;
       _expensePaymentMethodController.text = expense.paymentMethod;
+      _expenseIsPinned = expense.isPinned;
       if (expense.date.isNotEmpty) {
         try {
           _expenseDate = DateFormat('dd/MM/yyyy').parse(expense.date);
@@ -2740,8 +3018,10 @@ class _FinanceSectionsState extends State<FinanceSections> {
       _expenseDescriptionController.clear();
       _expenseAmountController.clear();
       _expenseCategoryController.clear();
+      _selectedExpenseCategory = null;
       _expensePaymentMethodController.clear();
       _expenseDate = DateTime.now();
+      _expenseIsPinned = false;
     }
 
     showDialog(
@@ -2766,7 +3046,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59),
+                    color: const Color(0xFFF57F17),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(28),
                       topRight: Radius.circular(28),
@@ -2819,117 +3099,188 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         style: const TextStyle(color: AppTheme.white),
                       ),
                       const SizedBox(height: 16),
-                      // Monto y Categoría
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _expenseAmountController,
-                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                              decoration: InputDecoration(
-                                labelText: 'Monto',
-                                labelStyle: const TextStyle(color: AppTheme.white),
-                                hintText: '0.00',
-                                hintStyle: const TextStyle(color: AppTheme.white),
-                                filled: true,
-                                fillColor: AppTheme.darkSurfaceVariant,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                prefixText: '\$ ',
-                                prefixStyle: const TextStyle(color: AppTheme.white),
-                                prefixIcon: const Icon(Icons.attach_money, color: AppTheme.white),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              ),
-                              style: const TextStyle(color: AppTheme.white),
-                            ),
+                      // Monto
+                      TextFormField(
+                        controller: _expenseAmountController,
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(
+                          labelText: 'Monto',
+                          labelStyle: const TextStyle(color: AppTheme.white),
+                          hintText: '0.00',
+                          hintStyle: const TextStyle(color: AppTheme.white),
+                          filled: true,
+                          fillColor: AppTheme.darkSurfaceVariant,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _expenseCategoryController,
-                              decoration: InputDecoration(
-                                labelText: 'Categoría',
-                                labelStyle: const TextStyle(color: AppTheme.white),
-                                hintText: 'Ej: Comida, Transporte',
-                                hintStyle: const TextStyle(color: AppTheme.white),
-                                filled: true,
-                                fillColor: AppTheme.darkSurfaceVariant,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                prefixIcon: const Icon(Icons.category, color: AppTheme.white),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              ),
-                              style: const TextStyle(color: AppTheme.white),
-                            ),
-                          ),
-                        ],
+                          prefixText: '\$ ',
+                          prefixStyle: const TextStyle(color: AppTheme.white),
+                          prefixIcon: const Icon(Icons.attach_money, color: AppTheme.white),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
                       ),
                       const SizedBox(height: 16),
-                      // Fecha y Método de pago
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _expenseDate ?? DateTime.now(),
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                                );
-                                if (picked != null) {
-                                  setModalState(() {
-                                    _expenseDate = picked;
-                                  });
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.darkSurfaceVariant,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.calendar_today, color: AppTheme.white),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      _expenseDate != null
-                                          ? DateFormat('dd/MM/yyyy').format(_expenseDate!)
-                                          : 'Seleccionar fecha',
-                                      style: const TextStyle(color: AppTheme.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                      // Categoría (Dropdown)
+                      DropdownButtonFormField<String>(
+                        value: _selectedExpenseCategory,
+                        decoration: InputDecoration(
+                          labelText: 'Categoría',
+                          labelStyle: const TextStyle(color: AppTheme.white),
+                          hintText: 'Seleccionar categoría',
+                          hintStyle: const TextStyle(color: AppTheme.white),
+                          filled: true,
+                          fillColor: AppTheme.darkSurfaceVariant,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _expensePaymentMethodController,
-                              decoration: InputDecoration(
-                                labelText: 'Método de pago',
-                                labelStyle: const TextStyle(color: AppTheme.white),
-                                hintText: 'Efectivo/Tarjeta',
-                                hintStyle: const TextStyle(color: AppTheme.white),
-                                filled: true,
-                                fillColor: AppTheme.darkSurfaceVariant,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                prefixIcon: const Icon(Icons.payment, color: AppTheme.white),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                              ),
+                          prefixIcon: const Icon(Icons.category, color: AppTheme.white),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                        dropdownColor: AppTheme.darkSurfaceVariant,
+                        style: const TextStyle(color: AppTheme.white),
+                        icon: const Icon(Icons.arrow_drop_down, color: AppTheme.white),
+                        items: _categories.map((category) {
+                          return DropdownMenuItem<String>(
+                            value: category.name,
+                            child: Text(
+                              category.name,
                               style: const TextStyle(color: AppTheme.white),
                             ),
+                          );
+                        }).toList()
+                          ..add(
+                            const DropdownMenuItem<String>(
+                              value: 'Otra',
+                              child: Text(
+                                'Otra',
+                                style: TextStyle(color: AppTheme.white),
+                              ),
+                            ),
                           ),
-                        ],
+                        onChanged: (value) {
+                          setModalState(() {
+                            _selectedExpenseCategory = value;
+                            if (value == 'Otra') {
+                              _expenseCategoryController.clear();
+                            } else {
+                              _expenseCategoryController.text = value ?? '';
+                            }
+                          });
+                        },
+                      ),
+                      // Campo de texto para "Otra" categoría
+                      if (_selectedExpenseCategory == 'Otra') ...[
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _expenseCategoryController,
+                          decoration: InputDecoration(
+                            labelText: 'Nombre de la categoría',
+                            labelStyle: const TextStyle(color: AppTheme.white),
+                            hintText: 'Ej: Comida, Transporte',
+                            hintStyle: const TextStyle(color: AppTheme.white),
+                            filled: true,
+                            fillColor: AppTheme.darkSurfaceVariant,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            prefixIcon: const Icon(Icons.edit, color: AppTheme.white),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          ),
+                          style: const TextStyle(color: AppTheme.white),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      // Anclar gasto
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.push_pin, color: AppTheme.white),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Anclar gasto',
+                                style: TextStyle(
+                                  color: AppTheme.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            Switch(
+                              value: _expenseIsPinned,
+                              onChanged: (value) {
+                                setModalState(() {
+                                  _expenseIsPinned = value;
+                                });
+                              },
+                              activeColor: const Color(0xFFF57F17),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Fecha
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _expenseDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (picked != null) {
+                            setModalState(() {
+                              _expenseDate = picked;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.darkSurfaceVariant,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: AppTheme.white),
+                              const SizedBox(width: 12),
+                              Text(
+                                _expenseDate != null
+                                    ? DateFormat('dd/MM/yyyy').format(_expenseDate!)
+                                    : 'Seleccionar fecha',
+                                style: const TextStyle(color: AppTheme.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Método de pago
+                      TextFormField(
+                        controller: _expensePaymentMethodController,
+                        decoration: InputDecoration(
+                          labelText: 'Método de pago',
+                          labelStyle: const TextStyle(color: AppTheme.white),
+                          hintText: 'Efectivo/Tarjeta',
+                          hintStyle: const TextStyle(color: AppTheme.white),
+                          filled: true,
+                          fillColor: AppTheme.darkSurfaceVariant,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(Icons.payment, color: AppTheme.white),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                        style: const TextStyle(color: AppTheme.white),
                       ),
                       const SizedBox(height: 24),
                       // Botones
@@ -2960,6 +3311,11 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                     ? DateFormat('dd/MM/yyyy').format(_expenseDate!)
                                     : '';
                                 
+                                // Determinar la categoría final
+                                final finalCategory = _selectedExpenseCategory == 'Otra'
+                                    ? _expenseCategoryController.text
+                                    : (_selectedExpenseCategory ?? _expenseCategoryController.text);
+                                
                                 if (_editingExpense != null) {
                                   setState(() {
                                     final index = _expenses.indexWhere((e) => e.id == _editingExpense!.id);
@@ -2968,23 +3324,29 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                         id: _editingExpense!.id,
                                         date: dateStr,
                                         description: _expenseDescriptionController.text,
-                                        category: _expenseCategoryController.text,
+                                        category: finalCategory,
                                         amount: _expenseAmountController.text,
                                         paymentMethod: _expensePaymentMethodController.text,
+                                        isPinned: _expenseIsPinned,
                                       );
                                     }
                                   });
+                                  // Actualizar gastos de categorías
+                                  _updateCategorySpent();
                                 } else {
                                   setState(() {
                                     _expenses.add(Expense(
                                       id: DateTime.now().millisecondsSinceEpoch.toString(),
                                       date: dateStr,
                                       description: _expenseDescriptionController.text,
-                                      category: _expenseCategoryController.text,
+                                      category: finalCategory,
                                       amount: _expenseAmountController.text,
                                       paymentMethod: _expensePaymentMethodController.text,
+                                      isPinned: _expenseIsPinned,
                                     ));
                                   });
+                                  // Actualizar gastos de categorías
+                                  _updateCategorySpent();
                                 }
                                 
                                 final wasEditing = _editingExpense != null;
@@ -2993,8 +3355,10 @@ class _FinanceSectionsState extends State<FinanceSections> {
                                 _expenseDescriptionController.clear();
                                 _expenseAmountController.clear();
                                 _expenseCategoryController.clear();
+                                _selectedExpenseCategory = null;
                                 _expensePaymentMethodController.clear();
                                 _expenseDate = null;
+                                _expenseIsPinned = false;
                                 _editingExpense = null;
                                 
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -3015,7 +3379,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4A7C59),
+                              backgroundColor: const Color(0xFFF57F17),
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -3045,7 +3409,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
     
     // Iconos por categoría
     IconData categoryIcon = Icons.category;
-    Color categoryColor = const Color(0xFF4A7C59);
+    Color categoryColor = const Color(0xFFF57F17);
     if (expense.category.toLowerCase().contains('comida') || 
         expense.category.toLowerCase().contains('alimento')) {
       categoryIcon = Icons.restaurant;
@@ -3097,13 +3461,34 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        expense.description.isEmpty ? 'Sin descripción' : expense.description,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              expense.description.isEmpty ? 'Sin descripción' : expense.description,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ),
+                          if (expense.isPinned) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF57F17).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.push_pin,
+                                size: 16,
+                                color: Color(0xFFF57F17),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -3224,6 +3609,8 @@ class _FinanceSectionsState extends State<FinanceSections> {
                               setState(() {
                                 _expenses.removeWhere((e) => e.id == expense.id);
                               });
+                              // Actualizar gastos de categorías
+                              _updateCategorySpent();
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -3255,432 +3642,724 @@ class _FinanceSectionsState extends State<FinanceSections> {
     );
   }
 
-  Widget _buildCreditCardCard(CreditCard card) {
+  Widget _buildImprovedCreditCardCard(CreditCard card) {
     final limit = double.tryParse(card.limit) ?? 0.0;
     final balance = double.tryParse(card.balance) ?? 0.0;
+    final available = limit - balance;
     final creditUsed = limit > 0 ? (balance / limit * 100).clamp(0.0, 100.0) : 0.0;
+    
+    // Determinar color según uso
+    Color statusColor = const Color(0xFFF57F17);
+    if (creditUsed > 80) {
+      statusColor = Colors.red;
+    } else if (creditUsed > 50) {
+      statusColor = Colors.orange;
+    }
 
-    return Card(
-      color: AppTheme.darkSurface,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.credit_card,
-                    size: 18,
-                    color: Color(0xFF4A7C59),
-                  ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: [
+          // Tarjeta de crédito visual mejorada
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  statusColor,
+                  statusColor.withOpacity(0.8),
+                  statusColor.withOpacity(0.6),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: statusColor.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          card.bank.isEmpty ? 'Banco' : card.bank,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Activa',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         card.name.isEmpty ? 'Tarjeta de Crédito' : card.name,
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                           color: AppTheme.white,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Crédito Disponible',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.white.withOpacity(0.8),
                         ),
                       ),
                       Text(
-                        card.bank.isEmpty ? 'Banco' : card.bank,
+                        '\$${available.toStringAsFixed(2)}',
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                           color: AppTheme.white,
                         ),
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Límite',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.white.withOpacity(0.7),
+                            ),
+                          ),
+                          Text(
+                            '\$${limit.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Utilizado',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.white.withOpacity(0.7),
+                            ),
+                          ),
+                          Text(
+                            '${creditUsed.toStringAsFixed(0)}%',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    'Activa',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.white,
+                ],
+              ),
+            ),
+          ),
+          // Detalles de la tarjeta
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+              border: Border.all(
+                color: AppTheme.darkSurfaceVariant,
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título de sección
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: statusColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Detalles de la Tarjeta',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Detalles editables - Nombre y Banco
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Nombre de Tarjeta',
+                            style: TextStyle(fontSize: 12, color: AppTheme.white),
+                          ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            initialValue: card.name,
+                            decoration: InputDecoration(
+                              hintText: 'Nombre de la tarjeta',
+                              hintStyle: const TextStyle(color: AppTheme.white),
+                              filled: true,
+                              fillColor: AppTheme.darkSurfaceVariant,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                            onChanged: (value) {
+                              setState(() {
+                                final index = _creditCards.indexWhere((c) => c.id == card.id);
+                                if (index != -1) {
+                                  _creditCards[index] = CreditCard(
+                                    id: card.id,
+                                    name: value,
+                                    bank: card.bank,
+                                    limit: card.limit,
+                                    balance: card.balance,
+                                    dueDate: card.dueDate,
+                                    minPayment: card.minPayment,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Banco',
+                            style: TextStyle(fontSize: 12, color: AppTheme.white),
+                          ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            initialValue: card.bank,
+                            decoration: InputDecoration(
+                              hintText: 'Banco',
+                              hintStyle: const TextStyle(color: AppTheme.white),
+                              filled: true,
+                              fillColor: AppTheme.darkSurfaceVariant,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                            onChanged: (value) {
+                              setState(() {
+                                final index = _creditCards.indexWhere((c) => c.id == card.id);
+                                if (index != -1) {
+                                  _creditCards[index] = CreditCard(
+                                    id: card.id,
+                                    name: card.name,
+                                    bank: value,
+                                    limit: card.limit,
+                                    balance: card.balance,
+                                    dueDate: card.dueDate,
+                                    minPayment: card.minPayment,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Detalles editables
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Límite de Crédito',
+                            style: TextStyle(fontSize: 12, color: AppTheme.white),
+                          ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            initialValue: card.limit,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              prefixText: '\$ ',
+                              prefixStyle: const TextStyle(color: AppTheme.white),
+                              hintText: '\$0.00',
+                              hintStyle: const TextStyle(color: AppTheme.white),
+                              filled: true,
+                              fillColor: AppTheme.darkSurfaceVariant,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                            onChanged: (value) {
+                              setState(() {
+                                final index = _creditCards.indexWhere((c) => c.id == card.id);
+                                if (index != -1) {
+                                  _creditCards[index] = CreditCard(
+                                    id: card.id,
+                                    name: card.name,
+                                    bank: card.bank,
+                                    limit: value,
+                                    balance: card.balance,
+                                    dueDate: card.dueDate,
+                                    minPayment: card.minPayment,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Saldo Actual',
+                            style: TextStyle(fontSize: 12, color: AppTheme.white),
+                          ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            initialValue: card.balance,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              prefixText: '\$ ',
+                              prefixStyle: const TextStyle(color: AppTheme.white),
+                              hintText: '\$0.00',
+                              hintStyle: const TextStyle(color: AppTheme.white),
+                              filled: true,
+                              fillColor: AppTheme.darkSurfaceVariant,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                            onChanged: (value) {
+                              setState(() {
+                                final index = _creditCards.indexWhere((c) => c.id == card.id);
+                                if (index != -1) {
+                                  _creditCards[index] = CreditCard(
+                                    id: card.id,
+                                    name: card.name,
+                                    bank: card.bank,
+                                    limit: card.limit,
+                                    balance: value,
+                                    dueDate: card.dueDate,
+                                    minPayment: card.minPayment,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Fecha de Vencimiento',
+                            style: TextStyle(fontSize: 12, color: AppTheme.white),
+                          ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            initialValue: card.dueDate,
+                            decoration: InputDecoration(
+                              hintText: 'DD/MM/YYYY',
+                              hintStyle: const TextStyle(color: AppTheme.white),
+                              filled: true,
+                              fillColor: AppTheme.darkSurfaceVariant,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                            onChanged: (value) {
+                              setState(() {
+                                final index = _creditCards.indexWhere((c) => c.id == card.id);
+                                if (index != -1) {
+                                  _creditCards[index] = CreditCard(
+                                    id: card.id,
+                                    name: card.name,
+                                    bank: card.bank,
+                                    limit: card.limit,
+                                    balance: card.balance,
+                                    dueDate: value,
+                                    minPayment: card.minPayment,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Pago Mínimo',
+                            style: TextStyle(fontSize: 12, color: AppTheme.white),
+                          ),
+                          const SizedBox(height: 4),
+                          TextFormField(
+                            initialValue: card.minPayment,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              prefixText: '\$ ',
+                              prefixStyle: const TextStyle(color: AppTheme.white),
+                              hintText: '\$0.00',
+                              hintStyle: const TextStyle(color: AppTheme.white),
+                              filled: true,
+                              fillColor: AppTheme.darkSurfaceVariant,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: const TextStyle(color: AppTheme.white, fontSize: 14),
+                            onChanged: (value) {
+                              setState(() {
+                                final index = _creditCards.indexWhere((c) => c.id == card.id);
+                                if (index != -1) {
+                                  _creditCards[index] = CreditCard(
+                                    id: card.id,
+                                    name: card.name,
+                                    bank: card.bank,
+                                    limit: card.limit,
+                                    balance: card.balance,
+                                    dueDate: card.dueDate,
+                                    minPayment: value,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Barra de progreso del crédito utilizado mejorada
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: statusColor.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Detalles editables - Nombre y Banco
-            Row(
-              children: [
-                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Nombre de Tarjeta',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: card.name,
-                        decoration: InputDecoration(
-                          hintText: 'Nombre de la tarjeta',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Crédito Utilizado',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.white,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          Text(
+                            '${creditUsed.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurfaceVariant,
+                          borderRadius: BorderRadius.circular(5),
                         ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            final index = _creditCards.indexWhere((c) => c.id == card.id);
-                            if (index != -1) {
-                              _creditCards[index] = CreditCard(
-                                id: card.id,
-                                name: value,
-                                bank: card.bank,
-                                limit: card.limit,
-                                balance: card.balance,
-                                dueDate: card.dueDate,
-                                minPayment: card.minPayment,
-                              );
-                            }
-                          });
-                        },
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: (creditUsed / 100).clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  statusColor,
+                                  statusColor.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Disponible: \$${available.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.white.withOpacity(0.7),
+                            ),
+                          ),
+                          Text(
+                            'Usado: \$${balance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.white.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Banco',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: card.bank,
-                        decoration: InputDecoration(
-                          hintText: 'Banco',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
+                const SizedBox(height: 20),
+                // Información adicional
+                if (card.dueDate.isNotEmpty || card.minPayment.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurfaceVariant.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        if (card.dueDate.isNotEmpty) ...[
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 16, color: AppTheme.white),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Vencimiento',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      card.dueDate,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            final index = _creditCards.indexWhere((c) => c.id == card.id);
-                            if (index != -1) {
-                              _creditCards[index] = CreditCard(
-                                id: card.id,
-                                name: card.name,
-                                bank: value,
-                                limit: card.limit,
-                                balance: card.balance,
-                                dueDate: card.dueDate,
-                                minPayment: card.minPayment,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                    ],
+                        ],
+                        if (card.minPayment.isNotEmpty) ...[
+                          if (card.dueDate.isNotEmpty) const SizedBox(width: 16),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.payment, size: 16, color: AppTheme.white),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Pago Mínimo',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      '\$${card.minPayment}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 20),
+                ],
+                // Acciones mejoradas
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: AppTheme.darkSurface,
+                              title: const Text(
+                                'Eliminar Tarjeta',
+                                style: TextStyle(color: AppTheme.white),
+                              ),
+                              content: Text(
+                                '¿Estás seguro de que deseas eliminar la tarjeta "${card.name.isEmpty ? 'Tarjeta de Crédito' : card.name}"?',
+                                style: const TextStyle(color: AppTheme.white),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancelar', style: TextStyle(color: AppTheme.white)),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _creditCards.removeWhere((c) => c.id == card.id);
+                                    });
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Tarjeta eliminada exitosamente'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Eliminar'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text('Eliminar'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red, width: 1.5),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text('Editar Detalles'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: statusColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Detalles editables
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Límite de Crédito',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: card.limit,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          prefixText: '\$ ',
-                          prefixStyle: const TextStyle(color: AppTheme.white),
-                          hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            final index = _creditCards.indexWhere((c) => c.id == card.id);
-                            if (index != -1) {
-                              _creditCards[index] = CreditCard(
-                                id: card.id,
-                                name: card.name,
-                                bank: card.bank,
-                                limit: value,
-                                balance: card.balance,
-                                dueDate: card.dueDate,
-                                minPayment: card.minPayment,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Saldo Actual',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: card.balance,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          prefixText: '\$ ',
-                          prefixStyle: const TextStyle(color: AppTheme.white),
-                          hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            final index = _creditCards.indexWhere((c) => c.id == card.id);
-                            if (index != -1) {
-                              _creditCards[index] = CreditCard(
-                                id: card.id,
-                                name: card.name,
-                                bank: card.bank,
-                                limit: card.limit,
-                                balance: value,
-                                dueDate: card.dueDate,
-                                minPayment: card.minPayment,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Fecha de Vencimiento',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: card.dueDate,
-                        decoration: InputDecoration(
-                          hintText: 'DD/MM/YYYY',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            final index = _creditCards.indexWhere((c) => c.id == card.id);
-                            if (index != -1) {
-                              _creditCards[index] = CreditCard(
-                                id: card.id,
-                                name: card.name,
-                                bank: card.bank,
-                                limit: card.limit,
-                                balance: card.balance,
-                                dueDate: value,
-                                minPayment: card.minPayment,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Pago Mínimo',
-                        style: TextStyle(fontSize: 12, color: AppTheme.white),
-                      ),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        initialValue: card.minPayment,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          prefixText: '\$ ',
-                          prefixStyle: const TextStyle(color: AppTheme.white),
-                          hintText: '\$0.00',
-                          hintStyle: const TextStyle(color: AppTheme.white),
-                          filled: true,
-                          fillColor: AppTheme.darkSurfaceVariant,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        style: const TextStyle(color: AppTheme.white, fontSize: 14),
-                        onChanged: (value) {
-                          setState(() {
-                            final index = _creditCards.indexWhere((c) => c.id == card.id);
-                            if (index != -1) {
-                              _creditCards[index] = CreditCard(
-                                id: card.id,
-                                name: card.name,
-                                bank: card.bank,
-                                limit: card.limit,
-                                balance: card.balance,
-                                dueDate: card.dueDate,
-                                minPayment: value,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Barra de progreso del crédito utilizado
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Crédito Utilizado',
-                  style: TextStyle(fontSize: 14, color: AppTheme.white),
-                ),
-                Text(
-                  '${creditUsed.toStringAsFixed(0)}%',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4A7C59),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: AppTheme.darkSurfaceVariant,
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: (creditUsed / 100).clamp(0.0, 1.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Acciones
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: AppTheme.white),
-                  label: const Text('Editar', style: TextStyle(color: AppTheme.white)),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.visibility, size: 16, color: AppTheme.white),
-                  label: const Text('Ver Detalles', style: TextStyle(color: AppTheme.white)),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _creditCards.removeWhere((c) => c.id == card.id);
-                    });
-                  },
-                  icon: const Icon(Icons.delete, size: 16, color: AppTheme.white),
-                  label: const Text('Eliminar', style: TextStyle(color: AppTheme.white)),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -3704,13 +4383,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59).withOpacity(0.2),
+                    color: const Color(0xFFF57F17).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.description,
                     size: 18,
-                    color: Color(0xFF4A7C59),
+                    color: Color(0xFFF57F17),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -4055,13 +4734,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59).withOpacity(0.2),
+                    color: const Color(0xFFF57F17).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.trending_up,
                     size: 18,
-                    color: Color(0xFF4A7C59),
+                    color: Color(0xFFF57F17),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -4484,13 +5163,13 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4A7C59).withOpacity(0.2),
+                    color: const Color(0xFFF57F17).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.flag,
                     size: 18,
-                    color: Color(0xFF4A7C59),
+                    color: Color(0xFFF57F17),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -4740,7 +5419,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF4A7C59),
+                    color: Color(0xFFF57F17),
                   ),
                 ),
               ],
@@ -4757,7 +5436,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                 widthFactor: (progress / 100).clamp(0.0, 1.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: progress >= 100 ? Colors.green : const Color(0xFF4A7C59),
+                    color: progress >= 100 ? Colors.green : const Color(0xFFF57F17),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -4878,7 +5557,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Agregar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A7C59),
+                    backgroundColor: const Color(0xFFF57F17),
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -4914,7 +5593,7 @@ class _FinanceSectionsState extends State<FinanceSections> {
                         label: const Text('Agregar primer artículo'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.darkSurfaceVariant,
-                          foregroundColor: const Color(0xFF4A7C59),
+                          foregroundColor: const Color(0xFFF57F17),
                         ),
                       ),
                     ],
